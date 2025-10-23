@@ -101,12 +101,6 @@ A 4K status dashboard for an MSP office that displays internet health metrics, s
 - Top posts from r/netsec
 - Security breach notifications
 
-### Page 7: Space Weather 🌌
-**Data Source:** NOAA Space Weather API
-- Solar flare activity
-- Geomagnetic storm levels
-- Aurora forecast
-- Potential satellite/communications disruption
 
 ### Page 8: Fun Internet Stats 🎮
 **Data Sources:** Various APIs
@@ -148,9 +142,6 @@ A 4K status dashboard for an MSP office that displays internet health metrics, s
 - GitHub Trending: `https://api.github.com/search/repositories`
 - Hacker News: `https://hacker-news.firebaseio.com/v0/`
 - Reddit: `https://www.reddit.com/r/netsec/top.json`
-
-**Space Weather**
-- NOAA: `https://services.swpc.noaa.gov/products/`
 
 ### Optional/Future Data Sources
 - RIPE Atlas API - Internet connectivity measurements
