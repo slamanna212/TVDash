@@ -5,6 +5,7 @@ import { getM365Status } from './m365';
 import { getGWorkspaceStatus } from './gworkspace';
 import { getInternetStatus } from './internet';
 import { getRadarAttacks } from './radar';
+import { getServiceHistory } from '../db/queries';
 
 export async function handleApiRequest(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
@@ -19,11 +20,30 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
     // GET /api/services/:id/history - Historical data for a service
     if (path.match(/^\/api\/services\/\d+\/history$/) && request.method === 'GET') {
       const id = parseInt(path.split('/')[3]);
-      // TODO: Implement service history endpoint
-      return new Response(JSON.stringify({ error: 'Not implemented yet' }), {
-        status: 501,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const days = parseInt(url.searchParams.get('days') || '7');
+
+      try {
+        const history = await getServiceHistory(env, id, days);
+
+        return new Response(JSON.stringify({
+          serviceId: id,
+          days,
+          history,
+          count: history.length,
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (error) {
+        console.error(`Error fetching history for service ${id}:`, error);
+        return new Response(JSON.stringify({
+          error: 'Failed to fetch service history',
+          message: error instanceof Error ? error.message : 'Unknown error',
+        }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     // GET /api/internet - ISP status + global internet health

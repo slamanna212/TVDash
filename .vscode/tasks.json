@@ -118,7 +118,7 @@
     {
       "label": "Database: Create D1",
       "type": "shell",
-      "command": "npx wrangler d1 create msp-dashboard",
+      "command": "npx wrangler d1 create drone",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -134,7 +134,7 @@
     {
       "label": "Database: Run Migrations",
       "type": "shell",
-      "command": "npx wrangler d1 migrations apply msp-dashboard",
+      "command": "npx wrangler d1 migrations apply drone --remote",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -150,7 +150,7 @@
     {
       "label": "Database: Query D1",
       "type": "shell",
-      "command": "npx wrangler d1 execute msp-dashboard --command=\"${input:sqlQuery}\"",
+      "command": "npx wrangler d1 execute drone --remote --command=\"${input:sqlQuery}\"",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -276,7 +276,7 @@
     {
       "label": "Cron: Trigger 1-Minute",
       "type": "shell",
-      "command": "curl -X POST http://localhost:8787/__scheduled?cron=*+*+*+*+*",
+      "command": "curl -X POST 'http://localhost:8787/__scheduled?cron=*%20*%20*%20*%20*'",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -291,7 +291,7 @@
     {
       "label": "Cron: Trigger 5-Minute",
       "type": "shell",
-      "command": "curl -X POST http://localhost:8787/__scheduled?cron=*/5+*+*+*+*",
+      "command": "curl -X POST 'http://localhost:8787/__scheduled?cron=*%2F5%20*%20*%20*%20*'",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -306,7 +306,7 @@
     {
       "label": "Cron: Trigger 15-Minute",
       "type": "shell",
-      "command": "curl -X POST http://localhost:8787/__scheduled?cron=*/15+*+*+*+*",
+      "command": "curl -X POST 'http://localhost:8787/__scheduled?cron=*%2F15%20*%20*%20*%20*'",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -316,6 +316,40 @@
       "icon": {
         "id": "clock",
         "color": "terminal.ansiCyan"
+      }
+    },
+    {
+      "label": "Cron: Trigger Daily",
+      "type": "shell",
+      "command": "curl -X POST 'http://localhost:8787/__scheduled?cron=0%203%20*%20*%20*'",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": "test",
+      "icon": {
+        "id": "clock",
+        "color": "terminal.ansiMagenta"
+      }
+    },
+    {
+      "label": "Cron: Trigger All (Sequential)",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Cron: Trigger 1-Minute",
+        "Cron: Trigger 5-Minute",
+        "Cron: Trigger 15-Minute"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": "test",
+      "icon": {
+        "id": "debug-all",
+        "color": "terminal.ansiGreen"
       }
     },
     {

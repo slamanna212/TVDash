@@ -28,7 +28,12 @@ export async function collectM365Status(env: Env): Promise<{
     const accessToken = await getM365AccessToken(env);
 
     if (!accessToken) {
-      throw new Error('Failed to obtain M365 access token');
+      // Return early with unknown status if credentials aren't configured or invalid
+      return {
+        overall: 'unknown',
+        services: [],
+        lastChecked: new Date().toISOString(),
+      };
     }
 
     return await fetchWithCache(

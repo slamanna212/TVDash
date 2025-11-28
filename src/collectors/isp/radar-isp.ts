@@ -86,22 +86,34 @@ async function fetchIQIMetrics(
   jitterMs: number | null;
 }> {
   try {
-    const response = await fetch(
-      `${RADAR_BASE_URL}/quality/iqi/summary?asn=${asn}&dateRange=1d`,
+    // Fetch bandwidth metrics
+    const bandwidthResponse = await fetch(
+      `${RADAR_BASE_URL}/quality/iqi/summary?asn=${asn}&dateRange=1d&metric=bandwidth`,
       { headers }
     );
 
-    if (!response.ok) {
-      console.warn(`IQI API returned ${response.status} for ASN ${asn}`);
-      return { bandwidthPercentile: null, latencyPercentile: null, jitterMs: null };
+    let bandwidthPercentile: number | null = null;
+    if (bandwidthResponse.ok) {
+      const bandwidthData = await bandwidthResponse.json();
+      bandwidthPercentile = bandwidthData.result?.summary_0?.percentile || null;
     }
 
-    const data = await response.json();
+    // Fetch latency metrics
+    const latencyResponse = await fetch(
+      `${RADAR_BASE_URL}/quality/iqi/summary?asn=${asn}&dateRange=1d&metric=latency`,
+      { headers }
+    );
+
+    let latencyPercentile: number | null = null;
+    if (latencyResponse.ok) {
+      const latencyData = await latencyResponse.json();
+      latencyPercentile = latencyData.result?.summary_0?.percentile || null;
+    }
 
     return {
-      bandwidthPercentile: data.result?.bandwidth?.percentile || null,
-      latencyPercentile: data.result?.latency?.percentile || null,
-      jitterMs: data.result?.jitter?.avg || null,
+      bandwidthPercentile,
+      latencyPercentile,
+      jitterMs: null, // Jitter not available in IQI summary
     };
   } catch (error) {
     console.error('Error fetching IQI metrics:', error);

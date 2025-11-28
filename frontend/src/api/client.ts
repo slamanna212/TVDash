@@ -76,6 +76,68 @@ export interface GWorkspaceResponse {
   lastChecked: string;
 }
 
+export interface ISPMetrics {
+  isp: {
+    id: number;
+    name: string;
+    primary_asn: number;
+    secondary_asns?: string;
+  };
+  status: 'operational' | 'degraded' | 'outage' | 'unknown';
+  metrics: {
+    bandwidthPercentile: number | null;
+    latencyPercentile: number | null;
+    jitterMs: number | null;
+  };
+  anomalies: Array<{
+    type: string;
+    severity: string;
+    startTime: string;
+    endTime?: string;
+  }>;
+  bgpIncidents: Array<{
+    type: 'hijack' | 'leak';
+    description: string;
+    startTime: string;
+    endTime?: string;
+  }>;
+  lastChecked: string;
+}
+
+export interface InternetResponse {
+  overallStatus: 'operational' | 'degraded' | 'outage' | 'unknown';
+  isps: ISPMetrics[];
+  lastUpdated: string;
+}
+
+export interface AttackData {
+  layer3: {
+    timeseries: Array<{
+      timestamp: string;
+      value: number;
+    }>;
+    total: number;
+  };
+  layer7: {
+    timeseries: Array<{
+      timestamp: string;
+      value: number;
+    }>;
+    total: number;
+  };
+  breakdown: {
+    byProtocol: Array<{
+      name: string;
+      value: number;
+    }>;
+    byVector: Array<{
+      name: string;
+      value: number;
+    }>;
+  };
+  lastUpdated: string;
+}
+
 export interface Event {
   id: number;
   source: string;
@@ -116,8 +178,8 @@ class APIClient {
     return this.fetch(`/api/services/${id}/history?days=${days}`);
   }
 
-  async getInternet(): Promise<any> {
-    return this.fetch('/api/internet');
+  async getInternet(): Promise<InternetResponse> {
+    return this.fetch<InternetResponse>('/api/internet');
   }
 
   async getCloud(): Promise<CloudResponse> {
@@ -132,8 +194,8 @@ class APIClient {
     return this.fetch<GWorkspaceResponse>('/api/gworkspace');
   }
 
-  async getRadarAttacks(): Promise<any> {
-    return this.fetch('/api/radar/attacks');
+  async getRadarAttacks(): Promise<AttackData> {
+    return this.fetch<AttackData>('/api/radar/attacks');
   }
 
   async getGrid(): Promise<any> {
