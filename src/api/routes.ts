@@ -3,6 +3,8 @@ import { getServices } from './services';
 import { getCloudStatus } from './cloud';
 import { getM365Status } from './m365';
 import { getGWorkspaceStatus } from './gworkspace';
+import { getInternetStatus } from './internet';
+import { getRadarAttacks } from './radar';
 
 export async function handleApiRequest(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
@@ -26,11 +28,7 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
 
     // GET /api/internet - ISP status + global internet health
     if (path === '/api/internet' && request.method === 'GET') {
-      // TODO: Implement internet status endpoint
-      return new Response(JSON.stringify({ error: 'Not implemented yet' }), {
-        status: 501,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return await getInternetStatus(env);
     }
 
     // GET /api/cloud - Combined cloud status
@@ -50,11 +48,7 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
 
     // GET /api/radar/attacks - Attack activity data
     if (path === '/api/radar/attacks' && request.method === 'GET') {
-      // TODO: Implement Radar attacks endpoint
-      return new Response(JSON.stringify({ error: 'Not implemented yet' }), {
-        status: 501,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return await getRadarAttacks(env);
     }
 
     // GET /api/grid - Power grid status

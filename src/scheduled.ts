@@ -1,4 +1,12 @@
-import type { Env } from './types';
+import type { Env, Service, CheckResult } from './types';
+import { performHttpCheck } from './collectors/http-check';
+import { checkStatuspageStatus } from './collectors/statuspage';
+import { checkStatusHubStatus } from './collectors/statushub';
+import { collectAWSStatus } from './collectors/cloud/aws';
+import { collectAzureStatus } from './collectors/cloud/azure';
+import { collectGCPStatus } from './collectors/cloud/gcp';
+import { collectM365Status } from './collectors/productivity/microsoft';
+import { collectGWorkspaceStatus } from './collectors/productivity/gworkspace';
 
 export async function handleScheduled(
   event: ScheduledEvent,
@@ -11,26 +19,24 @@ export async function handleScheduled(
   try {
     // Every minute tasks
     if (cron === '* * * * *') {
-      console.log('Running 1-minute tasks');
-      // TODO: HTTP health checks for internal services
+      console.log('Running 1-minute tasks: HTTP health checks');
+      await runHttpHealthChecks(env);
     }
 
     // Every 5 minute tasks
     if (cron === '*/5 * * * *') {
       console.log('Running 5-minute tasks');
-      // TODO: Statuspage polling
-      // TODO: Cloud status checks
-      // TODO: M365 Graph API
-      // TODO: Google Workspace
-      // TODO: Radar data
-      // TODO: Grid data
-      // TODO: Alert processing
+      await Promise.all([
+        runStatuspageChecks(env),
+        runCloudStatusChecks(env),
+        runProductivityChecks(env),
+      ]);
     }
 
     // Every 15 minute tasks
     if (cron === '*/15 * * * *') {
       console.log('Running 15-minute tasks');
-      // TODO: Radar IQI/Speed metrics
+      // Placeholder for future Radar IQI/Speed metrics
     }
 
     // Daily cleanup
@@ -43,6 +49,190 @@ export async function handleScheduled(
   }
 }
 
+/**
+ * Check HTTP-based services (ConnectWise, ScreenConnect, etc.)
+ */
+async function runHttpHealthChecks(env: Env): Promise<void> {
+  try {
+    // Get all services with check_type = 'http'
+    const result = await env.DB.prepare(`
+      SELECT * FROM services WHERE check_type = 'http' AND check_url IS NOT NULL
+    `).all();
+
+    if (!result.success || !result.results) {
+      console.error('Failed to fetch HTTP services');
+      return;
+    }
+
+    const services = result.results as Service[];
+
+    // Check each service
+    for (const service of services) {
+      try {
+        const checkResult = await performHttpCheck(service.check_url!);
+        await recordStatusHistory(env, service.id, checkResult);
+        console.log(`✓ ${service.name}: ${checkResult.status}`);
+      } catch (error) {
+        console.error(`✗ ${service.name}:`, error);
+        await recordStatusHistory(env, service.id, {
+          status: 'unknown',
+          message: 'Check failed',
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error in HTTP health checks:', error);
+  }
+}
+
+/**
+ * Check Statuspage-based services (IT Glue, Datto, etc.)
+ */
+async function runStatuspageChecks(env: Env): Promise<void> {
+  try {
+    // Get all services with check_type = 'statuspage'
+    const result = await env.DB.prepare(`
+      SELECT * FROM services WHERE check_type = 'statuspage' AND statuspage_id IS NOT NULL
+    `).all();
+
+    if (!result.success || !result.results) {
+      console.error('Failed to fetch Statuspage services');
+      return;
+    }
+
+    const services = result.results as Service[];
+
+    // Check each service
+    for (const service of services) {
+      try {
+        // Determine parser based on URL
+        let checkResult: CheckResult;
+
+        if (service.statuspage_id!.includes('sonicwall')) {
+          // Use StatusHub parser for SonicWall
+          checkResult = await checkStatusHubStatus(service.statuspage_id!);
+        } else {
+          // Use standard Statuspage parser
+          checkResult = await checkStatuspageStatus(service.statuspage_id!);
+        }
+
+        await recordStatusHistory(env, service.id, checkResult);
+        console.log(`✓ ${service.name}: ${checkResult.status}`);
+      } catch (error) {
+        console.error(`✗ ${service.name}:`, error);
+        await recordStatusHistory(env, service.id, {
+          status: 'unknown',
+          message: 'Check failed',
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error in Statuspage checks:', error);
+  }
+}
+
+/**
+ * Check cloud provider status (AWS, Azure, GCP)
+ */
+async function runCloudStatusChecks(env: Env): Promise<void> {
+  try {
+    const [aws, azure, gcp] = await Promise.all([
+      collectAWSStatus(env),
+      collectAzureStatus(env),
+      collectGCPStatus(env),
+    ]);
+
+    // Store cloud status in database
+    const now = new Date().toISOString();
+
+    await env.DB.prepare(`
+      INSERT INTO cloud_status (provider, overall_status, incidents, last_updated, checked_at)
+      VALUES (?, ?, ?, ?, ?)
+    `).bind('aws', aws.status, JSON.stringify(aws.incidents), aws.lastUpdated, now).run();
+
+    await env.DB.prepare(`
+      INSERT INTO cloud_status (provider, overall_status, incidents, last_updated, checked_at)
+      VALUES (?, ?, ?, ?, ?)
+    `).bind('azure', azure.status, JSON.stringify(azure.incidents), azure.lastUpdated, now).run();
+
+    await env.DB.prepare(`
+      INSERT INTO cloud_status (provider, overall_status, incidents, last_updated, checked_at)
+      VALUES (?, ?, ?, ?, ?)
+    `).bind('gcp', gcp.status, JSON.stringify(gcp.incidents), gcp.lastUpdated, now).run();
+
+    console.log(`✓ Cloud status: AWS=${aws.status}, Azure=${azure.status}, GCP=${gcp.status}`);
+  } catch (error) {
+    console.error('Error checking cloud status:', error);
+  }
+}
+
+/**
+ * Check productivity suites (M365, Google Workspace)
+ */
+async function runProductivityChecks(env: Env): Promise<void> {
+  try {
+    // Check M365
+    const m365 = await collectM365Status(env);
+
+    for (const service of m365.services) {
+      await env.DB.prepare(`
+        INSERT INTO m365_health (service_name, status, issues, checked_at)
+        VALUES (?, ?, ?, ?)
+      `).bind(
+        service.name,
+        service.status,
+        JSON.stringify(service.issues),
+        new Date().toISOString()
+      ).run();
+    }
+
+    console.log(`✓ M365: ${m365.overall} (${m365.services.length} services)`);
+
+    // Check Google Workspace
+    const workspace = await collectGWorkspaceStatus(env);
+
+    await env.DB.prepare(`
+      INSERT INTO gworkspace_status (overall_status, incidents, checked_at)
+      VALUES (?, ?, ?)
+    `).bind(
+      workspace.overall,
+      JSON.stringify(workspace.services),
+      workspace.lastChecked
+    ).run();
+
+    console.log(`✓ Google Workspace: ${workspace.overall}`);
+  } catch (error) {
+    console.error('Error checking productivity suites:', error);
+  }
+}
+
+/**
+ * Record service status check to history
+ */
+async function recordStatusHistory(
+  env: Env,
+  serviceId: number,
+  result: CheckResult
+): Promise<void> {
+  try {
+    await env.DB.prepare(`
+      INSERT INTO status_history (service_id, status, response_time_ms, message, checked_at)
+      VALUES (?, ?, ?, ?, ?)
+    `).bind(
+      serviceId,
+      result.status,
+      result.responseTime || null,
+      result.message || null,
+      new Date().toISOString()
+    ).run();
+  } catch (error) {
+    console.error(`Failed to record status for service ${serviceId}:`, error);
+  }
+}
+
+/**
+ * Clean up old data (runs daily at 3 AM)
+ */
 async function cleanupOldData(env: Env): Promise<void> {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -50,21 +240,43 @@ async function cleanupOldData(env: Env): Promise<void> {
 
   try {
     // Clean up old status history
-    await env.DB.prepare(
+    const statusResult = await env.DB.prepare(
       'DELETE FROM status_history WHERE checked_at < ?'
     ).bind(timestamp).run();
 
+    // Clean up old cloud status
+    const cloudResult = await env.DB.prepare(
+      'DELETE FROM cloud_status WHERE checked_at < ?'
+    ).bind(timestamp).run();
+
+    // Clean up old M365 health records
+    const m365Result = await env.DB.prepare(
+      'DELETE FROM m365_health WHERE checked_at < ?'
+    ).bind(timestamp).run();
+
+    // Clean up old workspace status
+    const workspaceResult = await env.DB.prepare(
+      'DELETE FROM gworkspace_status WHERE checked_at < ?'
+    ).bind(timestamp).run();
+
     // Clean up old events
-    await env.DB.prepare(
+    const eventsResult = await env.DB.prepare(
       'DELETE FROM events WHERE created_at < ? OR (expires_at IS NOT NULL AND expires_at < ?)'
     ).bind(timestamp, new Date().toISOString()).run();
 
     // Clean up expired cache entries
-    await env.DB.prepare(
+    const cacheResult = await env.DB.prepare(
       'DELETE FROM api_cache WHERE expires_at < ?'
     ).bind(new Date().toISOString()).run();
 
-    console.log('Data cleanup completed successfully');
+    console.log('Data cleanup completed:', {
+      statusHistory: statusResult.meta?.changes || 0,
+      cloudStatus: cloudResult.meta?.changes || 0,
+      m365Health: m365Result.meta?.changes || 0,
+      workspaceStatus: workspaceResult.meta?.changes || 0,
+      events: eventsResult.meta?.changes || 0,
+      cache: cacheResult.meta?.changes || 0,
+    });
   } catch (error) {
     console.error('Error during data cleanup:', error);
   }
