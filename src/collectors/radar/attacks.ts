@@ -22,10 +22,7 @@ interface RadarTimeseriesResponse {
 interface RadarSummaryResponse {
   result: {
     meta: any;
-    top_0: Array<{
-      name: string;
-      value: string;
-    }>;
+    summary_0: Record<string, string>;
   };
   success: boolean;
 }
@@ -56,6 +53,13 @@ export interface AttackData {
     }>;
   };
   lastUpdated: string;
+}
+
+function convertSummaryToArray(summary: Record<string, string>): Array<{ name: string; value: number }> {
+  return Object.entries(summary).map(([name, value]) => ({
+    name,
+    value: parseInt(value),
+  }));
 }
 
 export async function collectAttackData(env: Env): Promise<AttackData> {
@@ -107,7 +111,7 @@ export async function collectAttackData(env: Env): Promise<AttackData> {
 
         const protocolData: RadarSummaryResponse = protocolResponse.ok
           ? await protocolResponse.json()
-          : { result: { meta: {}, top_0: [] }, success: false };
+          : { result: { meta: {}, summary_0: {} }, success: false };
 
         // Fetch attack breakdown by vector
         const vectorResponse = await fetch(
@@ -117,7 +121,7 @@ export async function collectAttackData(env: Env): Promise<AttackData> {
 
         const vectorData: RadarSummaryResponse = vectorResponse.ok
           ? await vectorResponse.json()
-          : { result: { meta: {}, top_0: [] }, success: false };
+          : { result: { meta: {}, summary_0: {} }, success: false };
 
         // Process Layer 3 data
         const layer3Timeseries = layer3Data.result.serie_0.timestamps.map((timestamp, index) => ({
@@ -145,14 +149,8 @@ export async function collectAttackData(env: Env): Promise<AttackData> {
             total: layer7Total,
           },
           breakdown: {
-            byProtocol: protocolData.result.top_0.map(item => ({
-              name: item.name,
-              value: parseInt(item.value),
-            })),
-            byVector: vectorData.result.top_0.map(item => ({
-              name: item.name,
-              value: parseInt(item.value),
-            })),
+            byProtocol: convertSummaryToArray(protocolData.result.summary_0 ?? {}),
+            byVector: convertSummaryToArray(vectorData.result.summary_0 ?? {}),
           },
           lastUpdated: new Date().toISOString(),
         };
