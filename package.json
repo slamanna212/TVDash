@@ -6,6 +6,7 @@
     "dev": "wrangler dev",
     "build": "cd frontend && npm run build",
     "deploy": "npm run build && wrangler deploy",
+    "postinstall": "cd frontend && npm install && npm run build",
     "db:migrate": "wrangler d1 migrations apply msp-dashboard",
     "db:create": "wrangler d1 create msp-dashboard"
   },
