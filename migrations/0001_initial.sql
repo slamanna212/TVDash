@@ -147,8 +147,8 @@ INSERT INTO local_isps (name, primary_asn, secondary_asns, display_order) VALUES
 
 -- Seed MSP services
 INSERT INTO services (name, category, check_type, check_url, statuspage_id, display_order) VALUES
-    ('ConnectWise Manage', 'msp_tool', 'http', 'https://sscw.stratixsystems.com/', NULL, 1),
-    ('ConnectWise Automate', 'msp_tool', 'http', 'https://automate.stratixsystems.com/automate/', NULL, 2),
+    ('Manage', 'msp_tool', 'http', 'https://sscw.stratixsystems.com/', NULL, 1),
+    ('Automate', 'msp_tool', 'http', 'https://automate.stratixsystems.com/automate/', NULL, 2),
     ('ScreenConnect', 'msp_tool', 'http', 'https://help.stratixsystems.com/', NULL, 3),
     ('IT Glue', 'msp_tool', 'statuspage', NULL, 'https://status.itglue.com', 4),
     ('Datto', 'msp_tool', 'statuspage', NULL, 'https://status.datto.com', 5),

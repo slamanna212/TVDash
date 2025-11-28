@@ -66,7 +66,7 @@ body {
 }
 
 .ticker-track {
-  animation: scroll 60s linear infinite;
+  animation: scroll 120s linear infinite;
 }
 
 .ticker-track:hover {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 /**
  * Hook to automatically fetch and refresh data at a specified interval
@@ -16,10 +16,16 @@ export function useAutoRefresh<T>(
   const [error, setError] = useState<Error | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
+  // Use ref to store fetcher to avoid infinite loops
+  const fetcherRef = useRef(fetcher);
+  useEffect(() => {
+    fetcherRef.current = fetcher;
+  }, [fetcher]);
+
   const fetchData = useCallback(async () => {
     try {
       setError(null);
-      const result = await fetcher();
+      const result = await fetcherRef.current();
       setData(result);
       setLastUpdated(new Date());
       setLoading(false);
@@ -27,7 +33,7 @@ export function useAutoRefresh<T>(
       setError(err instanceof Error ? err : new Error('Unknown error'));
       setLoading(false);
     }
-  }, [fetcher]);
+  }, []);
 
   useEffect(() => {
     if (initialFetch) {

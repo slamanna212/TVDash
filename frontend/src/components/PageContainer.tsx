@@ -1,4 +1,4 @@
-import { Box, Center, Text } from '@mantine/core';
+import { Box, RingProgress } from '@mantine/core';
 import { usePageRotation } from '../hooks/usePageRotation';
 import { InternetStatusPage } from '../pages/InternetStatusPage';
 import { CloudStatusPage } from '../pages/CloudStatusPage';
@@ -17,9 +17,9 @@ const pages = [
 ];
 
 export function PageContainer() {
-  const currentPageIndex = usePageRotation(pages.length, 45); // Rotate every 45 seconds
+  const { currentPage, progress } = usePageRotation(pages.length, 45); // Rotate every 45 seconds
 
-  const CurrentPage = pages[currentPageIndex].component;
+  const CurrentPage = pages[currentPage].component;
 
   return (
     <Box
@@ -30,6 +30,22 @@ export function PageContainer() {
         position: 'relative',
       }}
     >
+      {/* Progress Ring - Top Right */}
+      <Box
+        style={{
+          position: 'absolute',
+          top: '2vw',
+          right: '2vw',
+          zIndex: 1000,
+        }}
+      >
+        <RingProgress
+          size={80}
+          thickness={6}
+          sections={[{ value: progress, color: '#e53935' }]}
+        />
+      </Box>
+
       <CurrentPage />
     </Box>
   );

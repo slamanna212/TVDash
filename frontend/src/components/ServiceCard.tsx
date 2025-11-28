@@ -31,10 +31,10 @@ export function ServiceCard({ service }: ServiceCardProps) {
       className={service.status === 'outage' ? 'status-outage' : ''}
       style={{
         backgroundColor,
-        padding: '1vw 1.5vw',
+        padding: '1.5vw 2vw',
         borderRadius: '8px',
         minWidth: 'var(--card-min-width)',
-        height: '80%',
+        height: '100%',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',

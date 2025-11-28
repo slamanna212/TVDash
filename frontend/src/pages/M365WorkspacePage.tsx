@@ -10,7 +10,7 @@ export function M365WorkspacePage() {
     60
   );
 
-  const { data: workspaceData, loading: workspaceLoading } = useAutoRefresh(
+  const { data: workspaceData } = useAutoRefresh(
     () => apiClient.getGWorkspace(),
     60
   );
@@ -32,19 +32,19 @@ export function M365WorkspacePage() {
       <Grid gutter="xl">
         {/* Microsoft 365 - 75% */}
         <Grid.Col span={9}>
-          <M365Section data={m365Data} loading={m365Loading} error={m365Error} />
+          <M365Section data={m365Data} error={m365Error} />
         </Grid.Col>
 
         {/* Google Workspace - 25% */}
         <Grid.Col span={3}>
-          <WorkspaceSection data={workspaceData} loading={workspaceLoading} />
+          <WorkspaceSection data={workspaceData} />
         </Grid.Col>
       </Grid>
     </Box>
   );
 }
 
-function M365Section({ data, loading, error }: { data: any; loading: boolean; error: Error | null }) {
+function M365Section({ data, error }: { data: any; error: Error | null }) {
   if (error) {
     return (
       <Card shadow="md" padding="lg" style={{ background: 'var(--bg-secondary)', height: '100%' }}>
@@ -114,7 +114,7 @@ function M365Section({ data, loading, error }: { data: any; loading: boolean; er
   );
 }
 
-function WorkspaceSection({ data, loading }: { data: any; loading: boolean }) {
+function WorkspaceSection({ data }: { data: any }) {
   return (
     <Card shadow="md" padding="lg" style={{ background: 'var(--bg-secondary)', height: '100%' }}>
       <Stack gap="md" style={{ height: '100%' }}>
