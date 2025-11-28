@@ -1,4 +1,5 @@
-import { Box, RingProgress } from '@mantine/core';
+import { Box, RingProgress, ActionIcon, Group } from '@mantine/core';
+import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import { usePageRotation } from '../hooks/usePageRotation';
 import { InternetStatusPage } from '../pages/InternetStatusPage';
 import { CloudStatusPage } from '../pages/CloudStatusPage';
@@ -15,7 +16,7 @@ const pages = [
 ];
 
 export function PageContainer() {
-  const { currentPage, progress } = usePageRotation(pages.length, 45); // Rotate every 45 seconds
+  const { currentPage, progress, goNext, goPrevious } = usePageRotation(pages.length, 45); // Rotate every 45 seconds
 
   const CurrentPage = pages[currentPage].component;
 
@@ -28,8 +29,9 @@ export function PageContainer() {
         position: 'relative',
       }}
     >
-      {/* Progress Ring - Top Right */}
-      <Box
+      {/* Navigation Controls and Progress Ring - Top Right */}
+      <Group
+        gap="md"
         style={{
           position: 'absolute',
           top: '2vw',
@@ -37,12 +39,54 @@ export function PageContainer() {
           zIndex: 1000,
         }}
       >
+        <ActionIcon
+          size={50}
+          variant="filled"
+          color="dark.6"
+          onClick={goPrevious}
+          style={{
+            border: '2px solid #25262b',
+            transition: 'all 0.2s ease',
+          }}
+          styles={{
+            root: {
+              '&:hover': {
+                backgroundColor: '#25262b',
+                transform: 'scale(1.05)',
+              },
+            },
+          }}
+        >
+          <IconChevronLeft size={28} stroke={2} />
+        </ActionIcon>
+
+        <ActionIcon
+          size={50}
+          variant="filled"
+          color="dark.6"
+          onClick={goNext}
+          style={{
+            border: '2px solid #25262b',
+            transition: 'all 0.2s ease',
+          }}
+          styles={{
+            root: {
+              '&:hover': {
+                backgroundColor: '#25262b',
+                transform: 'scale(1.05)',
+              },
+            },
+          }}
+        >
+          <IconChevronRight size={28} stroke={2} />
+        </ActionIcon>
+
         <RingProgress
           size={80}
           thickness={6}
           sections={[{ value: progress, color: '#e53935' }]}
         />
-      </Box>
+      </Group>
 
       <CurrentPage />
     </Box>
