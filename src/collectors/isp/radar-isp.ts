@@ -185,28 +185,7 @@ async function fetchBGPIncidents(
       }
     }
 
-    // Check for BGP route leaks
-    const leakResponse = await fetch(
-      `${RADAR_BASE_URL}/bgp/leaks/events?involvedAsn=${asn}&dateRange=7d`,
-      { headers }
-    );
-
-    if (leakResponse.ok) {
-      const leakData = await leakResponse.json();
-
-      if (leakData.success && leakData.result?.events) {
-        leakData.result.events
-          .filter((event: any) => !event.endTime)
-          .forEach((event: any) => {
-            incidents.push({
-              type: 'leak',
-              description: `BGP Route Leak detected involving AS${asn}`,
-              startTime: event.startTime,
-              endTime: event.endTime,
-            });
-          });
-      }
-    }
+    // Note: BGP route leak detection disabled - feature is still in beta
 
     return incidents;
   } catch (error) {
