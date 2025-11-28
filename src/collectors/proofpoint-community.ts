@@ -1,9 +1,8 @@
 import type { CheckResult } from '../types';
 
 /**
- * Check Proofpoint's Salesforce Community status page
- * Since this is a dynamic Salesforce Community page, we'll do an HTTP check
- * and try to parse for incident indicators
+ * Check Proofpoint's unofficial status page (proofpointstatus.com)
+ * This is easier to parse than the official Salesforce Community page
  */
 export async function checkProofpointCommunityStatus(url: string): Promise<CheckResult> {
   try {
@@ -25,29 +24,22 @@ export async function checkProofpointCommunityStatus(url: string): Promise<Check
 
     const html = await response.text();
 
-    // Look for common incident indicators in the HTML
-    // Salesforce Community pages often include incident data in the page content
-    const hasIncident =
-      html.toLowerCase().includes('incident') ||
-      html.toLowerCase().includes('outage') ||
-      html.toLowerCase().includes('degraded') ||
-      html.toLowerCase().includes('maintenance');
+    // Look for the "all systems operational" message
+    // When operational, the unofficial status page shows: "All systems operational"
+    const isOperational = html.toLowerCase().includes('all systems operational');
 
-    // If the page loads successfully and doesn't show obvious incidents, assume operational
-    // This is a basic check - may need refinement based on actual page structure
-    if (!hasIncident) {
+    if (isOperational) {
       return {
         status: 'operational',
-        message: 'No incidents reported',
+        message: 'All systems operational',
         responseTime,
       };
     }
 
-    // If there are incident keywords, mark as degraded
-    // Would need more sophisticated parsing to determine if it's an actual outage
+    // If the "all systems operational" message is not found, assume there are incidents
     return {
       status: 'degraded',
-      message: 'Possible incident detected - check status page',
+      message: 'Incidents detected - check status page',
       responseTime,
     };
   } catch (error) {
