@@ -1,6 +1,7 @@
 import type { Env } from './types';
 import { handleScheduled } from './scheduled';
 import { handleApiRequest } from './api/routes';
+import { getAssetFromKV } from '@cloudflare/kv-asset-handler';
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -68,11 +69,35 @@ export default {
         });
       }
 
-      // Serve static frontend (will be handled by Workers Sites)
-      // For now, return a simple message
-      return new Response('MSP Dashboard - Frontend not yet deployed', {
-        headers: { 'Content-Type': 'text/plain', ...corsHeaders },
-      });
+      // Serve static frontend from Workers Sites
+      try {
+        return await getAssetFromKV(
+          {
+            request,
+            waitUntil: ctx.waitUntil.bind(ctx),
+          } as any,
+          {
+            ASSET_NAMESPACE: (env as any).__STATIC_CONTENT,
+            ASSET_MANIFEST: (env as any).__STATIC_CONTENT_MANIFEST,
+          }
+        );
+      } catch (e) {
+        // If asset not found, serve index.html for client-side routing
+        const notFoundResponse = await getAssetFromKV(
+          {
+            request: new Request(`${url.origin}/index.html`, request),
+            waitUntil: ctx.waitUntil.bind(ctx),
+          } as any,
+          {
+            ASSET_NAMESPACE: (env as any).__STATIC_CONTENT,
+            ASSET_MANIFEST: (env as any).__STATIC_CONTENT_MANIFEST,
+          }
+        );
+        return new Response(notFoundResponse.body, {
+          ...notFoundResponse,
+          status: 200,
+        });
+      }
     } catch (error) {
       console.error('Error handling request:', error);
       return new Response(JSON.stringify({
