@@ -25,6 +25,7 @@ export interface Service {
   check_type: CheckType;
   check_url?: string;
   statuspage_id?: string;
+  component_groups?: string;  // JSON array: ["Group Name 1", "Group Name 2"]
   supports_warning: number;
   display_order: number;
   created_at: string;

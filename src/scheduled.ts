@@ -1,6 +1,6 @@
 import type { Env, Service, CheckResult } from './types';
 import { performHttpCheck } from './collectors/http-check';
-import { checkStatuspageStatus } from './collectors/statuspage';
+import { checkStatuspageStatus, checkStatuspageStatusWithGroups } from './collectors/statuspage';
 import { checkStatusHubStatus } from './collectors/statushub';
 import { checkProofpointCommunityStatus } from './collectors/proofpoint-community';
 import { collectAWSStatus } from './collectors/cloud/aws';
@@ -113,8 +113,21 @@ async function runStatuspageChecks(env: Env): Promise<void> {
           // Use StatusHub parser for SonicWall
           checkResult = await checkStatusHubStatus(service.statuspage_id!);
         } else {
-          // Use standard Statuspage parser
-          checkResult = await checkStatuspageStatus(service.statuspage_id!);
+          // Parse component groups if present
+          let componentGroups: string[] | null = null;
+          if (service.component_groups) {
+            try {
+              componentGroups = JSON.parse(service.component_groups);
+            } catch (e) {
+              console.error(`Failed to parse component_groups for ${service.name}:`, e);
+            }
+          }
+
+          // Use standard Statuspage parser with optional group filtering
+          checkResult = await checkStatuspageStatusWithGroups(
+            service.statuspage_id!,
+            componentGroups
+          );
         }
 
         await recordStatusHistory(env, service.id, checkResult);
