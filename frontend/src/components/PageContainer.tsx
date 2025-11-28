@@ -3,7 +3,6 @@ import { usePageRotation } from '../hooks/usePageRotation';
 import { InternetStatusPage } from '../pages/InternetStatusPage';
 import { CloudStatusPage } from '../pages/CloudStatusPage';
 import { M365WorkspacePage } from '../pages/M365WorkspacePage';
-import { RadarAttacksPage } from '../pages/RadarAttacksPage';
 import { PowerGridPage } from '../pages/PowerGridPage';
 import { EventsPage } from '../pages/EventsPage';
 
@@ -11,7 +10,6 @@ const pages = [
   { name: 'Internet Status', component: InternetStatusPage },
   { name: 'Cloud Status', component: CloudStatusPage },
   { name: 'M365 & Workspace', component: M365WorkspacePage },
-  { name: 'Attack Activity', component: RadarAttacksPage },
   { name: 'Power Grid', component: PowerGridPage },
   { name: 'Events Timeline', component: EventsPage },
 ];
