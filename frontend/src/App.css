@@ -1,0 +1,74 @@
+:root {
+  /* Layout */
+  --ticker-height: 12vh;
+  --card-min-width: 8vw;
+  --page-padding: 2vw;
+
+  /* Typography */
+  --font-base: 1.2vw;
+  --font-lg: 1.8vw;
+  --font-xl: 2.4vw;
+  --spacing-base: 1vw;
+
+  /* Status Colors */
+  --status-operational: #2f9e44;
+  --status-degraded: #fab005;
+  --status-outage: #e03131;
+  --status-unknown: #495057;
+
+  /* Theme */
+  --accent-color: #e53935;
+  --bg-primary: #1a1b1e;
+  --bg-secondary: #25262b;
+  --text-primary: #c1c2c5;
+  --text-secondary: #909296;
+}
+
+@media (max-width: 1920px) {
+  :root {
+    --font-base: 16px;
+    --font-lg: 24px;
+    --font-xl: 32px;
+  }
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  overflow: hidden;
+}
+
+#root {
+  height: 100vh;
+  width: 100vw;
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.status-outage {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.ticker-track {
+  animation: scroll 60s linear infinite;
+}
+
+.ticker-track:hover {
+  animation-play-state: paused;
+}

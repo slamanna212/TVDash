@@ -1,0 +1,35 @@
+name = "msp-dashboard"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[triggers]
+crons = [
+  "* * * * *",        # Every minute
+  "*/5 * * * *",      # Every 5 minutes
+  "*/15 * * * *",     # Every 15 minutes
+  "0 3 * * *"         # Daily at 3 AM
+]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "msp-dashboard"
+database_id = "your-database-id-here"
+
+[site]
+bucket = "./frontend/dist"
+
+[vars]
+ENVIRONMENT = "production"
+ALERTS_ENABLED = "true"
+PAGE_ROTATION_SECONDS = "45"
+TICKER_REFRESH_SECONDS = "30"
+
+# Secrets (set via: wrangler secret put SECRET_NAME)
+# CF_RADAR_API_TOKEN
+# EIA_API_KEY
+# PJM_API_KEY
+# TEAMS_WEBHOOK_URL
+# M365_TENANT_ID
+# M365_CLIENT_ID
+# M365_CLIENT_SECRET
