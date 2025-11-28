@@ -13,19 +13,6 @@ interface ServiceCardProps {
 export function ServiceCard({ service }: ServiceCardProps) {
   const backgroundColor = statusColors[service.status];
 
-  const getStatusIcon = () => {
-    switch (service.status) {
-      case 'operational':
-        return '✓';
-      case 'degraded':
-        return '⚠';
-      case 'outage':
-        return '✗';
-      default:
-        return '?';
-    }
-  };
-
   return (
     <Box
       className={service.status === 'outage' ? 'status-outage' : ''}
@@ -46,18 +33,6 @@ export function ServiceCard({ service }: ServiceCardProps) {
     >
       <Text
         style={{
-          fontSize: 'calc(var(--font-base) * 1.5)',
-          fontWeight: 'bold',
-          color: '#fff',
-          textAlign: 'center',
-          lineHeight: 1.2,
-        }}
-      >
-        {getStatusIcon()}
-      </Text>
-
-      <Text
-        style={{
           fontSize: 'var(--font-base)',
           fontWeight: 600,
           color: '#fff',
@@ -67,18 +42,6 @@ export function ServiceCard({ service }: ServiceCardProps) {
       >
         {service.name}
       </Text>
-
-      {service.responseTime && (
-        <Text
-          style={{
-            fontSize: 'calc(var(--font-base) * 0.8)',
-            color: 'rgba(255, 255, 255, 0.9)',
-            textAlign: 'center',
-          }}
-        >
-          {service.responseTime}ms
-        </Text>
-      )}
     </Box>
   );
 }
