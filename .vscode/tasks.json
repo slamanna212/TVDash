@@ -276,7 +276,7 @@
     {
       "label": "Cron: Trigger 1-Minute",
       "type": "shell",
-      "command": "curl -X POST 'http://localhost:8787/__scheduled?cron=*%20*%20*%20*%20*'",
+      "command": "curl -X POST 'http://localhost:8787/api/trigger-scheduled?cron=*%20*%20*%20*%20*' | jq",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -291,7 +291,7 @@
     {
       "label": "Cron: Trigger 5-Minute",
       "type": "shell",
-      "command": "curl -X POST 'http://localhost:8787/__scheduled?cron=*%2F5%20*%20*%20*%20*'",
+      "command": "curl -X POST 'http://localhost:8787/api/trigger-scheduled?cron=*%2F5%20*%20*%20*%20*' | jq",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -306,7 +306,7 @@
     {
       "label": "Cron: Trigger 15-Minute",
       "type": "shell",
-      "command": "curl -X POST 'http://localhost:8787/__scheduled?cron=*%2F15%20*%20*%20*%20*'",
+      "command": "curl -X POST 'http://localhost:8787/api/trigger-scheduled?cron=*%2F15%20*%20*%20*%20*' | jq",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -321,7 +321,7 @@
     {
       "label": "Cron: Trigger Daily",
       "type": "shell",
-      "command": "curl -X POST 'http://localhost:8787/__scheduled?cron=0%203%20*%20*%20*'",
+      "command": "curl -X POST 'http://localhost:8787/api/trigger-scheduled?cron=0%203%20*%20*%20*' | jq",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",

@@ -29,6 +29,30 @@ export default {
         });
       }
 
+      // Manual trigger for scheduled tasks (development only)
+      if (url.pathname === '/api/trigger-scheduled') {
+        const cronParam = url.searchParams.get('cron') || '* * * * *';
+        console.log(`Manually triggering scheduled task with cron: ${cronParam}`);
+
+        // Create a mock ScheduledEvent
+        const mockEvent: ScheduledEvent = {
+          cron: cronParam,
+          scheduledTime: Date.now(),
+          type: 'scheduled',
+        };
+
+        // Run the scheduled handler
+        ctx.waitUntil(handleScheduled(mockEvent, env, ctx));
+
+        return new Response(JSON.stringify({
+          status: 'triggered',
+          cron: cronParam,
+          message: `Scheduled task triggered with cron: ${cronParam}`
+        }), {
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        });
+      }
+
       // API routes
       if (url.pathname.startsWith('/api/')) {
         const response = await handleApiRequest(request, env);
