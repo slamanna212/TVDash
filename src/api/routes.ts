@@ -2,7 +2,6 @@ import type { Env } from '../types';
 import { getServices } from './services';
 import { getCloudStatus } from './cloud';
 import { getM365Status } from './m365';
-import { getGWorkspaceStatus } from './gworkspace';
 import { getInternetStatus } from './internet';
 import { getRadarAttacks } from './radar';
 import { getServiceHistory } from '../db/queries';
@@ -59,11 +58,6 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
     // GET /api/m365 - Microsoft 365 status
     if (path === '/api/m365' && request.method === 'GET') {
       return await getM365Status(env);
-    }
-
-    // GET /api/gworkspace - Google Workspace status
-    if (path === '/api/gworkspace' && request.method === 'GET') {
-      return await getGWorkspaceStatus(env);
     }
 
     // GET /api/radar/attacks - Attack activity data

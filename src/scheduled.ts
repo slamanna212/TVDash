@@ -2,11 +2,11 @@ import type { Env, Service, CheckResult } from './types';
 import { performHttpCheck } from './collectors/http-check';
 import { checkStatuspageStatus } from './collectors/statuspage';
 import { checkStatusHubStatus } from './collectors/statushub';
+import { checkProofpointCommunityStatus } from './collectors/proofpoint-community';
 import { collectAWSStatus } from './collectors/cloud/aws';
 import { collectAzureStatus } from './collectors/cloud/azure';
 import { collectGCPStatus } from './collectors/cloud/gcp';
 import { collectM365Status } from './collectors/productivity/microsoft';
-import { collectGWorkspaceStatus } from './collectors/productivity/gworkspace';
 
 export async function handleScheduled(
   event: ScheduledEvent,
@@ -28,6 +28,7 @@ export async function handleScheduled(
       console.log('Running 5-minute tasks');
       await Promise.all([
         runStatuspageChecks(env),
+        runCustomChecks(env),
         runCloudStatusChecks(env),
         runProductivityChecks(env),
       ]);
@@ -132,6 +133,54 @@ async function runStatuspageChecks(env: Env): Promise<void> {
 }
 
 /**
+ * Check custom status pages (Proofpoint Salesforce Community, etc.)
+ */
+async function runCustomChecks(env: Env): Promise<void> {
+  try {
+    // Get all services with check_type = 'custom'
+    const result = await env.DB.prepare(`
+      SELECT * FROM services WHERE check_type = 'custom' AND statuspage_id IS NOT NULL
+    `).all();
+
+    if (!result.success || !result.results) {
+      console.error('Failed to fetch custom services');
+      return;
+    }
+
+    const services = result.results as Service[];
+
+    // Check each service
+    for (const service of services) {
+      try {
+        let checkResult: CheckResult;
+
+        // Route to appropriate custom parser based on service name or URL
+        if (service.name === 'Proofpoint' || service.statuspage_id!.includes('proofpoint')) {
+          checkResult = await checkProofpointCommunityStatus(service.statuspage_id!);
+        } else {
+          // Default to HTTP check for unknown custom services
+          checkResult = {
+            status: 'unknown',
+            message: 'No custom parser available',
+          };
+        }
+
+        await recordStatusHistory(env, service.id, checkResult);
+        console.log(`✓ ${service.name}: ${checkResult.status}`);
+      } catch (error) {
+        console.error(`✗ ${service.name}:`, error);
+        await recordStatusHistory(env, service.id, {
+          status: 'unknown',
+          message: 'Check failed',
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error in custom checks:', error);
+  }
+}
+
+/**
  * Check cloud provider status (AWS, Azure, GCP)
  */
 async function runCloudStatusChecks(env: Env): Promise<void> {
@@ -167,7 +216,7 @@ async function runCloudStatusChecks(env: Env): Promise<void> {
 }
 
 /**
- * Check productivity suites (M365, Google Workspace)
+ * Check productivity suites (M365)
  */
 async function runProductivityChecks(env: Env): Promise<void> {
   try {
@@ -187,20 +236,6 @@ async function runProductivityChecks(env: Env): Promise<void> {
     }
 
     console.log(`✓ M365: ${m365.overall} (${m365.services.length} services)`);
-
-    // Check Google Workspace
-    const workspace = await collectGWorkspaceStatus(env);
-
-    await env.DB.prepare(`
-      INSERT INTO gworkspace_status (overall_status, incidents, checked_at)
-      VALUES (?, ?, ?)
-    `).bind(
-      workspace.overall,
-      JSON.stringify(workspace.services),
-      workspace.lastChecked
-    ).run();
-
-    console.log(`✓ Google Workspace: ${workspace.overall}`);
   } catch (error) {
     console.error('Error checking productivity suites:', error);
   }
@@ -254,11 +289,6 @@ async function cleanupOldData(env: Env): Promise<void> {
       'DELETE FROM m365_health WHERE checked_at < ?'
     ).bind(timestamp).run();
 
-    // Clean up old workspace status
-    const workspaceResult = await env.DB.prepare(
-      'DELETE FROM gworkspace_status WHERE checked_at < ?'
-    ).bind(timestamp).run();
-
     // Clean up old events
     const eventsResult = await env.DB.prepare(
       'DELETE FROM events WHERE created_at < ? OR (expires_at IS NOT NULL AND expires_at < ?)'
@@ -273,7 +303,6 @@ async function cleanupOldData(env: Env): Promise<void> {
       statusHistory: statusResult.meta?.changes || 0,
       cloudStatus: cloudResult.meta?.changes || 0,
       m365Health: m365Result.meta?.changes || 0,
-      workspaceStatus: workspaceResult.meta?.changes || 0,
       events: eventsResult.meta?.changes || 0,
       cache: cacheResult.meta?.changes || 0,
     });

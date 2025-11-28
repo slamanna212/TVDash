@@ -60,22 +60,6 @@ export interface M365Response {
   lastChecked: string;
 }
 
-export interface GWorkspaceService {
-  name: string;
-  status: 'operational' | 'degraded' | 'outage' | 'unknown';
-  incident?: {
-    title: string;
-    description: string;
-    startTime: string;
-  };
-}
-
-export interface GWorkspaceResponse {
-  overall: string;
-  services: GWorkspaceService[];
-  lastChecked: string;
-}
-
 export interface ISPMetrics {
   isp: {
     id: number;
@@ -188,10 +172,6 @@ class APIClient {
 
   async getM365(): Promise<M365Response> {
     return this.fetch<M365Response>('/api/m365');
-  }
-
-  async getGWorkspace(): Promise<GWorkspaceResponse> {
-    return this.fetch<GWorkspaceResponse>('/api/gworkspace');
   }
 
   async getRadarAttacks(): Promise<AttackData> {
