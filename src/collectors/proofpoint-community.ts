@@ -1,8 +1,8 @@
 import type { CheckResult } from '../types';
 
 /**
- * Check Proofpoint's unofficial status page (proofpointstatus.com)
- * This is easier to parse than the official Salesforce Community page
+ * Check StatusGator-based status pages
+ * Supports both proofpointstatus.com and statusgator.com pages
  */
 export async function checkProofpointCommunityStatus(url: string): Promise<CheckResult> {
   try {
@@ -23,10 +23,14 @@ export async function checkProofpointCommunityStatus(url: string): Promise<Check
     }
 
     const html = await response.text();
+    const htmlLower = html.toLowerCase();
 
-    // Look for the "all systems operational" message
-    // When operational, the unofficial status page shows: "All systems operational"
-    const isOperational = html.toLowerCase().includes('all systems operational');
+    // Check for various operational indicators
+    // - proofpointstatus.com: "All systems operational"
+    // - statusgator.com: "currently operational"
+    const isOperational =
+      htmlLower.includes('all systems operational') ||
+      htmlLower.includes('currently operational');
 
     if (isOperational) {
       return {
@@ -36,14 +40,14 @@ export async function checkProofpointCommunityStatus(url: string): Promise<Check
       };
     }
 
-    // If the "all systems operational" message is not found, assume there are incidents
+    // If no operational message is found, assume there are incidents
     return {
       status: 'degraded',
       message: 'Incidents detected - check status page',
       responseTime,
     };
   } catch (error) {
-    console.error('Proofpoint Community check failed:', error);
+    console.error('StatusGator check failed:', error);
     return {
       status: 'unknown',
       message: error instanceof Error ? error.message : 'Check failed',

@@ -146,7 +146,7 @@ async function runStatuspageChecks(env: Env): Promise<void> {
 }
 
 /**
- * Check custom status pages (Proofpoint Salesforce Community, etc.)
+ * Check custom status pages (StatusGator-based pages, etc.)
  */
 async function runCustomChecks(env: Env): Promise<void> {
   try {
@@ -168,7 +168,12 @@ async function runCustomChecks(env: Env): Promise<void> {
         let checkResult: CheckResult;
 
         // Route to appropriate custom parser based on service name or URL
-        if (service.name === 'Proofpoint' || service.statuspage_id!.includes('proofpoint')) {
+        if (
+          service.name === 'Proofpoint' ||
+          service.name === 'CrowdStrike' ||
+          service.statuspage_id!.includes('proofpoint') ||
+          service.statuspage_id!.includes('statusgator')
+        ) {
           checkResult = await checkProofpointCommunityStatus(service.statuspage_id!);
         } else {
           // Default to HTTP check for unknown custom services
