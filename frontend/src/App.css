@@ -68,7 +68,3 @@ body {
 .ticker-track {
   animation: scroll 90s linear infinite;
 }
-
-.ticker-track:hover {
-  animation-play-state: paused;
-}
