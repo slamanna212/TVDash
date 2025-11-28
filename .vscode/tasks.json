@@ -1,0 +1,481 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Worker: Dev Server",
+      "type": "shell",
+      "command": "npm run dev",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": false,
+        "clear": true
+      },
+      "group": "build",
+      "runOptions": {
+        "instanceLimit": 1
+      },
+      "icon": {
+        "id": "server",
+        "color": "terminal.ansiYellow"
+      }
+    },
+    {
+      "label": "Frontend: Dev Server",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": {
+        "cwd": "${workspaceFolder}/frontend"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": false,
+        "clear": true
+      },
+      "group": "build",
+      "runOptions": {
+        "instanceLimit": 1
+      },
+      "icon": {
+        "id": "browser",
+        "color": "terminal.ansiCyan"
+      }
+    },
+    {
+      "label": "Dev: Start All",
+      "dependsOn": ["Worker: Dev Server", "Frontend: Dev Server"],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "icon": {
+        "id": "rocket",
+        "color": "terminal.ansiGreen"
+      }
+    },
+    {
+      "label": "Frontend: Build",
+      "type": "shell",
+      "command": "npm run build",
+      "options": {
+        "cwd": "${workspaceFolder}/frontend"
+      },
+      "problemMatcher": ["$tsc"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "group": "build",
+      "icon": {
+        "id": "package",
+        "color": "terminal.ansiBlue"
+      }
+    },
+    {
+      "label": "Frontend: Preview Build",
+      "type": "shell",
+      "command": "npm run preview",
+      "options": {
+        "cwd": "${workspaceFolder}/frontend"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": "test",
+      "icon": {
+        "id": "eye",
+        "color": "terminal.ansiMagenta"
+      }
+    },
+    {
+      "label": "Deploy: Production",
+      "type": "shell",
+      "command": "npm run deploy",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": true,
+        "clear": true
+      },
+      "group": "none",
+      "icon": {
+        "id": "cloud-upload",
+        "color": "terminal.ansiGreen"
+      }
+    },
+    {
+      "label": "Database: Create D1",
+      "type": "shell",
+      "command": "npx wrangler d1 create msp-dashboard",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": true
+      },
+      "group": "none",
+      "icon": {
+        "id": "database",
+        "color": "terminal.ansiYellow"
+      }
+    },
+    {
+      "label": "Database: Run Migrations",
+      "type": "shell",
+      "command": "npx wrangler d1 migrations apply msp-dashboard",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": true
+      },
+      "group": "none",
+      "icon": {
+        "id": "database",
+        "color": "terminal.ansiGreen"
+      }
+    },
+    {
+      "label": "Database: Query D1",
+      "type": "shell",
+      "command": "npx wrangler d1 execute msp-dashboard --command=\"${input:sqlQuery}\"",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": true
+      },
+      "group": "none",
+      "icon": {
+        "id": "database",
+        "color": "terminal.ansiCyan"
+      }
+    },
+    {
+      "label": "Cloudflare: Login",
+      "type": "shell",
+      "command": "npx wrangler login",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": true
+      },
+      "group": "none",
+      "icon": {
+        "id": "key",
+        "color": "terminal.ansiYellow"
+      }
+    },
+    {
+      "label": "Cloudflare: Logout",
+      "type": "shell",
+      "command": "npx wrangler logout",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": "none",
+      "icon": {
+        "id": "sign-out",
+        "color": "terminal.ansiRed"
+      }
+    },
+    {
+      "label": "Cloudflare: Whoami",
+      "type": "shell",
+      "command": "npx wrangler whoami",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": "none",
+      "icon": {
+        "id": "person",
+        "color": "terminal.ansiCyan"
+      }
+    },
+    {
+      "label": "Secrets: Set Radar Token",
+      "type": "shell",
+      "command": "npx wrangler secret put CF_RADAR_API_TOKEN",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": true
+      },
+      "group": "none",
+      "icon": {
+        "id": "lock",
+        "color": "terminal.ansiRed"
+      }
+    },
+    {
+      "label": "Secrets: Set M365 Credentials",
+      "type": "shell",
+      "command": "npx wrangler secret put M365_TENANT_ID && npx wrangler secret put M365_CLIENT_ID && npx wrangler secret put M365_CLIENT_SECRET",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": true
+      },
+      "group": "none",
+      "icon": {
+        "id": "lock",
+        "color": "terminal.ansiRed"
+      }
+    },
+    {
+      "label": "Secrets: Set Teams Webhook",
+      "type": "shell",
+      "command": "npx wrangler secret put TEAMS_WEBHOOK_URL",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": true
+      },
+      "group": "none",
+      "icon": {
+        "id": "lock",
+        "color": "terminal.ansiRed"
+      }
+    },
+    {
+      "label": "Secrets: Set EIA API Key",
+      "type": "shell",
+      "command": "npx wrangler secret put EIA_API_KEY",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": true
+      },
+      "group": "none",
+      "icon": {
+        "id": "lock",
+        "color": "terminal.ansiRed"
+      }
+    },
+    {
+      "label": "Cron: Trigger 1-Minute",
+      "type": "shell",
+      "command": "curl -X POST http://localhost:8787/__scheduled?cron=*+*+*+*+*",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": "test",
+      "icon": {
+        "id": "clock",
+        "color": "terminal.ansiYellow"
+      }
+    },
+    {
+      "label": "Cron: Trigger 5-Minute",
+      "type": "shell",
+      "command": "curl -X POST http://localhost:8787/__scheduled?cron=*/5+*+*+*+*",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": "test",
+      "icon": {
+        "id": "clock",
+        "color": "terminal.ansiGreen"
+      }
+    },
+    {
+      "label": "Cron: Trigger 15-Minute",
+      "type": "shell",
+      "command": "curl -X POST http://localhost:8787/__scheduled?cron=*/15+*+*+*+*",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": "test",
+      "icon": {
+        "id": "clock",
+        "color": "terminal.ansiCyan"
+      }
+    },
+    {
+      "label": "Test: Health Check",
+      "type": "shell",
+      "command": "curl http://localhost:8787/health | jq",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": "test",
+      "icon": {
+        "id": "pulse",
+        "color": "terminal.ansiGreen"
+      }
+    },
+    {
+      "label": "Test: API Services",
+      "type": "shell",
+      "command": "curl http://localhost:8787/api/services | jq",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": "test",
+      "icon": {
+        "id": "json",
+        "color": "terminal.ansiCyan"
+      }
+    },
+    {
+      "label": "Test: API Cloud",
+      "type": "shell",
+      "command": "curl http://localhost:8787/api/cloud | jq",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": "test",
+      "icon": {
+        "id": "cloud",
+        "color": "terminal.ansiBlue"
+      }
+    },
+    {
+      "label": "Install: Worker Dependencies",
+      "type": "shell",
+      "command": "npm install",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": "none",
+      "icon": {
+        "id": "package",
+        "color": "terminal.ansiGreen"
+      }
+    },
+    {
+      "label": "Install: Frontend Dependencies",
+      "type": "shell",
+      "command": "npm install",
+      "options": {
+        "cwd": "${workspaceFolder}/frontend"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": "none",
+      "icon": {
+        "id": "package",
+        "color": "terminal.ansiBlue"
+      }
+    },
+    {
+      "label": "Install: All Dependencies",
+      "dependsOn": ["Install: Worker Dependencies", "Install: Frontend Dependencies"],
+      "problemMatcher": [],
+      "group": "none",
+      "icon": {
+        "id": "package",
+        "color": "terminal.ansiMagenta"
+      }
+    },
+    {
+      "label": "Update: Wrangler to v4",
+      "type": "shell",
+      "command": "npm install --save-dev wrangler@4",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": true
+      },
+      "group": "none",
+      "icon": {
+        "id": "arrow-up",
+        "color": "terminal.ansiYellow"
+      }
+    },
+    {
+      "label": "Logs: Tail Production",
+      "type": "shell",
+      "command": "npx wrangler tail",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": false
+      },
+      "group": "none",
+      "isBackground": true,
+      "icon": {
+        "id": "output",
+        "color": "terminal.ansiYellow"
+      }
+    },
+    {
+      "label": "Clean: Build Artifacts",
+      "type": "shell",
+      "command": "rm -rf dist frontend/dist .wrangler",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "group": "none",
+      "icon": {
+        "id": "trash",
+        "color": "terminal.ansiRed"
+      }
+    },
+    {
+      "label": "Clean: Node Modules",
+      "type": "shell",
+      "command": "rm -rf node_modules frontend/node_modules",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "group": "none",
+      "icon": {
+        "id": "trash",
+        "color": "terminal.ansiRed"
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "sqlQuery",
+      "type": "promptString",
+      "description": "Enter SQL query to execute",
+      "default": "SELECT * FROM services LIMIT 10;"
+    }
+  ]
+}
