@@ -30,17 +30,9 @@ export function InternetStatusPage() {
 
   return (
     <Box style={{ height: '100%', width: '100%' }}>
-      <Group justify="space-between" align="flex-start" mb="2vw">
-        <Title order={1} style={{ fontSize: 'var(--font-xl)' }}>
-          Internet Status
-        </Title>
-        {data && (
-          <Group gap="md">
-            <Text size="lg" c="dimmed">Overall:</Text>
-            <StatusBadge status={data.overallStatus} size="lg" />
-          </Group>
-        )}
-      </Group>
+      <Title order={1} style={{ fontSize: 'var(--font-xl)', marginBottom: '2vw' }}>
+        Internet Status
+      </Title>
 
       <Grid gutter="xl">
         {data?.isps.map((ispMetrics) => (

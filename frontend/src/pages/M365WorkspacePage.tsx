@@ -44,12 +44,9 @@ function M365Section({ data, error }: { data: any; error: Error | null }) {
   return (
     <Card shadow="md" padding="lg" style={{ background: 'var(--bg-secondary)', height: '100%' }}>
       <Stack gap="md" style={{ height: '100%' }}>
-        <Group justify="space-between">
-          <Text size="calc(var(--font-lg) * 1.2)" fw={700}>
-            Microsoft 365
-          </Text>
-          {data && <StatusBadge status={data.overall as any} size="lg" />}
-        </Group>
+        <Text size="calc(var(--font-lg) * 1.2)" fw={700}>
+          Microsoft 365
+        </Text>
 
         {data && data.services && data.services.length > 0 ? (
           <SimpleGrid cols={2} spacing="md">
