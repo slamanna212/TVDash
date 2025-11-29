@@ -69,10 +69,14 @@ export interface ISPMetrics {
   };
   status: 'operational' | 'degraded' | 'outage' | 'unknown';
   metrics: {
-    bandwidthPercentile: number | null;
-    latencyPercentile: number | null;
+    latencyMs: number | null;      // Median latency in ms
     jitterMs: number | null;
   };
+  rpki: {
+    validPercentage: number;       // % of routes that are RPKI valid
+    unknownPercentage: number;     // % of routes with unknown RPKI status
+    invalidPercentage: number;     // % of routes that are RPKI invalid
+  } | null;
   anomalies: Array<{
     type: string;
     severity: string;

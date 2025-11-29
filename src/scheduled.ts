@@ -293,6 +293,7 @@ async function runISPChecks(env: Env): Promise<void> {
         null,
         JSON.stringify({
           metrics: metric.metrics,
+          rpki: metric.rpki,
           anomalies: metric.anomalies,
           bgpIncidents: metric.bgpIncidents,
         }),

@@ -1,8 +1,20 @@
-import { Box, Title, Grid, Card, Text, Badge, Stack, Group, Loader, Center, Progress } from '@mantine/core';
+import { Box, Title, Grid, Card, Text, Badge, Stack, Group, Loader, Center, RingProgress } from '@mantine/core';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import { apiClient, ISPMetrics } from '../api/client';
 import { StatusBadge } from '../components/StatusBadge';
 import { statusColors } from '../theme';
+
+function getSecondaryASNsText(secondaryAsns: string): string {
+  try {
+    const asns = JSON.parse(secondaryAsns);
+    if (Array.isArray(asns) && asns.length > 0) {
+      return `, AS${asns.join(', AS')}`;
+    }
+  } catch (e) {
+    // Ignore parse errors
+  }
+  return '';
+}
 
 export function InternetStatusPage() {
   const { data, loading, error } = useAutoRefresh(
@@ -36,7 +48,7 @@ export function InternetStatusPage() {
 
       <Grid gutter="xl">
         {data?.isps.map((ispMetrics) => (
-          <Grid.Col key={ispMetrics.isp.id} span={6}>
+          <Grid.Col key={ispMetrics.isp.id} span={4}>
             <ISPCard ispMetrics={ispMetrics} />
           </Grid.Col>
         ))}
@@ -62,68 +74,47 @@ function ISPCard({ ispMetrics }: { ispMetrics: ISPMetrics }) {
       <Stack gap="md">
         {/* ISP Header */}
         <Group justify="space-between" align="flex-start">
-          <Box>
-            <Text
-              size="calc(var(--font-lg) * 1.2)"
-              fw={700}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-            >
-              <span>🌐</span>
-              {ispMetrics.isp.name}
-            </Text>
-            <Text size="sm" c="dimmed">
-              AS{ispMetrics.isp.primary_asn}
-            </Text>
-          </Box>
+          <Group align="flex-start" gap="md">
+            {/* RPKI Validation Stats */}
+            {ispMetrics.rpki &&
+             ispMetrics.rpki.validPercentage !== null &&
+             ispMetrics.rpki.unknownPercentage !== null &&
+             ispMetrics.rpki.invalidPercentage !== null ? (
+              <Box style={{ textAlign: 'center' }}>
+                <RingProgress
+                  size={120}
+                  thickness={12}
+                  sections={[
+                    { value: ispMetrics.rpki.validPercentage, color: 'green', tooltip: `Valid: ${ispMetrics.rpki.validPercentage.toFixed(1)}%` },
+                    { value: ispMetrics.rpki.unknownPercentage, color: 'gray', tooltip: `Unknown: ${ispMetrics.rpki.unknownPercentage.toFixed(1)}%` },
+                    { value: ispMetrics.rpki.invalidPercentage, color: 'red', tooltip: `Invalid: ${ispMetrics.rpki.invalidPercentage.toFixed(1)}%` },
+                  ]}
+                  label={
+                    <Text size="xs" ta="center" fw={700}>
+                      BGP
+                    </Text>
+                  }
+                />
+              </Box>
+            ) : (
+              <Box style={{ width: 120, height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Text size="4rem">🌐</Text>
+              </Box>
+            )}
+
+            <Box>
+              <Text size="calc(var(--font-lg) * 1.2)" fw={700}>
+                {ispMetrics.isp.name}
+              </Text>
+              <Text size="sm" c="dimmed">
+                AS{ispMetrics.isp.primary_asn}
+                {ispMetrics.isp.secondary_asns && getSecondaryASNsText(ispMetrics.isp.secondary_asns)}
+              </Text>
+            </Box>
+          </Group>
+
           <StatusBadge status={ispMetrics.status} size="lg" />
         </Group>
-
-        {/* Quality Metrics */}
-        <Stack gap="sm">
-          <Text fw={600} size="lg">Internet Quality Index:</Text>
-
-          {ispMetrics.metrics.bandwidthPercentile !== null && (
-            <Box>
-              <Group justify="space-between" mb="xs">
-                <Text size="sm">Bandwidth Percentile</Text>
-                <Text size="sm" fw={600}>{ispMetrics.metrics.bandwidthPercentile}th</Text>
-              </Group>
-              <Progress
-                value={ispMetrics.metrics.bandwidthPercentile}
-                color={getPercentileColor(ispMetrics.metrics.bandwidthPercentile)}
-                size="lg"
-              />
-            </Box>
-          )}
-
-          {ispMetrics.metrics.latencyPercentile !== null && (
-            <Box>
-              <Group justify="space-between" mb="xs">
-                <Text size="sm">Latency Percentile</Text>
-                <Text size="sm" fw={600}>{ispMetrics.metrics.latencyPercentile}th</Text>
-              </Group>
-              <Progress
-                value={ispMetrics.metrics.latencyPercentile}
-                color={getPercentileColor(ispMetrics.metrics.latencyPercentile)}
-                size="lg"
-              />
-            </Box>
-          )}
-
-          {ispMetrics.metrics.jitterMs !== null && (
-            <Group justify="space-between">
-              <Text size="sm">Jitter</Text>
-              <Text size="sm" fw={600}>{ispMetrics.metrics.jitterMs.toFixed(2)} ms</Text>
-            </Group>
-          )}
-
-          {ispMetrics.metrics.bandwidthPercentile === null &&
-           ispMetrics.metrics.latencyPercentile === null && (
-            <Text c="dimmed" size="sm">
-              No metrics available
-            </Text>
-          )}
-        </Stack>
 
         {/* Traffic Anomalies */}
         {ispMetrics.anomalies.length > 0 && (
@@ -194,19 +185,20 @@ function ISPCard({ ispMetrics }: { ispMetrics: ISPMetrics }) {
           </Text>
         )}
 
-        {/* Last Checked */}
-        <Text size="xs" c="dimmed" mt="auto">
-          Last checked: {new Date(ispMetrics.lastChecked).toLocaleTimeString()}
-        </Text>
+        {/* Last Checked & Average Latency */}
+        <Group justify="space-between" mt="auto">
+          <Text size="xs" c="dimmed">
+            Last checked: {new Date(ispMetrics.lastChecked).toLocaleTimeString()}
+          </Text>
+          {ispMetrics.metrics.latencyMs !== null && (
+            <Text size="sm" fw={600}>
+              Average Latency: {ispMetrics.metrics.latencyMs.toFixed(1)}ms
+            </Text>
+          )}
+        </Group>
       </Stack>
     </Card>
   );
-}
-
-function getPercentileColor(percentile: number): string {
-  if (percentile >= 75) return 'green';
-  if (percentile >= 50) return 'yellow';
-  return 'red';
 }
 
 function getSeverityColor(severity: string): string {
