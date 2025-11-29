@@ -24,18 +24,20 @@ External APIs → Cloudflare Workers (Cron Collectors) → D1 Database → API R
 ### MSP Tools (13 Services)
 All monitored via public status pages - NO internal URLs:
 
-| Service | Type | 
+| Service | Type |
 |---------|------|
-| IT Glue | Statuspage | 
-| Datto | Statuspage | 
-| Proofpoint | Statuspage | 
-| Cisco Umbrella | Statuspage | 
+| IT Glue | Statuspage |
+| Datto | Statuspage |
+| Proofpoint | Statuspage + Custom |
+| Cisco Umbrella | Statuspage |
 | Duo | Statuspage |
 | SonicWall | StatusHub |
 | Huntress | Statuspage |
 | CrowdStrike | Statuspage |
 | Microsoft 365 | Graph API |
 | Google Workspace | JSON API |
+
+**Note on Proofpoint:** Uses a custom collector (src/collectors/proofpoint-community.ts) that handles both proofpointstatus.com and statusgator.com style pages with fallback to standard Statuspage format.
 
 **Note:** ConnectWise Manage, Automate, and ScreenConnect have been REMOVED from this implementation as we only monitor public status pages. The database migration includes them but they are not actively checked.
 
@@ -185,7 +187,7 @@ Monitored via Cloudflare Radar API:
 | `GET /api/gworkspace` | ✅ | Google Workspace status |
 | `GET /api/internet` | ✅ | ISP status via Radar |
 | `GET /api/radar/attacks` | ✅ | DDoS attack data |
-| `GET /api/services/:id/history` | 🔲 | Historical data (TODO) |
+| `GET /api/services/:id/history` | ✅ | Historical data with configurable date range |
 | `GET /api/grid` | 🔲 | Power grid status (TODO) |
 | `GET /api/events` | 🔲 | Event timeline (TODO) |
 
@@ -425,15 +427,20 @@ unknown    - Cannot determine status (API error, not configured)
 
 ## Future Enhancements
 
+**Planned:**
 - [ ] Power grid monitoring (EIA API)
 - [ ] Teams alerting on status changes
 - [ ] Events timeline page
-- [ ] Service history charts
-- [ ] Attack data visualization (charts)
-- [ ] Internet status page with ISP details
-- [ ] More granular alert configuration
-- [ ] Historical uptime reports
-- [ ] Mobile-responsive view (for checking on phone)
+- [ ] Uptime percentage display on service cards
+- [ ] M365 & Cloud status page enhancements (details TBD)
+
+**Not Currently Planned:**
+- Service history charts (API exists but no UI for now)
+- Mobile-responsive view
+- Enhanced Radar IQI/Speed metrics
+- Alert configuration UI
+
+**See TODO.md for detailed implementation tasks.**
 
 ## References
 

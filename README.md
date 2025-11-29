@@ -226,7 +226,8 @@ msp-dashboard/
 
 ### MSP Tools (13 services)
 - ConnectWise Manage, Automate, ScreenConnect (HTTP checks)
-- IT Glue, Datto, Proofpoint, Cisco Umbrella, Duo, Huntress, CrowdStrike (Statuspage)
+- IT Glue, Datto, Cisco Umbrella, Duo, Huntress, CrowdStrike (Statuspage)
+- Proofpoint (Custom collector with Statuspage fallback)
 - SonicWall (StatusHub)
 - Microsoft 365 (Graph API)
 - Google Workspace (JSON feed)
@@ -250,37 +251,32 @@ msp-dashboard/
 
 | Endpoint | Description |
 |----------|-------------|
-| `GET /api/services` | All services with current status |
-| `GET /api/services/:id/history` | Historical data (TODO) |
-| `GET /api/internet` | ISP status (TODO) |
-| `GET /api/cloud` | Cloud provider status (TODO) |
-| `GET /api/m365` | M365 health (TODO) |
-| `GET /api/gworkspace` | Google Workspace status (TODO) |
-| `GET /api/radar/attacks` | Attack data (TODO) |
+| `GET /api/services` | All services with current status ✅ |
+| `GET /api/services/:id/history` | Historical data ✅ |
+| `GET /api/cloud` | Cloud provider status ✅ |
+| `GET /api/m365` | M365 health ✅ |
+| `GET /api/gworkspace` | Google Workspace status ✅ |
+| `GET /api/internet` | ISP status ✅ |
+| `GET /api/radar/attacks` | Attack data ✅ |
 | `GET /api/grid` | Power grid status (TODO) |
 | `GET /api/events` | Event timeline (TODO) |
 
 ## Next Steps
 
-### Immediate (Required for Basic Functionality)
-1. ✅ Install dependencies and set up Cloudflare
-2. ✅ Create D1 database and run migrations
-3. 🔲 Implement cron collectors to populate status data
-4. 🔲 Wire up remaining API endpoints
-5. 🔲 Test ticker with live data
+**See [TODO.md](./TODO.md) for the complete prioritized task list.**
 
-### Short-term (Enhanced Dashboard)
-1. Build out dashboard page components with real data
-2. Implement Cloudflare Radar integration
-3. Implement Power Grid monitoring
-4. Create unified events timeline
+### Current Status
+- ✅ Backend fully functional with all major collectors
+- ✅ 7/9 API endpoints implemented
+- ✅ 4/6 dashboard pages fully built
+- ✅ Historical data recording and API working
+- 🔲 Power Grid monitoring (needs EIA_API_KEY)
+- 🔲 Events timeline (infrastructure exists, needs wiring)
+- 🔲 Teams alerting (needs TEAMS_WEBHOOK_URL)
 
-### Long-term (Production Ready)
-1. Implement Teams alerting system
-2. Add error handling and fallbacks
-3. Optimize for 4K display
-4. Performance testing
-5. Production deployment
+### Quick Wins (Start Here)
+1. Uptime percentage display (1-2 hours)
+2. Events timeline page (3-5 hours)
 
 ## Cron Schedule
 
