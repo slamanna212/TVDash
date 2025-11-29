@@ -67,7 +67,6 @@ function CloudProviderCard({ provider }: { provider: CloudProvider }) {
       style={{
         height: '100%',
         background: 'var(--bg-secondary)',
-        border: `2px solid ${statusColors[provider.status]}`,
       }}
     >
       <Stack gap="md">

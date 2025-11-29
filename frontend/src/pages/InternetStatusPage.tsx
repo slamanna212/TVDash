@@ -68,7 +68,6 @@ function ISPCard({ ispMetrics }: { ispMetrics: ISPMetrics }) {
       style={{
         height: '100%',
         background: 'var(--bg-secondary)',
-        border: `2px solid ${statusColors[ispMetrics.status]}`,
       }}
     >
       <Stack gap="md">
