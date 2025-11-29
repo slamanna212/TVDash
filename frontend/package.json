@@ -1,5 +1,5 @@
 {
-  "name": "msp-dashboard-frontend",
+  "name": "drone-frontend",
   "version": "1.0.0",
   "private": true,
   "type": "module",
