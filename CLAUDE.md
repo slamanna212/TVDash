@@ -24,18 +24,18 @@ External APIs → Cloudflare Workers (Cron Collectors) → D1 Database → API R
 ### MSP Tools (13 Services)
 All monitored via public status pages - NO internal URLs:
 
-| Service | Type | URL |
-|---------|------|-----|
-| IT Glue | Statuspage | https://status.itglue.com |
-| Datto | Statuspage | https://status.datto.com |
-| Proofpoint | Statuspage | https://status.proofpoint.com |
-| Cisco Umbrella | Statuspage | https://status.umbrella.com |
-| Duo | Statuspage | https://status.duo.com |
-| SonicWall | StatusHub | https://status.sonicwall.com |
-| Huntress | Statuspage | https://status.huntress.io |
-| CrowdStrike | Statuspage | https://status.crowdstrike.com |
-| Microsoft 365 | Graph API | Microsoft Graph Service Health API |
-| Google Workspace | JSON API | https://www.google.com/appsstatus/dashboard/incidents.json |
+| Service | Type | 
+|---------|------|
+| IT Glue | Statuspage | 
+| Datto | Statuspage | 
+| Proofpoint | Statuspage | 
+| Cisco Umbrella | Statuspage | 
+| Duo | Statuspage |
+| SonicWall | StatusHub |
+| Huntress | Statuspage |
+| CrowdStrike | Statuspage |
+| Microsoft 365 | Graph API |
+| Google Workspace | JSON API |
 
 **Note:** ConnectWise Manage, Automate, and ScreenConnect have been REMOVED from this implementation as we only monitor public status pages. The database migration includes them but they are not actively checked.
 
@@ -67,14 +67,6 @@ Monitored via Cloudflare Radar API:
 │  [IT Glue ✓] [Datto ✓] [M365 ⚠] [AWS ✓] ...       │
 └─────────────────────────────────────────────────────┘
 ```
-
-**6 Dashboard Pages:**
-1. Internet Status - ISP health + global metrics
-2. Cloud Status - AWS, Azure, GCP
-3. M365 & Workspace - Microsoft 365 + Google Workspace
-4. Attack Activity - Cloudflare Radar DDoS data
-5. Power Grid - PJM status (planned)
-6. Events Timeline - Unified incident feed
 
 ## Project Structure
 
