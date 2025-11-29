@@ -8,14 +8,15 @@ Last Updated: 2025-11-29
 
 ## 🎯 High Priority (Start Here)
 
-### 1. Uptime Percentage Display
-**Effort**: 1-2 hours
-**Dependencies**: None (historical data already recording!)
+### 1. M365 & Cloud Page Enhancements
+**Effort**: TBD
+**Dependencies**: None
 
 Tasks:
-- [ ] Add `calculateUptime()` function to src/utils/status.ts (already exists!)
-- [ ] Display uptime % on ServiceCard component
-- [ ] Show uptime trend indicator on ticker cards
+- [ ] Gather requirements from user
+- [ ] Enhance CloudStatusPage.tsx
+- [ ] Enhance M365WorkspacePage.tsx
+
 
 ### 2. Events Timeline Page
 **Effort**: 3-5 hours
@@ -53,14 +54,14 @@ Tasks:
 
 ## 🔄 Future Enhancements (Details TBD)
 
-### 5. M365 & Cloud Page Enhancements
-**Effort**: TBD
-**Dependencies**: None
+### 5. Uptime Percentage Display
+**Effort**: 1-2 hours
+**Dependencies**: None (historical data already recording!)
 
 Tasks:
-- [ ] Gather requirements from user
-- [ ] Enhance CloudStatusPage.tsx
-- [ ] Enhance M365WorkspacePage.tsx
+- [ ] Add `calculateUptime()` function to src/utils/status.ts (already exists!)
+- [ ] Display uptime % on ServiceCard component
+- [ ] Show uptime trend indicator on ticker cards
 
 ## ❌ Not Planned
 
