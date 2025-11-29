@@ -22,7 +22,6 @@ export function ServiceCard({ service }: ServiceCardProps) {
         borderRadius: '8px',
         minWidth: 'var(--card-min-width)',
         height: '16vh',
-        marginRight: '32px',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',

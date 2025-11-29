@@ -1,7 +1,5 @@
 import { Box } from '@mantine/core';
 import { useEffect, useState } from 'react';
-import { Marquee } from '@gfazioli/mantine-marquee';
-import '@gfazioli/mantine-marquee/styles.css';
 import { ServiceCard } from './ServiceCard';
 
 interface ServiceStatus {
@@ -53,30 +51,33 @@ export function ServiceTicker() {
     );
   }
 
+  // Separate outage cards from scrolling cards
+  const outageCards = services.filter(s => s.status === 'outage');
+  const scrollingCards = services.filter(s => s.status !== 'outage');
+
   return (
-    <Box
-      style={{
-        height: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        position: 'relative',
-      }}
-    >
-      <Marquee
-        w="100%"
-        pauseOnHover={false}
-        fadeEdges={true}
-        fadeEdgesSize="2rem"
-        fadeEdgesColor="var(--bg-primary)"
-        style={{
-          '--marquee-duration': '90s',
-          '--marquee-gap': '0px',
-        } as React.CSSProperties}
-      >
-        {services.map((service) => (
-          <ServiceCard key={service.id} service={service} />
-        ))}
-      </Marquee>
+    <Box className="ticker-container">
+      {/* Static outage cards on the left */}
+      {outageCards.length > 0 && (
+        <Box className="outage-cards-static">
+          {outageCards.map(service => (
+            <ServiceCard key={service.id} service={service} />
+          ))}
+        </Box>
+      )}
+
+      {/* Scrolling cards */}
+      <Box className="ticker-scroll-wrapper">
+        <Box className="ticker-scroll-content">
+          {/* Duplicate cards for seamless loop */}
+          {scrollingCards.map(service => (
+            <ServiceCard key={`a-${service.id}`} service={service} />
+          ))}
+          {scrollingCards.map(service => (
+            <ServiceCard key={`b-${service.id}`} service={service} />
+          ))}
+        </Box>
+      </Box>
     </Box>
   );
 }

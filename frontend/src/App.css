@@ -60,18 +60,57 @@ body {
   animation: pulse 2s ease-in-out infinite;
 }
 
-/* Marquee vertical centering fix */
-/* Root container - uses flex-direction: column, so use justify-content for vertical centering */
-.me_7dc7d3cd {
-  justify-content: center !important;
+/* Custom ticker implementation */
+.ticker-container {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  gap: 16px;
 }
 
-/* Horizontal container - uses flex-direction: row, so use align-items for vertical centering */
-.me_931ed4ea {
-  align-items: center !important;
+.outage-cards-static {
+  display: flex;
+  gap: 16px;
+  flex-shrink: 0;
+  z-index: 10;
+  padding-left: 16px;
 }
 
-/* Animated content wrappers - also need align-items for vertical centering */
-.me_8bbdc322 {
-  align-items: center !important;
+.ticker-scroll-wrapper {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  /* Fade edges */
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 0.5rem,
+    black calc(100% - 2rem),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 0.5rem,
+    black calc(100% - 2rem),
+    transparent 100%
+  );
+}
+
+.ticker-scroll-content {
+  display: flex;
+  gap: 16px;
+  animation: ticker-scroll 60s linear infinite;
+  will-change: transform;
+}
+
+@keyframes ticker-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }
