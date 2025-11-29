@@ -43,17 +43,22 @@ export async function collectM365Status(env: Env): Promise<{
       async () => {
         // Fetch health overviews
         const healthOverviews = await fetchM365HealthOverviews(accessToken);
+        console.log(`Fetched ${healthOverviews.length} M365 services`);
 
         // Fetch current issues
         const issues = await fetchM365Issues(accessToken);
+        console.log(`Fetched ${issues.length} M365 issues`);
 
         // Build services list
         const services: M365Service[] = healthOverviews.map(overview => {
+          const mappedStatus = mapM365Status(overview.status);
+          console.log(`M365 Service: ${overview.service} - Raw Status: "${overview.status}" - Mapped: ${mappedStatus}`);
+
           const serviceIssues = issues.filter(issue => issue.service === overview.id);
 
           return {
             name: overview.service,
-            status: mapM365Status(overview.status),
+            status: mappedStatus,
             issues: serviceIssues.map(issue => ({
               id: issue.id,
               title: issue.title,
@@ -191,15 +196,37 @@ async function fetchM365Issues(accessToken: string): Promise<M365IssueResponse[]
 function mapM365Status(status: string): 'operational' | 'degraded' | 'outage' | 'unknown' {
   const statusLower = status.toLowerCase();
 
-  if (statusLower.includes('servicedegradation')) {
-    return 'degraded';
+  // Log unexpected status values for debugging
+  if (!statusLower.includes('operational') &&
+      !statusLower.includes('degradation') &&
+      !statusLower.includes('interruption') &&
+      !statusLower.includes('restoring') &&
+      !statusLower.includes('restored') &&
+      !statusLower.includes('extended') &&
+      !statusLower.includes('recovery') &&
+      !statusLower.includes('investigating') &&
+      !statusLower.includes('falsepositive')) {
+    console.warn(`Unmapped M365 status value: ${status}`);
   }
 
-  if (statusLower.includes('serviceinterruption') || statusLower.includes('serviceoutage')) {
+  // Outage states
+  if (statusLower.includes('interruption') ||
+      statusLower.includes('outage') ||
+      statusLower.includes('investigating')) {
     return 'outage';
   }
 
-  if (statusLower.includes('serviceoperational')) {
+  // Degraded states
+  if (statusLower.includes('degradation') ||
+      statusLower.includes('restoring') ||
+      statusLower.includes('extended')) {
+    return 'degraded';
+  }
+
+  // Operational states
+  if (statusLower.includes('operational') ||
+      statusLower.includes('restored') ||
+      statusLower.includes('falsepositive')) {
     return 'operational';
   }
 
