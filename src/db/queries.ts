@@ -110,16 +110,11 @@ export async function getLatestCloudStatus(env: Env): Promise<
  * Get latest M365 health for all services
  */
 export async function getLatestM365Health(env: Env): Promise<
-  Array<{ service_name: string; status: string; issues: string }>
+  Array<{ service_name: string; status: string; issues: string; last_changed: string; checked_at: string }>
 > {
   const result = await env.DB.prepare(`
-    SELECT service_name, status, issues
-    FROM m365_health
-    WHERE (service_name, checked_at) IN (
-      SELECT service_name, MAX(checked_at)
-      FROM m365_health
-      GROUP BY service_name
-    )
+    SELECT service_name, status, issues, last_changed, checked_at
+    FROM m365_current
   `).all();
 
   if (!result.success) {

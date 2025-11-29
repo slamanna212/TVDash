@@ -5,7 +5,6 @@ compatibility_flags = ["nodejs_compat"]
 
 [triggers]
 crons = [
-  "* * * * *",        # Every minute
   "*/5 * * * *",      # Every 5 minutes
   "*/15 * * * *",     # Every 15 minutes
   "0 3 * * *"         # Daily at 3 AM

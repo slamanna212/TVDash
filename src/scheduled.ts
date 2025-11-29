@@ -18,28 +18,24 @@ export async function handleScheduled(
   console.log(`Cron triggered: ${cron} at ${new Date(event.scheduledTime).toISOString()}`);
 
   try {
-    // Every minute tasks
-    if (cron === '* * * * *') {
-      console.log('Running 1-minute tasks: HTTP health checks');
-      await runHttpHealthChecks(env);
-    }
-
     // Every 5 minute tasks
     if (cron === '*/5 * * * *') {
       console.log('Running 5-minute tasks');
       await Promise.all([
+        runHttpHealthChecks(env),
         runStatuspageChecks(env),
         runCustomChecks(env),
-        runCloudStatusChecks(env),
         runProductivityChecks(env),
-        runISPChecks(env),
       ]);
     }
 
     // Every 15 minute tasks
     if (cron === '*/15 * * * *') {
       console.log('Running 15-minute tasks');
-      // Placeholder for future Radar IQI/Speed metrics
+      await Promise.all([
+        runCloudStatusChecks(env),
+        runISPChecks(env),
+      ]);
     }
 
     // Daily cleanup
@@ -242,18 +238,44 @@ async function runProductivityChecks(env: Env): Promise<void> {
   try {
     // Check M365
     const m365 = await collectM365Status(env);
+    const now = new Date().toISOString();
 
-    // Write detailed service data to m365_health table (for detailed M365 page)
+    // Process each service and update m365_current
     for (const service of m365.services) {
+      const newStatus = service.status;
+      const newIssues = JSON.stringify(service.issues);
+
+      // Get previous status from m365_current
+      const previous = await env.DB.prepare(`
+        SELECT status, last_changed FROM m365_current WHERE service_name = ?
+      `).bind(service.name).first();
+
+      const statusChanged = !previous || previous.status !== newStatus;
+
+      // Update m365_current with latest check
       await env.DB.prepare(`
-        INSERT INTO m365_health (service_name, status, issues, checked_at)
-        VALUES (?, ?, ?, ?)
+        INSERT OR REPLACE INTO m365_current (service_name, status, issues, last_changed, checked_at)
+        VALUES (?, ?, ?, ?, ?)
       `).bind(
         service.name,
-        service.status,
-        JSON.stringify(service.issues),
-        new Date().toISOString()
+        newStatus,
+        newIssues,
+        statusChanged ? now : (previous?.last_changed || now),
+        now
       ).run();
+
+      // Only write to m365_health if status actually changed
+      if (statusChanged) {
+        await env.DB.prepare(`
+          INSERT INTO m365_health (service_name, status, issues, checked_at)
+          VALUES (?, ?, ?, ?)
+        `).bind(
+          service.name,
+          newStatus,
+          newIssues,
+          now
+        ).run();
+      }
     }
 
     // Record overall M365 status to status_history (for ServiceTicker)
