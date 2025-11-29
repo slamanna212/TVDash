@@ -26,10 +26,15 @@ TICKER_REFRESH_SECONDS = "30"
 
 [observability]
 [observability.logs]
-enabled = false
+enabled = true
 head_sampling_rate = 1
 invocation_logs = true
 persist = true
+
+[observability.traces]
+enabled = false
+persist = true
+head_sampling_rate = 1
 
 # Secrets (set via: wrangler secret put SECRET_NAME)
 # CF_RADAR_API_TOKEN
