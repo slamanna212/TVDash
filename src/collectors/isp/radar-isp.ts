@@ -1,4 +1,5 @@
 import type { Env, LocalISP } from '../../types';
+import { fetchWithCache } from '../../utils/cache';
 
 const RADAR_BASE_URL = 'https://api.cloudflare.com/client/v4/radar';
 
@@ -34,47 +35,56 @@ export async function checkISPStatus(env: Env, isp: LocalISP): Promise<ISPMetric
     return getUnknownStatus(isp);
   }
 
-  try {
-    const headers = {
-      'Authorization': `Bearer ${env.CF_RADAR_API_TOKEN}`,
-      'Content-Type': 'application/json',
-    };
+  // Cache the ISP status for 5 minutes
+  return await fetchWithCache(
+    env,
+    `isp-status-${isp.primary_asn}`,
+    'isp',
+    async () => {
+      try {
+        const headers = {
+          'Authorization': `Bearer ${env.CF_RADAR_API_TOKEN}`,
+          'Content-Type': 'application/json',
+        };
 
-    // Fetch IQI (Internet Quality Index) metrics
-    const iqiMetrics = await fetchIQIMetrics(isp.primary_asn, headers);
+        // Fetch IQI (Internet Quality Index) metrics
+        const iqiMetrics = await fetchIQIMetrics(isp.primary_asn, headers);
 
-    // Check for traffic anomalies
-    const anomalies = await fetchTrafficAnomalies(isp.primary_asn, headers);
+        // Check for traffic anomalies
+        const anomalies = await fetchTrafficAnomalies(isp.primary_asn, headers);
 
-    // Check for BGP incidents
-    const bgpIncidents = await fetchBGPIncidents(isp.primary_asn, headers);
+        // Check for BGP incidents
+        const bgpIncidents = await fetchBGPIncidents(isp.primary_asn, headers);
 
-    // Determine overall status
-    let status: 'operational' | 'degraded' | 'outage' | 'unknown' = 'operational';
+        // Determine overall status
+        let status: 'operational' | 'degraded' | 'outage' | 'unknown' = 'operational';
 
-    // If there are active anomalies or BGP incidents, mark as degraded/outage
-    if (bgpIncidents.length > 0) {
-      status = 'outage'; // BGP incidents are serious
-    } else if (anomalies.some(a => a.severity === 'high')) {
-      status = 'outage';
-    } else if (anomalies.length > 0) {
-      status = 'degraded';
-    } else if (iqiMetrics.bandwidthPercentile !== null && iqiMetrics.bandwidthPercentile < 50) {
-      status = 'degraded';
-    }
+        // If there are active anomalies or BGP incidents, mark as degraded/outage
+        if (bgpIncidents.length > 0) {
+          status = 'outage'; // BGP incidents are serious
+        } else if (anomalies.some(a => a.severity === 'high')) {
+          status = 'outage';
+        } else if (anomalies.length > 0) {
+          status = 'degraded';
+        } else if (iqiMetrics.bandwidthPercentile !== null && iqiMetrics.bandwidthPercentile < 50) {
+          status = 'degraded';
+        }
 
-    return {
-      isp,
-      status,
-      metrics: iqiMetrics,
-      anomalies,
-      bgpIncidents,
-      lastChecked: new Date().toISOString(),
-    };
-  } catch (error) {
-    console.error(`Error checking ISP ${isp.name}:`, error);
-    return getUnknownStatus(isp);
-  }
+        return {
+          isp,
+          status,
+          metrics: iqiMetrics,
+          anomalies,
+          bgpIncidents,
+          lastChecked: new Date().toISOString(),
+        };
+      } catch (error) {
+        console.error(`Error checking ISP ${isp.name}:`, error);
+        return getUnknownStatus(isp);
+      }
+    },
+    300  // Cache for 5 minutes
+  );
 }
 
 async function fetchIQIMetrics(
@@ -223,29 +233,10 @@ export async function checkAllISPs(env: Env): Promise<ISPMetrics[]> {
 
     const isps = result.results as LocalISP[];
 
-    // Check each ISP in parallel
+    // Check each ISP in parallel (now uses cache!)
     const metrics = await Promise.all(
       isps.map(isp => checkISPStatus(env, isp))
     );
-
-    // Store results in database
-    for (const metric of metrics) {
-      await env.DB.prepare(`
-        INSERT INTO isp_check_history (isp_id, check_type, status, response_time_ms, details, checked_at)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `).bind(
-        metric.isp.id,
-        'combined',
-        metric.status,
-        null,
-        JSON.stringify({
-          metrics: metric.metrics,
-          anomalies: metric.anomalies,
-          bgpIncidents: metric.bgpIncidents,
-        }),
-        metric.lastChecked
-      ).run();
-    }
 
     return metrics;
   } catch (error) {

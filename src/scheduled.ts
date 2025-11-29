@@ -7,6 +7,7 @@ import { collectAWSStatus } from './collectors/cloud/aws';
 import { collectAzureStatus } from './collectors/cloud/azure';
 import { collectGCPStatus } from './collectors/cloud/gcp';
 import { collectM365Status } from './collectors/productivity/microsoft';
+import { checkAllISPs } from './collectors/isp/radar-isp';
 
 export async function handleScheduled(
   event: ScheduledEvent,
@@ -31,6 +32,7 @@ export async function handleScheduled(
         runCustomChecks(env),
         runCloudStatusChecks(env),
         runProductivityChecks(env),
+        runISPChecks(env),
       ]);
     }
 
@@ -269,6 +271,38 @@ async function runProductivityChecks(env: Env): Promise<void> {
       status: 'unknown',
       message: 'Check failed',
     });
+  }
+}
+
+/**
+ * Check ISP health via Cloudflare Radar
+ */
+async function runISPChecks(env: Env): Promise<void> {
+  try {
+    const metrics = await checkAllISPs(env);
+
+    // Write results to database for historical tracking
+    for (const metric of metrics) {
+      await env.DB.prepare(`
+        INSERT INTO isp_check_history (isp_id, check_type, status, response_time_ms, details, checked_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).bind(
+        metric.isp.id,
+        'combined',
+        metric.status,
+        null,
+        JSON.stringify({
+          metrics: metric.metrics,
+          anomalies: metric.anomalies,
+          bgpIncidents: metric.bgpIncidents,
+        }),
+        metric.lastChecked
+      ).run();
+    }
+
+    console.log(`✓ ISP checks: ${metrics.map(m => `${m.isp.name}=${m.status}`).join(', ')}`);
+  } catch (error) {
+    console.error('Error checking ISPs:', error);
   }
 }
 
