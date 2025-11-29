@@ -1,5 +1,5 @@
 import { Box } from '@mantine/core';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { ServiceCard } from './ServiceCard';
 
 interface ServiceStatus {
@@ -14,6 +14,8 @@ interface ServiceStatus {
 export function ServiceTicker() {
   const [services, setServices] = useState<ServiceStatus[]>([]);
   const [loading, setLoading] = useState(true);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const animationRef = useRef<number | null>(null);
 
   useEffect(() => {
     fetchServices();
@@ -34,6 +36,44 @@ export function ServiceTicker() {
     }
   };
 
+  // Memoize the separated cards to prevent unnecessary re-renders
+  const { outageCards, scrollingCards } = useMemo(() => {
+    const outage = services.filter(s => s.status === 'outage');
+    const scrolling = services.filter(s => s.status !== 'outage');
+    return { outageCards: outage, scrollingCards: scrolling };
+  }, [services]);
+
+  // Use smooth JavaScript animation instead of CSS to prevent resets
+  useEffect(() => {
+    const element = scrollRef.current;
+    if (!element || scrollingCards.length === 0) return;
+
+    let position = 0;
+    const speed = 0.5; // pixels per frame
+
+    const animate = () => {
+      position -= speed;
+
+      // Reset position when we've scrolled through half the content
+      // This creates a seamless loop since we duplicate the cards
+      const resetPoint = element.scrollWidth / 2;
+      if (Math.abs(position) >= resetPoint) {
+        position = 0;
+      }
+
+      element.style.transform = `translateX(${position}px)`;
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    animationRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [scrollingCards]);
+
   if (loading) {
     return (
       <Box
@@ -51,10 +91,6 @@ export function ServiceTicker() {
     );
   }
 
-  // Separate outage cards from scrolling cards
-  const outageCards = services.filter(s => s.status === 'outage');
-  const scrollingCards = services.filter(s => s.status !== 'outage');
-
   return (
     <Box className="ticker-container">
       {/* Static outage cards on the left */}
@@ -68,7 +104,7 @@ export function ServiceTicker() {
 
       {/* Scrolling cards */}
       <Box className="ticker-scroll-wrapper">
-        <Box className="ticker-scroll-content">
+        <Box ref={scrollRef} className="ticker-scroll-content-js">
           {/* Duplicate cards for seamless loop */}
           {scrollingCards.map(service => (
             <ServiceCard key={`a-${service.id}`} service={service} />

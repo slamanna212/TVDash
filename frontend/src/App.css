@@ -99,18 +99,29 @@ body {
   );
 }
 
+/* JavaScript-controlled animation (no CSS animation to prevent resets) */
+.ticker-scroll-content-js {
+  display: flex;
+  gap: 16px;
+  will-change: transform;
+}
+
+/* Legacy CSS animation version (not used) */
 .ticker-scroll-content {
   display: flex;
   gap: 16px;
   animation: ticker-scroll 60s linear infinite;
   will-change: transform;
+  /* Prevent animation from resetting on re-render */
+  animation-fill-mode: none;
 }
 
+/* Use a fixed animation that doesn't depend on content width */
 @keyframes ticker-scroll {
-  from {
-    transform: translateX(0);
+  0% {
+    transform: translateX(0%);
   }
-  to {
+  100% {
     transform: translateX(-50%);
   }
 }
