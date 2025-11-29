@@ -56,15 +56,22 @@ body {
   50% { opacity: 0.7; }
 }
 
-@keyframes scroll {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
 .status-outage {
   animation: pulse 2s ease-in-out infinite;
 }
 
-.ticker-track {
-  animation: scroll 90s linear infinite;
+/* Marquee vertical centering fix */
+/* Root container - uses flex-direction: column, so use justify-content for vertical centering */
+.me_7dc7d3cd {
+  justify-content: center !important;
+}
+
+/* Horizontal container - uses flex-direction: row, so use align-items for vertical centering */
+.me_931ed4ea {
+  align-items: center !important;
+}
+
+/* Animated content wrappers - also need align-items for vertical centering */
+.me_8bbdc322 {
+  align-items: center !important;
 }

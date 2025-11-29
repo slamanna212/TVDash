@@ -1,5 +1,7 @@
-import { Box, Group } from '@mantine/core';
+import { Box } from '@mantine/core';
 import { useEffect, useState } from 'react';
+import { Marquee } from '@gfazioli/mantine-marquee';
+import '@gfazioli/mantine-marquee/styles.css';
 import { ServiceCard } from './ServiceCard';
 
 interface ServiceStatus {
@@ -51,30 +53,30 @@ export function ServiceTicker() {
     );
   }
 
-  // Duplicate services for seamless loop
-  const duplicatedServices = [...services, ...services];
-
   return (
     <Box
       style={{
         height: '100%',
-        overflow: 'hidden',
+        display: 'flex',
+        alignItems: 'center',
         position: 'relative',
       }}
     >
-      <Group
-        className="ticker-track"
-        gap="md"
+      <Marquee
+        w="100%"
+        pauseOnHover={false}
+        fadeEdges={true}
+        fadeEdgesSize="2rem"
+        fadeEdgesColor="var(--bg-primary)"
         style={{
-          height: '100%',
-          flexWrap: 'nowrap',
-          padding: '1vw 0',
-        }}
+          '--marquee-duration': '90s',
+          '--marquee-gap': '0px',
+        } as React.CSSProperties}
       >
-        {duplicatedServices.map((service, index) => (
-          <ServiceCard key={`${service.id}-${index}`} service={service} />
+        {services.map((service) => (
+          <ServiceCard key={service.id} service={service} />
         ))}
-      </Group>
+      </Marquee>
     </Box>
   );
 }
