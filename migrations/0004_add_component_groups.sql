@@ -1,9 +1,7 @@
 -- Add column to store component group filters for statuspage services
 -- Format: JSON array of group names, e.g., '["Group 1", "Group 2"]'
 -- NULL means "monitor all components" (backward compatible)
--- Skip if column already exists (migration may have partially run)
--- SQLite doesn't support IF NOT EXISTS for ALTER TABLE, so we'll just update the services
--- The column was added in a previous partial migration run
+ALTER TABLE services ADD COLUMN component_groups TEXT;
 
 -- Update Datto to use shared Kaseya status page with specific groups
 UPDATE services
