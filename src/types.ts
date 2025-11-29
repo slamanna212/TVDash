@@ -1,5 +1,6 @@
 export interface Env {
   DB: D1Database;
+  ASSETS: Fetcher;
   CF_RADAR_API_TOKEN: string;
   EIA_API_KEY?: string;
   PJM_API_KEY?: string;

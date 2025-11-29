@@ -15,8 +15,8 @@ binding = "DB"
 database_name = "drone"
 database_id = "3bcb5e2d-bfd6-4048-9992-d6c7807af619"
 
-[site]
-bucket = "./frontend/dist"
+[assets]
+directory = "./frontend/dist"
 
 [vars]
 ENVIRONMENT = "production"

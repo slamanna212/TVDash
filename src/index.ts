@@ -1,7 +1,6 @@
 import type { Env } from './types';
 import { handleScheduled } from './scheduled';
 import { handleApiRequest } from './api/routes';
-import { getAssetFromKV } from '@cloudflare/kv-asset-handler';
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -69,35 +68,28 @@ export default {
         });
       }
 
-      // Serve static frontend from Workers Sites
-      try {
-        return await getAssetFromKV(
-          {
-            request,
-            waitUntil: ctx.waitUntil.bind(ctx),
-          } as any,
-          {
-            ASSET_NAMESPACE: (env as any).__STATIC_CONTENT,
-            ASSET_MANIFEST: (env as any).__STATIC_CONTENT_MANIFEST,
+      // Serve static frontend using Assets
+      if (env.ASSETS) {
+        try {
+          // Try to serve the requested asset
+          const assetResponse = await env.ASSETS.fetch(request);
+
+          // If asset found, return it
+          if (assetResponse.status !== 404) {
+            return assetResponse;
           }
-        );
-      } catch (e) {
-        // If asset not found, serve index.html for client-side routing
-        const notFoundResponse = await getAssetFromKV(
-          {
-            request: new Request(`${url.origin}/index.html`, request),
-            waitUntil: ctx.waitUntil.bind(ctx),
-          } as any,
-          {
-            ASSET_NAMESPACE: (env as any).__STATIC_CONTENT,
-            ASSET_MANIFEST: (env as any).__STATIC_CONTENT_MANIFEST,
-          }
-        );
-        return new Response(notFoundResponse.body, {
-          ...notFoundResponse,
-          status: 200,
-        });
+
+          // If not found, serve index.html for client-side routing
+          const indexRequest = new Request(`${url.origin}/index.html`, request);
+          return await env.ASSETS.fetch(indexRequest);
+        } catch (e) {
+          console.error('Error serving asset:', e);
+          throw e;
+        }
       }
+
+      // Fallback if ASSETS binding not available
+      return new Response('Frontend not configured', { status: 503 });
     } catch (error) {
       console.error('Error handling request:', error);
       return new Response(JSON.stringify({
