@@ -1,4 +1,4 @@
-import type { Env, Service, CheckResult } from './types';
+import type { Env, Service, CheckResult, ServiceStatus } from './types';
 import { performHttpCheck } from './collectors/http-check';
 import { checkStatuspageStatus, checkStatuspageStatusWithGroups } from './collectors/statuspage';
 import { checkStatusHubStatus } from './collectors/statushub';
@@ -241,6 +241,7 @@ async function runProductivityChecks(env: Env): Promise<void> {
     // Check M365
     const m365 = await collectM365Status(env);
 
+    // Write detailed service data to m365_health table (for detailed M365 page)
     for (const service of m365.services) {
       await env.DB.prepare(`
         INSERT INTO m365_health (service_name, status, issues, checked_at)
@@ -253,9 +254,21 @@ async function runProductivityChecks(env: Env): Promise<void> {
       ).run();
     }
 
+    // Record overall M365 status to status_history (for ServiceTicker)
+    // Microsoft 365 service_id = 12 (from migrations/0001_initial.sql)
+    await recordStatusHistory(env, 12, {
+      status: m365.overall as ServiceStatus,
+      message: `${m365.services.length} services monitored`,
+    });
+
     console.log(`✓ M365: ${m365.overall} (${m365.services.length} services)`);
   } catch (error) {
     console.error('Error checking productivity suites:', error);
+    // Record failure so the card shows 'unknown' with meaningful message
+    await recordStatusHistory(env, 12, {
+      status: 'unknown',
+      message: 'Check failed',
+    });
   }
 }
 
