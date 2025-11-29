@@ -22,7 +22,7 @@ External APIs → Cloudflare Workers (Cron Collectors) → D1 Database → API R
 ## What We Monitor (All Public URLs)
 
 ### MSP Tools (13 Services)
-All monitored via public status pages - NO internal URLs:
+All monitored via public status pages:
 
 | Service | Type |
 |---------|------|

@@ -8,6 +8,70 @@ Last Updated: 2025-11-29
 
 ## 🎯 High Priority (Start Here)
 
+### 0. Database Query Optimization (CRITICAL - Do First!)
+**Effort**: 2-3 hours
+**Impact**: Reduce queries from 256/15min to ~120/15min (53% reduction, save $0.19/month)
+**Current Issue**: 256 queries per 15 minutes = 24,576 queries/day
+
+**Problem Analysis:**
+- M365 writes 30-40 duplicate rows every 5 minutes (10,080 rows/day!)
+- HTTP checks running every 1 minute (too frequent)
+- Cloud/ISP running every 5 minutes (should be 15)
+
+**Phase 1 - Quick Wins (30 minutes):**
+- [ ] Move HTTP checks from 1-minute to 5-minute interval
+  - Edit `wrangler.toml`: Remove `"* * * * *"` cron
+  - Edit `src/scheduled.ts`: Remove 1-min block, add `runHttpHealthChecks(env)` to 5-min block
+  - Impact: -48 queries per 15 min
+
+- [ ] Move Cloud & ISP to 15-minute interval
+  - Edit `src/scheduled.ts`: Move `runCloudStatusChecks(env)` and `runISPChecks(env)` from 5-min to 15-min block
+  - Keep M365 at 5 minutes (user requirement)
+  - Impact: -48 queries per 15 min
+
+**Phase 2 - M365 Deduplication (1-2 hours):**
+- [ ] Create migration file `migrations/0002_optimize_m365.sql`:
+  ```sql
+  CREATE TABLE m365_current (
+    service_name TEXT PRIMARY KEY,
+    status TEXT NOT NULL,
+    issues TEXT,
+    last_changed TEXT NOT NULL,
+    checked_at TEXT NOT NULL
+  );
+
+  INSERT OR REPLACE INTO m365_current (service_name, status, issues, last_changed, checked_at)
+  SELECT service_name, status, issues, checked_at, checked_at
+  FROM m365_health
+  WHERE (service_name, checked_at) IN (
+    SELECT service_name, MAX(checked_at)
+    FROM m365_health
+    GROUP BY service_name
+  );
+  ```
+
+- [ ] Update `src/scheduled.ts` - runProductivityChecks function (lines 247-257):
+  - Replace the for loop with REPLACE logic
+  - Check previous status from m365_current
+  - Track last_changed timestamp
+  - Only INSERT to m365_health on actual status changes
+  - Impact: -35 queries per 5-min run during steady state
+
+- [ ] Update `src/db/queries.ts` - getLatestM365Health function:
+  - Change to query m365_current instead of m365_health
+  - Return service_name, status, issues, last_changed, checked_at
+
+- [ ] Run migration: `npx wrangler d1 migrations apply drone`
+
+- [ ] Test in dev: Verify M365 page shows current data correctly
+
+**Expected Results:**
+- Queries: 256/15min → ~120/15min (53% reduction)
+- Storage: m365_health stays at ~35-40 rows (vs 302,400/month)
+- Cost: $0.36/month → $0.17/month
+
+**Detailed implementation in plan file:** `~/.claude/plans/effervescent-dazzling-crystal.md`
+
 ### 1. M365 & Cloud Page Enhancements
 **Effort**: TBD
 **Dependencies**: None
