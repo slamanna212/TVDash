@@ -24,6 +24,13 @@ ALERTS_ENABLED = "true"
 PAGE_ROTATION_SECONDS = "45"
 TICKER_REFRESH_SECONDS = "30"
 
+[observability]
+[observability.logs]
+enabled = false
+head_sampling_rate = 1
+invocation_logs = true
+persist = true
+
 # Secrets (set via: wrangler secret put SECRET_NAME)
 # CF_RADAR_API_TOKEN
 # EIA_API_KEY
