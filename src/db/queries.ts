@@ -242,3 +242,106 @@ export async function updateAlertState(
     .bind(entityType, entityId, newStatus, new Date().toISOString())
     .run();
 }
+
+/**
+ * Check if an event already exists for a specific entity
+ */
+export async function checkEventExists(
+  env: Env,
+  source: string,
+  entityId: string
+): Promise<boolean> {
+  const result = await env.DB.prepare(`
+    SELECT id FROM events
+    WHERE source = ? AND entity_id = ?
+    ORDER BY created_at DESC
+    LIMIT 1
+  `)
+    .bind(source, entityId)
+    .first();
+
+  return result !== null;
+}
+
+/**
+ * Get previous cloud incidents for a provider (from alert_state)
+ */
+export async function getPreviousCloudIncidents(
+  env: Env,
+  provider: string
+): Promise<Set<string>> {
+  const result = await env.DB.prepare(`
+    SELECT entity_id
+    FROM alert_state
+    WHERE entity_type = 'cloud-incident'
+  `)
+    .all();
+
+  if (!result.success) return new Set();
+
+  return new Set((result.results as any[]).map((r) => r.entity_id));
+}
+
+/**
+ * Get previous M365 issues for a service (from alert_state)
+ */
+export async function getPreviousM365Issues(
+  env: Env,
+  serviceName: string
+): Promise<Set<string>> {
+  const result = await env.DB.prepare(`
+    SELECT entity_id
+    FROM alert_state
+    WHERE entity_type = 'm365-issue'
+      AND entity_id LIKE ?
+  `)
+    .bind(`${serviceName}-%`)
+    .all();
+
+  if (!result.success) return new Set();
+
+  return new Set(
+    (result.results as any[]).map((r) => {
+      // Extract issue ID from entity_id format: "ServiceName-IssueID"
+      const parts = r.entity_id.split('-');
+      return parts.slice(1).join('-'); // Handle service names with dashes
+    })
+  );
+}
+
+/**
+ * Mark event as resolved
+ */
+export async function markEventResolved(
+  env: Env,
+  source: string,
+  entityId: string
+): Promise<void> {
+  await env.DB.prepare(`
+    UPDATE events
+    SET resolved_at = ?
+    WHERE source = ?
+      AND entity_id = ?
+      AND resolved_at IS NULL
+  `)
+    .bind(new Date().toISOString(), source, entityId)
+    .run();
+}
+
+/**
+ * Record status history (wrapper for insert)
+ */
+export async function recordStatusHistory(
+  env: Env,
+  serviceId: number,
+  status: string,
+  responseTimeMs: number | null,
+  message: string | null
+): Promise<void> {
+  await env.DB.prepare(`
+    INSERT INTO status_history (service_id, status, response_time_ms, message, checked_at)
+    VALUES (?, ?, ?, ?, ?)
+  `)
+    .bind(serviceId, status, responseTimeMs, message, new Date().toISOString())
+    .run();
+}

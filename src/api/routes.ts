@@ -4,6 +4,7 @@ import { getCloudStatus } from './cloud';
 import { getM365Status } from './m365';
 import { getInternetStatus } from './internet';
 import { getRadarAttacks } from './radar';
+import { getEvents } from './events';
 import { getServiceHistory } from '../db/queries';
 
 export async function handleApiRequest(request: Request, env: Env): Promise<Response> {
@@ -76,11 +77,7 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
 
     // GET /api/events - Unified event timeline
     if (path === '/api/events' && request.method === 'GET') {
-      // TODO: Implement events timeline endpoint
-      return new Response(JSON.stringify({ error: 'Not implemented yet' }), {
-        status: 501,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return await getEvents(env, request);
     }
 
     // 404 - Route not found

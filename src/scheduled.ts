@@ -8,6 +8,16 @@ import { collectAzureStatus } from './collectors/cloud/azure';
 import { collectGCPStatus } from './collectors/cloud/gcp';
 import { collectM365Status } from './collectors/productivity/microsoft';
 import { checkAllISPs } from './collectors/isp/radar-isp';
+import { checkAndCreateAttackEvents } from './collectors/radar/attacks';
+import {
+  createEventIfChanged,
+  getAlertState,
+  updateAlertState,
+  shouldLogDegraded,
+  hashIncident,
+} from './utils/events';
+import { createEvent, getPreviousCloudIncidents, getPreviousM365Issues } from './db/queries';
+import { EVENT_TYPES } from './config/events';
 
 export async function handleScheduled(
   event: ScheduledEvent,
@@ -35,6 +45,7 @@ export async function handleScheduled(
       await Promise.all([
         runCloudStatusChecks(env),
         runISPChecks(env),
+        checkAndCreateAttackEvents(env),
       ]);
     }
 
@@ -207,6 +218,13 @@ async function runCloudStatusChecks(env: Env): Promise<void> {
       collectGCPStatus(env),
     ]);
 
+    // Process each provider for incident tracking
+    await Promise.all([
+      processCloudIncidents(env, aws),
+      processCloudIncidents(env, azure),
+      processCloudIncidents(env, gcp),
+    ]);
+
     // Store cloud status in database
     const now = new Date().toISOString();
 
@@ -228,6 +246,72 @@ async function runCloudStatusChecks(env: Env): Promise<void> {
     console.log(`✓ Cloud status: AWS=${aws.status}, Azure=${azure.status}, GCP=${gcp.status}`);
   } catch (error) {
     console.error('Error checking cloud status:', error);
+  }
+}
+
+/**
+ * Process cloud incidents and create events for new/resolved incidents
+ */
+async function processCloudIncidents(env: Env, provider: any): Promise<void> {
+  try {
+    // Get current incident hashes
+    const currentIncidents = new Map();
+    for (const incident of provider.incidents) {
+      const hash = hashIncident(incident.title, incident.startTime);
+      currentIncidents.set(hash, incident);
+    }
+
+    // Get previously tracked incidents from alert_state
+    const previousIncidents = await getPreviousCloudIncidents(env, provider.name);
+
+    // Detect new incidents
+    for (const [hash, incident] of currentIncidents) {
+      if (!previousIncidents.has(hash)) {
+        // New incident detected
+        const severity = incident.severity === 'critical' || incident.severity === 'major' ? 'critical' : 'warning';
+
+        await createEvent(env, {
+          source: 'cloud',
+          event_type: EVENT_TYPES.CLOUD_INCIDENT_STARTED,
+          severity,
+          title: `${provider.name}: ${incident.title}`,
+          description: incident.message?.substring(0, 500),
+          entity_id: hash,
+          entity_name: `${provider.name}${incident.regions ? ' - ' + incident.regions.join(', ') : ''}`,
+          occurred_at: incident.startTime || new Date().toISOString(),
+        });
+
+        // Track this incident
+        await updateAlertState(env, 'cloud-incident', hash, 'active');
+        console.log(`📢 New cloud incident: ${provider.name} - ${incident.title}`);
+      }
+    }
+
+    // Detect resolved incidents
+    for (const prevHash of previousIncidents) {
+      if (!currentIncidents.has(prevHash)) {
+        // Incident resolved
+        await createEvent(env, {
+          source: 'cloud',
+          event_type: EVENT_TYPES.CLOUD_INCIDENT_RESOLVED,
+          severity: 'info',
+          title: `${provider.name} incident resolved`,
+          description: 'Incident no longer reported in status feed',
+          entity_id: prevHash,
+          entity_name: provider.name,
+          occurred_at: new Date().toISOString(),
+        });
+
+        // Remove from alert_state
+        await env.DB.prepare(`
+          DELETE FROM alert_state WHERE entity_type = 'cloud-incident' AND entity_id = ?
+        `).bind(prevHash).run();
+
+        console.log(`✅ Cloud incident resolved: ${provider.name}`);
+      }
+    }
+  } catch (error) {
+    console.error(`Error processing cloud incidents for ${provider.name}:`, error);
   }
 }
 
@@ -276,6 +360,9 @@ async function runProductivityChecks(env: Env): Promise<void> {
           now
         ).run();
       }
+
+      // Process M365 issues for events
+      await processM365Issues(env, service);
     }
 
     // Record overall M365 status to status_history (for ServiceTicker)
@@ -297,13 +384,71 @@ async function runProductivityChecks(env: Env): Promise<void> {
 }
 
 /**
+ * Process M365 issues and create events for new/resolved issues
+ */
+async function processM365Issues(env: Env, service: any): Promise<void> {
+  try {
+    const currentIssueIds = new Set(service.issues.map((i: any) => i.id));
+    const previousIssueIds = await getPreviousM365Issues(env, service.name);
+
+    // New issues
+    for (const issue of service.issues) {
+      if (!previousIssueIds.has(issue.id)) {
+        const severity = issue.severity === 'Incident' || issue.severity === 'critical' ? 'critical' :
+                        issue.severity === 'Advisory' ? 'warning' : 'info';
+
+        await createEvent(env, {
+          source: 'm365',
+          event_type: EVENT_TYPES.M365_ISSUE,
+          severity: severity as any,
+          title: `M365 ${service.name}: ${issue.title}`,
+          description: issue.impactDescription?.substring(0, 500),
+          entity_id: `${service.name}-${issue.id}`,
+          entity_name: `M365 ${service.name}`,
+          occurred_at: issue.startTime || new Date().toISOString(),
+        });
+
+        // Track this issue
+        await updateAlertState(env, 'm365-issue', `${service.name}-${issue.id}`, 'active');
+        console.log(`📢 New M365 issue: ${service.name} - ${issue.title}`);
+      }
+    }
+
+    // Resolved issues
+    for (const prevId of previousIssueIds) {
+      if (!currentIssueIds.has(prevId)) {
+        await createEvent(env, {
+          source: 'm365',
+          event_type: EVENT_TYPES.M365_RESOLVED,
+          severity: 'info',
+          title: `M365 ${service.name} issue resolved`,
+          description: 'Issue no longer reported',
+          entity_id: `${service.name}-${prevId}`,
+          entity_name: `M365 ${service.name}`,
+          occurred_at: new Date().toISOString(),
+        });
+
+        // Remove from alert_state
+        await env.DB.prepare(`
+          DELETE FROM alert_state WHERE entity_type = 'm365-issue' AND entity_id = ?
+        `).bind(`${service.name}-${prevId}`).run();
+
+        console.log(`✅ M365 issue resolved: ${service.name}`);
+      }
+    }
+  } catch (error) {
+    console.error(`Error processing M365 issues for ${service.name}:`, error);
+  }
+}
+
+/**
  * Check ISP health via Cloudflare Radar
  */
 async function runISPChecks(env: Env): Promise<void> {
   try {
     const metrics = await checkAllISPs(env);
 
-    // Write results to database for historical tracking
+    // Write results to database and create events
     for (const metric of metrics) {
       await env.DB.prepare(`
         INSERT INTO isp_check_history (isp_id, check_type, status, response_time_ms, details, checked_at)
@@ -321,6 +466,9 @@ async function runISPChecks(env: Env): Promise<void> {
         }),
         metric.lastChecked
       ).run();
+
+      // Process ISP status changes for events
+      await processISPStatusChange(env, metric);
     }
 
     console.log(`✓ ISP checks: ${metrics.map(m => `${m.isp.name}=${m.status}`).join(', ')}`);
@@ -330,7 +478,102 @@ async function runISPChecks(env: Env): Promise<void> {
 }
 
 /**
- * Record service status check to history
+ * Process ISP status changes and create events
+ */
+async function processISPStatusChange(env: Env, metric: any): Promise<void> {
+  try {
+    const entityId = `isp-${metric.isp.id}`;
+    const previousState = await getAlertState(env, 'isp', entityId);
+
+    // Check for status changes
+    if (metric.status === 'degraded' || metric.status === 'outage') {
+      if (!previousState || previousState.last_status === 'operational') {
+        const eventType = metric.status === 'outage' ? EVENT_TYPES.ISP_OUTAGE : EVENT_TYPES.ISP_DEGRADED;
+        const severity = metric.status === 'outage' ? 'critical' : 'warning';
+
+        await createEvent(env, {
+          source: 'isp',
+          event_type: eventType,
+          severity: severity as any,
+          title: `${metric.isp.name}: Connectivity ${metric.status}`,
+          description: formatISPMetrics(metric),
+          entity_id: entityId,
+          entity_name: metric.isp.name,
+          occurred_at: new Date().toISOString(),
+        });
+
+        console.log(`📢 ISP status change: ${metric.isp.name} - ${metric.status}`);
+      }
+    } else if (metric.status === 'operational') {
+      if (previousState && (previousState.last_status === 'degraded' || previousState.last_status === 'outage')) {
+        await createEvent(env, {
+          source: 'isp',
+          event_type: EVENT_TYPES.ISP_RESOLVED,
+          severity: 'info',
+          title: `${metric.isp.name}: Connectivity restored`,
+          entity_id: entityId,
+          entity_name: metric.isp.name,
+          occurred_at: new Date().toISOString(),
+        });
+
+        console.log(`✅ ISP restored: ${metric.isp.name}`);
+      }
+    }
+
+    // Update alert state
+    await updateAlertState(env, 'isp', entityId, metric.status);
+
+    // Process BGP incidents
+    if (metric.bgpIncidents && metric.bgpIncidents.length > 0) {
+      for (const incident of metric.bgpIncidents) {
+        const incidentId = `bgp-${metric.isp.id}-${incident.type || 'incident'}`;
+        const exists = await env.DB.prepare(`
+          SELECT 1 FROM alert_state WHERE entity_type = 'isp-bgp' AND entity_id = ?
+        `).bind(incidentId).first();
+
+        if (!exists) {
+          await createEvent(env, {
+            source: 'isp',
+            event_type: EVENT_TYPES.ISP_BGP,
+            severity: 'critical',
+            title: `${metric.isp.name}: BGP ${incident.type || 'incident'} detected`,
+            description: incident.description || 'BGP routing anomaly detected',
+            entity_id: incidentId,
+            entity_name: metric.isp.name,
+            occurred_at: new Date().toISOString(),
+          });
+
+          await updateAlertState(env, 'isp-bgp', incidentId, 'active');
+          console.log(`📢 BGP incident: ${metric.isp.name}`);
+        }
+      }
+    }
+  } catch (error) {
+    console.error(`Error processing ISP status for ${metric.isp.name}:`, error);
+  }
+}
+
+/**
+ * Format ISP metrics for event description
+ */
+function formatISPMetrics(metric: any): string {
+  const parts = [];
+
+  if (metric.metrics) {
+    if (metric.metrics.latency) parts.push(`Latency: ${metric.metrics.latency}ms`);
+    if (metric.metrics.jitter) parts.push(`Jitter: ${metric.metrics.jitter}ms`);
+    if (metric.metrics.packetLoss) parts.push(`Packet loss: ${metric.metrics.packetLoss}%`);
+  }
+
+  if (metric.anomalies && metric.anomalies.length > 0) {
+    parts.push(`Anomalies: ${metric.anomalies.join(', ')}`);
+  }
+
+  return parts.length > 0 ? parts.join(', ') : 'ISP connectivity issue detected';
+}
+
+/**
+ * Record service status check to history and create events
  */
 async function recordStatusHistory(
   env: Env,
@@ -338,6 +581,7 @@ async function recordStatusHistory(
   result: CheckResult
 ): Promise<void> {
   try {
+    // Insert status history
     await env.DB.prepare(`
       INSERT INTO status_history (service_id, status, response_time_ms, message, checked_at)
       VALUES (?, ?, ?, ?, ?)
@@ -348,6 +592,28 @@ async function recordStatusHistory(
       result.message || null,
       new Date().toISOString()
     ).run();
+
+    // Get service details for event generation
+    const service = await env.DB.prepare(`
+      SELECT id, name FROM services WHERE id = ?
+    `).bind(serviceId).first();
+
+    if (!service) return;
+
+    const serviceName = (service as any).name;
+    const entityId = `service-${serviceId}`;
+
+    // Create events based on status changes
+    await createEventIfChanged(env, {
+      source: 'service',
+      event_type: result.status === 'outage' ? EVENT_TYPES.SERVICE_OUTAGE :
+                  result.status === 'degraded' ? EVENT_TYPES.SERVICE_DEGRADED :
+                  EVENT_TYPES.SERVICE_RESOLVED,
+      entityId,
+      entityName: serviceName,
+      currentStatus: result.status,
+      description: result.message || undefined,
+    });
   } catch (error) {
     console.error(`Failed to record status for service ${serviceId}:`, error);
   }

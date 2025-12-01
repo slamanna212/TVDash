@@ -1,5 +1,7 @@
 import type { Env } from '../../types';
 import { fetchWithCache } from '../../utils/cache';
+import { createEvent } from '../../db/queries';
+import { EVENT_TYPES, RADAR_ATTACK_THRESHOLD } from '../../config/events';
 
 const RADAR_BASE_URL = 'https://api.cloudflare.com/client/v4/radar';
 
@@ -179,4 +181,106 @@ function getEmptyAttackData(): AttackData {
     },
     lastUpdated: new Date().toISOString(),
   };
+}
+
+/**
+ * Check attack data and create events when threshold is exceeded
+ */
+export async function checkAndCreateAttackEvents(env: Env): Promise<void> {
+  try {
+    const attacks = await collectAttackData(env);
+
+    // Calculate current hour totals
+    const now = new Date();
+    const currentHourStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
+    const currentHourKey = currentHourStart.toISOString();
+
+    // Filter timeseries to current hour
+    const layer3CurrentHour = attacks.layer3.timeseries
+      .filter((ts) => new Date(ts.timestamp) >= currentHourStart)
+      .reduce((sum, ts) => sum + ts.value, 0);
+
+    const layer7CurrentHour = attacks.layer7.timeseries
+      .filter((ts) => new Date(ts.timestamp) >= currentHourStart)
+      .reduce((sum, ts) => sum + ts.value, 0);
+
+    // Check Layer 3 threshold
+    if (layer3CurrentHour > RADAR_ATTACK_THRESHOLD) {
+      const entityId = `radar-l3-${currentHourKey}`;
+
+      // Check if we already created event for this hour
+      const exists = await env.DB.prepare(`
+        SELECT 1 FROM events WHERE source = 'radar' AND entity_id = ? LIMIT 1
+      `).bind(entityId).first();
+
+      if (!exists) {
+        await createEvent(env, {
+          source: 'radar',
+          event_type: EVENT_TYPES.RADAR_L3_SPIKE,
+          severity: 'warning',
+          title: `DDoS Spike Detected: ${layer3CurrentHour} Layer 3 attacks`,
+          description: formatAttackBreakdown(attacks.breakdown),
+          entity_id: entityId,
+          entity_name: 'Global Internet',
+          occurred_at: currentHourStart.toISOString(),
+        });
+
+        console.log(`📢 Layer 3 DDoS spike: ${layer3CurrentHour} attacks`);
+      }
+    }
+
+    // Check Layer 7 threshold
+    if (layer7CurrentHour > RADAR_ATTACK_THRESHOLD) {
+      const entityId = `radar-l7-${currentHourKey}`;
+
+      // Check if we already created event for this hour
+      const exists = await env.DB.prepare(`
+        SELECT 1 FROM events WHERE source = 'radar' AND entity_id = ? LIMIT 1
+      `).bind(entityId).first();
+
+      if (!exists) {
+        await createEvent(env, {
+          source: 'radar',
+          event_type: EVENT_TYPES.RADAR_L7_SPIKE,
+          severity: 'warning',
+          title: `DDoS Spike Detected: ${layer7CurrentHour} Layer 7 attacks`,
+          description: formatAttackBreakdown(attacks.breakdown),
+          entity_id: entityId,
+          entity_name: 'Global Internet',
+          occurred_at: currentHourStart.toISOString(),
+        });
+
+        console.log(`📢 Layer 7 DDoS spike: ${layer7CurrentHour} attacks`);
+      }
+    }
+  } catch (error) {
+    console.error('Error checking attack events:', error);
+  }
+}
+
+/**
+ * Format attack breakdown for event description
+ */
+function formatAttackBreakdown(breakdown: AttackData['breakdown']): string {
+  const parts = [];
+
+  if (breakdown.byProtocol.length > 0) {
+    const top3Protocols = breakdown.byProtocol
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 3)
+      .map((p) => `${p.name}: ${p.value}`)
+      .join(', ');
+    parts.push(`Top protocols: ${top3Protocols}`);
+  }
+
+  if (breakdown.byVector.length > 0) {
+    const top3Vectors = breakdown.byVector
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 3)
+      .map((v) => `${v.name}: ${v.value}`)
+      .join(', ');
+    parts.push(`Top vectors: ${top3Vectors}`);
+  }
+
+  return parts.length > 0 ? parts.join('. ') : 'DDoS attack activity detected';
 }

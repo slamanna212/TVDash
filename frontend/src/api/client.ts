@@ -157,6 +157,12 @@ export interface Event {
 export interface EventsResponse {
   events: Event[];
   total: number;
+  summary: {
+    bySeverity: Array<{ severity: string; count: number }>;
+    bySource: Array<{ source: string; count: number }>;
+    activeCount: number;
+  };
+  lastUpdated: string;
 }
 
 class APIClient {
