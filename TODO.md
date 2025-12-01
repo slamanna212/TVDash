@@ -1,17 +1,5 @@
 # MSP Dashboard - TODO List
 
-### 2. Events Timeline Page
-**Effort**: 3-5 hours
-**Dependencies**: None (DB helpers already exist!)
-
-Tasks:
-- [ ] Wire up `/api/events` endpoint in src/api/routes.ts
-- [ ] Implement event aggregation in cron collectors
-- [ ] Build EventsPage.tsx frontend with filterable timeline
-- [ ] Add real-time event feed
-
-## 📋 Medium Priority
-
 ### 3. Power Grid Monitoring
 **Effort**: 4-6 hours
 **Dependencies**: EIA_API_KEY secret (free from eia.gov)

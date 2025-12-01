@@ -9,6 +9,7 @@ import { collectGCPStatus } from './collectors/cloud/gcp';
 import { collectM365Status } from './collectors/productivity/microsoft';
 import { checkAllISPs } from './collectors/isp/radar-isp';
 import { checkAndCreateAttackEvents } from './collectors/radar/attacks';
+import { collectPJMGridStatus } from './collectors/grid/eia';
 import {
   createEventIfChanged,
   getAlertState,
@@ -46,6 +47,7 @@ export async function handleScheduled(
         runCloudStatusChecks(env),
         runISPChecks(env),
         checkAndCreateAttackEvents(env),
+        runGridCheck(env),
       ]);
     }
 
@@ -616,6 +618,34 @@ async function recordStatusHistory(
     });
   } catch (error) {
     console.error(`Failed to record status for service ${serviceId}:`, error);
+  }
+}
+
+/**
+ * Check power grid status (PJM)
+ */
+async function runGridCheck(env: Env): Promise<void> {
+  try {
+    const gridData = await collectPJMGridStatus(env);
+    const now = new Date().toISOString();
+
+    await env.DB.prepare(`
+      INSERT INTO grid_status (
+        region, status, demand_mw, fuel_mix, alerts, checked_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).bind(
+      gridData.region,
+      gridData.status,
+      gridData.demand_mw || null,
+      JSON.stringify(gridData.fuel_mix || {}),
+      JSON.stringify(gridData.alerts || []),
+      now
+    ).run();
+
+    console.log(`✓ Grid status: ${gridData.status}`);
+  } catch (error) {
+    console.error('Error checking grid:', error);
   }
 }
 

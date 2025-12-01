@@ -165,6 +165,15 @@ export interface EventsResponse {
   lastUpdated: string;
 }
 
+export interface GridResponse {
+  region: string;
+  status: 'operational' | 'degraded' | 'outage' | 'unknown';
+  demand_mw?: number;
+  fuel_mix?: Record<string, number>;
+  alerts?: string[];
+  checked_at: string;
+}
+
 class APIClient {
   private baseUrl: string;
 
@@ -204,8 +213,8 @@ class APIClient {
     return this.fetch<AttackData>('/api/radar/attacks');
   }
 
-  async getGrid(): Promise<any> {
-    return this.fetch('/api/grid');
+  async getGrid(): Promise<GridResponse> {
+    return this.fetch<GridResponse>('/api/grid');
   }
 
   async getEvents(params?: { source?: string; limit?: number }): Promise<EventsResponse> {

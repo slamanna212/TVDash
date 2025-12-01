@@ -6,6 +6,7 @@ import { getInternetStatus } from './internet';
 import { getRadarAttacks } from './radar';
 import { getEvents } from './events';
 import { getServiceHistory } from '../db/queries';
+import { getGridStatus } from './grid';
 
 export async function handleApiRequest(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
@@ -68,11 +69,7 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
 
     // GET /api/grid - Power grid status
     if (path === '/api/grid' && request.method === 'GET') {
-      // TODO: Implement grid status endpoint
-      return new Response(JSON.stringify({ error: 'Not implemented yet' }), {
-        status: 501,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return await getGridStatus(env);
     }
 
     // GET /api/events - Unified event timeline
