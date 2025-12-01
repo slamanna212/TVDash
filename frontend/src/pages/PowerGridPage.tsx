@@ -40,10 +40,10 @@ export function PowerGridPage() {
   }
 
   const statusColor = {
-    operational: '#1b5e20',  // Dark green
-    degraded: '#f57f17',     // Dark yellow/orange
-    outage: '#b71c1c',       // Dark red
-    unknown: '#424242',      // Dark gray
+    operational: '#2f9e44',  // Green (matches app theme)
+    degraded: '#fab005',     // Yellow (matches app theme)
+    outage: '#e03131',       // Red (matches app theme)
+    unknown: '#495057',      // Gray (matches app theme)
   }[data.status];
 
   // Prepare fuel mix sections for RingProgress
@@ -62,14 +62,20 @@ export function PowerGridPage() {
       </Title>
 
       <Grid gutter="md">
+        {/* Left spacer */}
+        <Grid.Col span={2}></Grid.Col>
+
         {/* Main Status Card */}
-        <Grid.Col span={6}>
+        <Grid.Col span={3}>
           <Card
             shadow="sm"
-            padding="lg"
+            padding="sm"
             style={{
               backgroundColor: statusColor,
-              height: 'auto',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
             <Stack align="center" gap="sm" justify="center">
@@ -77,7 +83,7 @@ export function PowerGridPage() {
               <Title order={2} style={{ fontSize: 'calc(var(--font-lg) * 1.5)' }}>
                 {data.status.toUpperCase()}
               </Title>
-              <Text size="md">
+              <Text size="sm">
                 Last updated: {new Date(data.checked_at).toLocaleTimeString()}
               </Text>
             </Stack>
@@ -85,77 +91,77 @@ export function PowerGridPage() {
         </Grid.Col>
 
         {/* Fuel Mix Ring Progress */}
-        <Grid.Col span={6}>
-          <Card shadow="sm" padding="lg" style={{ height: 'auto' }}>
-            <Stack align="center" gap="sm" justify="center">
-              <Title order={3} style={{ fontSize: 'var(--font-lg)' }}>
-                Fuel Mix
-              </Title>
-              {fuelSections.length > 0 ? (
-                <>
-                  <RingProgress
-                    size={180}
-                    thickness={20}
-                    sections={fuelSections}
-                    label={
-                      <Stack align="center" gap={0}>
-                        <Text size="xs" c="dimmed">Generation</Text>
-                        <Text size="lg" fw={700}>Sources</Text>
-                      </Stack>
-                    }
-                  />
-                  {/* Legend */}
-                  <Stack gap={4} style={{ width: '100%' }}>
-                    {Object.entries(data.fuel_mix!).map(([fuel, percentage]) => (
-                      <Group key={fuel} justify="space-between">
-                        <Group gap="xs">
-                          <Box
-                            style={{
-                              width: 12,
-                              height: 12,
-                              borderRadius: 3,
-                              backgroundColor: FUEL_CONFIG[fuel]?.color || '#9e9e9e',
-                            }}
-                          />
-                          <Text size="xs">{FUEL_CONFIG[fuel]?.name || fuel}</Text>
-                        </Group>
-                        <Text size="xs" fw={600}>{percentage}%</Text>
+        <Grid.Col span={5}>
+          <Card shadow="sm" padding="sm" style={{ height: 'auto' }}>
+            {fuelSections.length > 0 ? (
+              <Group align="center" justify="center" gap="lg" wrap="nowrap">
+                <RingProgress
+                  size={240}
+                  thickness={28}
+                  sections={fuelSections}
+                  label={
+                    <Stack align="center" gap={0}>
+                      <Text size="xs" c="dimmed">Generation</Text>
+                      <Text size="lg" fw={700}>Sources</Text>
+                    </Stack>
+                  }
+                />
+                {/* Legend */}
+                <Stack gap={6} justify="center" style={{ minWidth: '160px' }}>
+                  {Object.entries(data.fuel_mix!).map(([fuel, percentage]) => (
+                    <Group key={fuel} justify="space-between" gap="sm" wrap="nowrap">
+                      <Group gap="xs" wrap="nowrap">
+                        <Box
+                          style={{
+                            width: 12,
+                            height: 12,
+                            borderRadius: 3,
+                            backgroundColor: FUEL_CONFIG[fuel]?.color || '#9e9e9e',
+                            flexShrink: 0,
+                          }}
+                        />
+                        <Text size="sm" style={{ whiteSpace: 'nowrap' }}>{FUEL_CONFIG[fuel]?.name || fuel}</Text>
                       </Group>
-                    ))}
-                  </Stack>
-                </>
-              ) : (
-                <Text c="dimmed" size="md">Fuel mix data not available</Text>
-              )}
-            </Stack>
+                      <Text size="sm" fw={600} style={{ whiteSpace: 'nowrap' }}>{percentage}%</Text>
+                    </Group>
+                  ))}
+                </Stack>
+              </Group>
+            ) : (
+              <Text c="dimmed" size="md" ta="center">Fuel mix data not available</Text>
+            )}
           </Card>
         </Grid.Col>
 
+        {/* Right spacer */}
+        <Grid.Col span={2}></Grid.Col>
+
         {/* Active Alerts */}
         <Grid.Col span={12}>
-          <Card
-            shadow="sm"
-            padding="md"
-            style={{
-              backgroundColor: data.alerts && data.alerts.length > 0 ? '#b71c1c' : undefined,
-            }}
-          >
-            <Group mb="sm">
-              <IconAlertTriangle size={28} />
-              <Title order={3} style={{ fontSize: 'var(--font-lg)' }}>
-                Active Alerts
-              </Title>
-            </Group>
-            {data.alerts && data.alerts.length > 0 ? (
-              <Stack gap="xs">
-                {data.alerts.map((alert, idx) => (
-                  <Text key={idx} size="md">{alert}</Text>
-                ))}
-              </Stack>
-            ) : (
-              <Text size="md" c="dimmed">No active alerts</Text>
-            )}
-          </Card>
+          <Group mb="md" mt="lg">
+            <IconAlertTriangle size={28} />
+            <Title order={3} style={{ fontSize: 'var(--font-lg)' }}>
+              Active Alerts
+            </Title>
+          </Group>
+          {data.alerts && data.alerts.length > 0 ? (
+            <Stack gap="md">
+              {data.alerts.map((alert, idx) => (
+                <Card
+                  key={idx}
+                  shadow="sm"
+                  padding="md"
+                  style={{
+                    backgroundColor: '#e03131',
+                  }}
+                >
+                  <Text size="md" fw={500}>{alert}</Text>
+                </Card>
+              ))}
+            </Stack>
+          ) : (
+            <Text size="md" c="dimmed" ml="md">No active alerts</Text>
+          )}
         </Grid.Col>
       </Grid>
     </Box>
