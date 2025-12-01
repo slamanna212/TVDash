@@ -1,4 +1,4 @@
-import { Box, Title, Stack, Group, Loader, Center, Text, ScrollArea } from '@mantine/core';
+import { Box, Title, Stack, Loader, Center, Text, ScrollArea } from '@mantine/core';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import { apiClient, Event } from '../api/client';
 import { EventCard } from '../components/EventCard';

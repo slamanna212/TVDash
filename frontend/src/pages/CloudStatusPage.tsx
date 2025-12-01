@@ -29,7 +29,7 @@ export function CloudStatusPage() {
         data.providers.find((p) => p.name === 'Azure'),
         data.providers.find((p) => p.name === 'AWS'),
         data.providers.find((p) => p.name === 'Google Cloud'),
-      ].filter(Boolean)
+      ].filter((p): p is NonNullable<typeof p> => p !== undefined)
     : [];
 
   if (loading && !data) {

@@ -39,6 +39,16 @@ export function PowerGridPage() {
     );
   }
 
+  if (!data) {
+    return (
+      <Center style={{ height: '100%' }}>
+        <Text size="xl" c="dimmed">
+          No grid data available
+        </Text>
+      </Center>
+    );
+  }
+
   const statusColor = {
     operational: '#2f9e44',  // Green (matches app theme)
     degraded: '#fab005',     // Yellow (matches app theme)
