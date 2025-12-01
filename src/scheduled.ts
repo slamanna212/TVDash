@@ -66,9 +66,12 @@ export async function handleScheduled(
  */
 async function runHttpHealthChecks(env: Env): Promise<void> {
   try {
-    // Get all services with check_type = 'http'
+    // Get all services with check_type = 'http' that are not handled by GitHub Actions
     const result = await env.DB.prepare(`
-      SELECT * FROM services WHERE check_type = 'http' AND check_url IS NOT NULL
+      SELECT * FROM services
+      WHERE check_type = 'http'
+        AND check_url IS NOT NULL
+        AND (check_method IS NULL OR check_method = 'worker')
     `).all();
 
     if (!result.success || !result.results) {
@@ -77,6 +80,12 @@ async function runHttpHealthChecks(env: Env): Promise<void> {
     }
 
     const services = result.results as Service[];
+
+    // If no services to check, skip (all delegated to GitHub Actions)
+    if (services.length === 0) {
+      console.log('No HTTP services to check via Worker (all delegated to GitHub Actions)');
+      return;
+    }
 
     // Check each service
     for (const service of services) {

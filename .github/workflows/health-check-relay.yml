@@ -1,0 +1,108 @@
+name: US-Based Health Check Relay
+
+on:
+  schedule:
+    # Run every 5 minutes (matching Cloudflare cron)
+    - cron: '*/5 * * * *'
+  workflow_dispatch:  # Allow manual triggering for testing
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest  # Runs in US-based Azure datacenter
+    timeout-minutes: 5
+
+    steps:
+      - name: Check Manage
+        id: manage
+        continue-on-error: true
+        run: |
+          START_TIME=$(date +%s%3N)
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            --max-time 10 \
+            --user-agent "MSP-Dashboard-Monitor/1.0-GH" \
+            "https://sscw.stratixsystems.com/")
+          END_TIME=$(date +%s%3N)
+          RESPONSE_TIME=$((END_TIME - START_TIME))
+
+          echo "http_code=$HTTP_CODE" >> $GITHUB_OUTPUT
+          echo "response_time=$RESPONSE_TIME" >> $GITHUB_OUTPUT
+
+      - name: Check Automate
+        id: automate
+        continue-on-error: true
+        run: |
+          START_TIME=$(date +%s%3N)
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            --max-time 10 \
+            --user-agent "MSP-Dashboard-Monitor/1.0-GH" \
+            "https://automate.stratixsystems.com/automate/")
+          END_TIME=$(date +%s%3N)
+          RESPONSE_TIME=$((END_TIME - START_TIME))
+
+          echo "http_code=$HTTP_CODE" >> $GITHUB_OUTPUT
+          echo "response_time=$RESPONSE_TIME" >> $GITHUB_OUTPUT
+
+      - name: Check ScreenConnect
+        id: screenconnect
+        continue-on-error: true
+        run: |
+          START_TIME=$(date +%s%3N)
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            --max-time 10 \
+            --user-agent "MSP-Dashboard-Monitor/1.0-GH" \
+            "https://help.stratixsystems.com/")
+          END_TIME=$(date +%s%3N)
+          RESPONSE_TIME=$((END_TIME - START_TIME))
+
+          echo "http_code=$HTTP_CODE" >> $GITHUB_OUTPUT
+          echo "response_time=$RESPONSE_TIME" >> $GITHUB_OUTPUT
+
+      - name: Build JSON Payload
+        id: payload
+        run: |
+          # Create JSON payload with all results
+          cat > payload.json <<EOF
+          {
+            "checks": [
+              {
+                "service_id": 1,
+                "service_name": "Manage",
+                "http_code": "${{ steps.manage.outputs.http_code }}",
+                "response_time": ${{ steps.manage.outputs.response_time || 0 }},
+                "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+              },
+              {
+                "service_id": 2,
+                "service_name": "Automate",
+                "http_code": "${{ steps.automate.outputs.http_code }}",
+                "response_time": ${{ steps.automate.outputs.response_time || 0 }},
+                "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+              },
+              {
+                "service_id": 3,
+                "service_name": "ScreenConnect",
+                "http_code": "${{ steps.screenconnect.outputs.http_code }}",
+                "response_time": ${{ steps.screenconnect.outputs.response_time || 0 }},
+                "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+              }
+            ]
+          }
+          EOF
+
+          cat payload.json
+
+      - name: Send to Cloudflare Worker
+        env:
+          WORKER_URL: ${{ secrets.WORKER_HEALTH_RELAY_URL }}
+          RELAY_SECRET: ${{ secrets.HEALTH_RELAY_SECRET }}
+        run: |
+          # Generate HMAC signature for authentication
+          SIGNATURE=$(echo -n "$(cat payload.json)" | openssl dgst -sha256 -hmac "$RELAY_SECRET" | sed 's/^.* //')
+
+          curl -X POST "$WORKER_URL/api/health-relay" \
+            -H "Content-Type: application/json" \
+            -H "X-Relay-Signature: sha256=$SIGNATURE" \
+            -H "User-Agent: GitHub-Actions-Health-Relay/1.0" \
+            --data @payload.json \
+            --max-time 10 \
+            --fail-with-body

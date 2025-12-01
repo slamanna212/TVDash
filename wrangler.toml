@@ -44,3 +44,4 @@ head_sampling_rate = 1
 # M365_TENANT_ID
 # M365_CLIENT_ID
 # M365_CLIENT_SECRET
+# HEALTH_RELAY_SECRET - Shared secret for GitHub Actions health relay (HMAC-SHA256)

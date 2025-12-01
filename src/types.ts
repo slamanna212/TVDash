@@ -8,6 +8,7 @@ export interface Env {
   M365_TENANT_ID?: string;
   M365_CLIENT_ID?: string;
   M365_CLIENT_SECRET?: string;
+  HEALTH_RELAY_SECRET: string;
   ENVIRONMENT: string;
   ALERTS_ENABLED: string;
   PAGE_ROTATION_SECONDS: string;

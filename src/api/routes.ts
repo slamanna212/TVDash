@@ -7,6 +7,7 @@ import { getRadarAttacks } from './radar';
 import { getEvents } from './events';
 import { getServiceHistory } from '../db/queries';
 import { getGridStatus } from './grid';
+import { handleHealthRelay } from './health-relay';
 
 export async function handleApiRequest(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
@@ -75,6 +76,11 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
     // GET /api/events - Unified event timeline
     if (path === '/api/events' && request.method === 'GET') {
       return await getEvents(env, request);
+    }
+
+    // POST /api/health-relay - Receive health checks from GitHub Actions
+    if (path === '/api/health-relay' && request.method === 'POST') {
+      return await handleHealthRelay(request, env);
     }
 
     // 404 - Route not found
