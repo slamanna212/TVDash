@@ -1,6 +1,7 @@
 import type { Env, CloudProvider, CloudIncident } from '../../types';
 import { parseRSSFeed, hasActiveIncidents } from '../rss-parser';
 import { fetchWithCache } from '../../utils/cache';
+import { extractAWSRegion } from '../../utils/cloud-regions';
 
 // Key AWS services to monitor
 const AWS_RSS_FEEDS = {
@@ -31,12 +32,17 @@ export async function collectAWSStatus(env: Env): Promise<CloudProvider> {
             if (hasActiveIncidents(recentItems, 48)) { // Check last 48 hours
               hasAnyIncidents = true;
 
+              // Extract region from service name
+              const region = extractAWSRegion(serviceName);
+              const regions = region ? [region] : undefined;
+
               // Add the most recent incident
               const latestIncident = recentItems[0];
               incidents.push({
                 title: `${serviceName}: ${latestIncident.title}`,
                 severity: determineAWSSeverity(latestIncident.description),
                 services: [serviceName],
+                regions,
                 startTime: latestIncident.pubDate,
                 message: latestIncident.description,
               });

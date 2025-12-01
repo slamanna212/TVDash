@@ -24,9 +24,25 @@ export interface ServicesResponse {
   lastUpdated: string;
 }
 
+export interface CloudRegion {
+  key: string;
+  name: string;
+  location: string;
+  provider: string;
+  status: 'operational' | 'degraded' | 'outage' | 'unknown';
+  affectedIncidents: Array<{
+    title: string;
+    severity: string;
+    startTime: string;
+    message?: string;
+  }>;
+  lastUpdated: string;
+}
+
 export interface CloudProvider {
   name: string;
   status: 'operational' | 'degraded' | 'outage' | 'unknown';
+  regions: CloudRegion[];
   incidents: Array<{
     title: string;
     severity: string;

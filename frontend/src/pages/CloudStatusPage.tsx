@@ -1,14 +1,36 @@
-import { Box, Title, Grid, Card, Text, Badge, Stack, Group, Loader, Center } from '@mantine/core';
+import { Box, Title, Grid, Text, Badge, Stack, Group, Loader, Center } from '@mantine/core';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
-import { apiClient, CloudProvider } from '../api/client';
-import { StatusBadge } from '../components/StatusBadge';
-import { statusColors } from '../theme';
+import { apiClient, CloudRegion } from '../api/client';
+import { CloudRegionCard } from '../components/CloudRegionCard';
+import { getProviderIcon } from '../utils/cloudIcons';
 
 export function CloudStatusPage() {
   const { data, loading, error } = useAutoRefresh(
     () => apiClient.getCloud(),
     60 // Refresh every minute
   );
+
+  // Sort regions by status priority (outage > degraded > operational)
+  const sortRegionsByStatus = (regions: CloudRegion[]) => {
+    const statusPriority: Record<string, number> = {
+      outage: 0,
+      degraded: 1,
+      operational: 2,
+      unknown: 3,
+    };
+    return [...regions].sort((a, b) =>
+      statusPriority[a.status] - statusPriority[b.status]
+    );
+  };
+
+  // Reorder providers: Azure, AWS, Google Cloud
+  const orderedProviders = data?.providers
+    ? [
+        data.providers.find((p) => p.name === 'Azure'),
+        data.providers.find((p) => p.name === 'AWS'),
+        data.providers.find((p) => p.name === 'Google Cloud'),
+      ].filter(Boolean)
+    : [];
 
   if (loading && !data) {
     return (
@@ -29,132 +51,44 @@ export function CloudStatusPage() {
   }
 
   return (
-    <Box style={{ height: '100%', width: '100%' }}>
+    <Box
+      style={{
+        height: '100%',
+        width: '100%',
+        overflow: 'auto',
+        scrollbarWidth: 'none', // Firefox
+        msOverflowStyle: 'none', // IE/Edge
+      }}
+      className="cloud-status-container"
+    >
       <Title order={1} style={{ fontSize: 'var(--font-xl)', marginBottom: '2vw' }}>
-        Cloud Provider Status
+        Cloud Status
       </Title>
 
-      <Grid gutter="xl">
-        {data?.providers.map((provider) => (
+      {/* 3-Column Grid Layout - One column per provider */}
+      <Grid gutter="md">
+        {orderedProviders.map((provider) => (
           <Grid.Col key={provider.name} span={4}>
-            <CloudProviderCard provider={provider} />
+            {/* Provider Column Header */}
+            <Group mb="md" align="center" gap="xs">
+              {getProviderIcon(provider.name, 28)}
+              <Title order={2} style={{ fontSize: 'calc(var(--font-lg) * 1.2)' }}>
+                {provider.name}
+              </Title>
+              <Badge size="sm" color="gray" variant="light">
+                {provider.regions.length}
+              </Badge>
+            </Group>
+
+            {/* Vertical Stack of Region Cards - Sorted by Status */}
+            <Stack gap="md">
+              {sortRegionsByStatus(provider.regions).map((region) => (
+                <CloudRegionCard key={region.key} region={region} />
+              ))}
+            </Stack>
           </Grid.Col>
         ))}
       </Grid>
     </Box>
   );
-}
-
-function CloudProviderCard({ provider }: { provider: CloudProvider }) {
-  const getProviderIcon = (name: string) => {
-    switch (name) {
-      case 'AWS':
-        return '☁️';
-      case 'Azure':
-        return '🔷';
-      case 'Google Cloud':
-        return '🌥️';
-      default:
-        return '☁️';
-    }
-  };
-
-  return (
-    <Card
-      shadow="md"
-      padding="lg"
-      radius="md"
-      style={{
-        height: '100%',
-        background: 'var(--bg-secondary)',
-      }}
-    >
-      <Stack gap="md">
-        {/* Provider Header */}
-        <Group justify="space-between" align="flex-start">
-          <Box>
-            <Text
-              size="calc(var(--font-lg) * 1.2)"
-              fw={700}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-            >
-              <span>{getProviderIcon(provider.name)}</span>
-              {provider.name}
-            </Text>
-          </Box>
-          <StatusBadge status={provider.status} size="lg" />
-        </Group>
-
-        {/* Incidents */}
-        {provider.incidents.length === 0 ? (
-          <Text c="dimmed" size="lg">
-            ✓ All systems operational
-          </Text>
-        ) : (
-          <Stack gap="sm">
-            <Text fw={600} size="lg">
-              Active Incidents ({provider.incidents.length}):
-            </Text>
-            {provider.incidents.slice(0, 3).map((incident, idx) => (
-              <Card
-                key={idx}
-                padding="sm"
-                radius="sm"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  borderLeft: `3px solid ${getSeverityColor(incident.severity)}`,
-                }}
-              >
-                <Stack gap="xs">
-                  <Group justify="space-between">
-                    <Text size="sm" fw={600} style={{ flex: 1 }}>
-                      {incident.title}
-                    </Text>
-                    <Badge color={getSeverityColor(incident.severity)} size="sm">
-                      {incident.severity}
-                    </Badge>
-                  </Group>
-
-                  {incident.services && incident.services.length > 0 && (
-                    <Text size="xs" c="dimmed">
-                      Services: {incident.services.join(', ')}
-                    </Text>
-                  )}
-
-                  {incident.regions && incident.regions.length > 0 && (
-                    <Text size="xs" c="dimmed">
-                      Regions: {incident.regions.join(', ')}
-                    </Text>
-                  )}
-                </Stack>
-              </Card>
-            ))}
-            {provider.incidents.length > 3 && (
-              <Text size="sm" c="dimmed">
-                + {provider.incidents.length - 3} more incidents
-              </Text>
-            )}
-          </Stack>
-        )}
-
-        {/* Last Updated */}
-        <Text size="xs" c="dimmed" mt="auto">
-          Updated: {new Date(provider.lastUpdated).toLocaleTimeString()}
-        </Text>
-      </Stack>
-    </Card>
-  );
-}
-
-function getSeverityColor(severity: string): string {
-  switch (severity.toLowerCase()) {
-    case 'critical':
-      return statusColors.outage;
-    case 'major':
-      return statusColors.degraded;
-    case 'minor':
-      return statusColors.degraded;
-    default:
-      return statusColors.unknown;
-  }
 }

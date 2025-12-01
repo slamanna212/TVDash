@@ -125,3 +125,38 @@ body {
     transform: translateX(-50%);
   }
 }
+
+/* Region Card Animations */
+@keyframes pulse-border {
+  0%, 100% {
+    border-left-width: 3px;
+    opacity: 1;
+  }
+  50% {
+    border-left-width: 5px;
+    opacity: 0.8;
+  }
+}
+
+.region-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.region-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.region-card-outage {
+  animation: pulse-border 2s ease-in-out infinite;
+}
+
+/* Hide scrollbars in Cloud Status page while keeping scroll functionality */
+.cloud-status-container::-webkit-scrollbar {
+  display: none;
+}
+
+.cloud-status-container {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}

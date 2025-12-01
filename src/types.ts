@@ -56,9 +56,20 @@ export interface LocalISP {
   display_order: number;
 }
 
+export interface CloudRegion {
+  key: string;           // "us-east-1", "eastus", "us-east1"
+  name: string;          // "US East 1"
+  location: string;      // "N. Virginia"
+  provider: string;      // "AWS", "Azure", "Google Cloud"
+  status: ServiceStatus;
+  affectedIncidents: CloudIncident[];
+  lastUpdated: string;
+}
+
 export interface CloudProvider {
   name: string;
   status: ServiceStatus;
+  regions: CloudRegion[];  // NEW: Array of region statuses
   incidents: CloudIncident[];
   lastUpdated: string;
 }
