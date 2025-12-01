@@ -1,16 +1,5 @@
 # MSP Dashboard - TODO List
 
-
-### 1. M365 & Cloud Page Enhancements
-**Effort**: TBD
-**Dependencies**: None
-
-Tasks:
-- [ ] Gather requirements from user
-- [ ] Enhance CloudStatusPage.tsx
-- [ ] Enhance M365WorkspacePage.tsx
-
-
 ### 2. Events Timeline Page
 **Effort**: 3-5 hours
 **Dependencies**: None (DB helpers already exist!)
