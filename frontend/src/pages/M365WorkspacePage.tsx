@@ -1,8 +1,7 @@
-import { Box, Title, Card, Text, Stack, Group, Loader, Center, SimpleGrid } from '@mantine/core';
+import { Box, Title, Text, Loader, Center, SimpleGrid } from '@mantine/core';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import { apiClient, M365Service } from '../api/client';
-import { StatusBadge } from '../components/StatusBadge';
-import { statusColors } from '../theme';
+import { M365ServiceCard } from '../components/M365ServiceCard';
 
 export function M365WorkspacePage() {
   const { data: m365Data, loading: m365Loading, error: m365Error } = useAutoRefresh(
@@ -30,68 +29,48 @@ export function M365WorkspacePage() {
 }
 
 function M365Section({ data, error }: { data: any; error: Error | null }) {
+  // Sort services by status priority
+  const statusPriority: Record<string, number> = {
+    outage: 0,
+    degraded: 1,
+    operational: 2,
+    unknown: 3,
+  };
+
+  const sortedServices = data?.services
+    ? [...data.services].sort((a: M365Service, b: M365Service) =>
+        statusPriority[a.status] - statusPriority[b.status]
+      )
+    : [];
+
   if (error) {
     return (
-      <Card shadow="md" padding="lg" style={{ background: 'var(--bg-secondary)', height: '100%' }}>
+      <Box style={{ padding: 'lg', height: '100%' }}>
         <Text c="red">M365 credentials not configured</Text>
         <Text size="sm" c="dimmed" mt="sm">
           Configure M365_TENANT_ID, M365_CLIENT_ID, and M365_CLIENT_SECRET to enable M365 monitoring
         </Text>
-      </Card>
+      </Box>
     );
   }
 
   return (
-    <Card shadow="md" padding="lg" style={{ background: 'var(--bg-secondary)', height: '100%' }}>
-      <Stack gap="md" style={{ height: '100%' }}>
-        <Text size="calc(var(--font-lg) * 1.2)" fw={700}>
-          Microsoft 365
-        </Text>
-
-        {data && data.services && data.services.length > 0 ? (
-          <SimpleGrid cols={2} spacing="md">
-            {data.services.map((service: M365Service) => (
-              <Card
-                key={service.name}
-                padding="md"
-                radius="sm"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: `2px solid ${statusColors[service.status]}`,
-                }}
-              >
-                <Stack gap="xs">
-                  <Group justify="space-between">
-                    <Text fw={600}>{service.name}</Text>
-                    <StatusBadge status={service.status} size="sm" />
-                  </Group>
-
-                  {service.issues && service.issues.length > 0 && (
-                    <Stack gap="xs">
-                      {service.issues.slice(0, 2).map((issue) => (
-                        <Box key={issue.id}>
-                          <Text size="xs" c="dimmed">
-                            {issue.title}
-                          </Text>
-                        </Box>
-                      ))}
-                      {service.issues.length > 2 && (
-                        <Text size="xs" c="dimmed">
-                          +{service.issues.length - 2} more
-                        </Text>
-                      )}
-                    </Stack>
-                  )}
-                </Stack>
-              </Card>
-            ))}
-          </SimpleGrid>
-        ) : (
-          <Center style={{ flex: 1 }}>
-            <Text c="dimmed">No M365 data available</Text>
-          </Center>
-        )}
-      </Stack>
-    </Card>
+    <Box style={{ height: '100%' }}>
+      {sortedServices.length > 0 ? (
+        <SimpleGrid cols={5} spacing="md">
+          {sortedServices.map((service: M365Service) => (
+            <M365ServiceCard
+              key={service.name}
+              service={service}
+              updatedAt={data.lastChecked}
+            />
+          ))}
+        </SimpleGrid>
+      ) : (
+        <Center style={{ height: '100%' }}>
+          <Text c="dimmed">No M365 data available</Text>
+        </Center>
+      )}
+    </Box>
   );
 }

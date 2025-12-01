@@ -151,6 +151,20 @@ body {
   animation: pulse-border 2s ease-in-out infinite;
 }
 
+/* M365 Service Card Animations */
+.service-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.service-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.service-card-outage {
+  animation: pulse-border 2s ease-in-out infinite;
+}
+
 /* Hide scrollbars in Cloud Status page while keeping scroll functionality */
 .cloud-status-container::-webkit-scrollbar {
   display: none;
