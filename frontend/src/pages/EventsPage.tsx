@@ -1,4 +1,5 @@
-import { Box, Title, Stack, Loader, Center, Text, ScrollArea } from '@mantine/core';
+import { Box, Title, Stack, Center, Text, ScrollArea, Skeleton } from '@mantine/core';
+import { motion } from 'framer-motion';
 import { useMemo } from 'react';
 import type { Event } from '../api/client';
 import { apiClient } from '../api/client';
@@ -23,6 +24,30 @@ function groupEventsByDay(events: Event[]): { [key: string]: Event[] } {
   return groups;
 }
 
+// Animation variants for card entry
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+    },
+  },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, x: -20 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      type: 'spring' as const,
+      stiffness: 300,
+      damping: 24,
+    },
+  },
+};
+
 export function EventsPage() {
   const { data, loading, error } = useAutoRefresh(
     () => apiClient.getEvents({ limit: 100 }),
@@ -45,9 +70,16 @@ export function EventsPage() {
 
   if (loading && !data) {
     return (
-      <Center style={{ height: '100%' }}>
-        <Loader size="xl" />
-      </Center>
+      <Box style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Title order={1} style={{ fontSize: 'var(--font-xl)', marginBottom: '2vw' }}>
+          Events Timeline
+        </Title>
+        <Stack gap="md" pb="xl">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Skeleton key={i} height={120} radius="md" animate />
+          ))}
+        </Stack>
+      </Box>
     );
   }
 
@@ -81,18 +113,26 @@ export function EventsPage() {
             </Text>
           </Center>
         ) : (
-          <Stack gap="md" pb="xl">
-            {sortedDates.map((dateKey) => (
-              <div key={dateKey}>
-                <DaySeparator date={new Date(dateKey)} />
-                <Stack gap="md">
-                  {groupedEvents[dateKey].map((event) => (
-                    <EventCard key={event.id} event={event} />
-                  ))}
-                </Stack>
-              </div>
-            ))}
-          </Stack>
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            <Stack gap="md" pb="xl">
+              {sortedDates.map((dateKey) => (
+                <div key={dateKey}>
+                  <DaySeparator date={new Date(dateKey)} />
+                  <Stack gap="md">
+                    {groupedEvents[dateKey].map((event) => (
+                      <motion.div key={event.id} variants={cardVariants}>
+                        <EventCard event={event} />
+                      </motion.div>
+                    ))}
+                  </Stack>
+                </div>
+              ))}
+            </Stack>
+          </motion.div>
         )}
       </ScrollArea>
     </Box>

@@ -1,5 +1,6 @@
 import { Box, Title, Grid, Card, Text, Stack, Skeleton, Center, RingProgress, Group } from '@mantine/core';
 import { IconBolt, IconAlertTriangle } from '@tabler/icons-react';
+import { motion } from 'framer-motion';
 import { useMemo } from 'react';
 import { apiClient } from '../api/client';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
@@ -23,6 +24,30 @@ const STATUS_COLORS: Record<string, string> = {
   degraded: '#fab005',     // Yellow (matches app theme)
   outage: '#e03131',       // Red (matches app theme)
   unknown: '#495057',      // Gray (matches app theme)
+};
+
+// Animation variants for card entry
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+    },
+  },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: 'spring' as const,
+      stiffness: 300,
+      damping: 24,
+    },
+  },
 };
 
 // Helper component for animated fuel percentage
@@ -102,111 +127,123 @@ export function PowerGridPage() {
         Power Grid - PJM Region (PA, NJ, DE)
       </Title>
 
-      <Grid gutter="md">
-        {/* Left spacer */}
-        <Grid.Col span={2}></Grid.Col>
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <Grid gutter="md">
+          {/* Left spacer */}
+          <Grid.Col span={2}></Grid.Col>
 
-        {/* Main Status Card */}
-        <Grid.Col span={3}>
-          <Card
-            shadow="sm"
-            padding="sm"
-            style={{
-              backgroundColor: statusColor,
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Stack align="center" gap="sm" justify="center">
-              <IconBolt size={80} stroke={1.5} />
-              <Title order={2} style={{ fontSize: 'calc(var(--font-lg) * 1.5)' }}>
-                {data.status.toUpperCase()}
-              </Title>
-              <Text size="sm">
-                Last updated: {new Date(data.checked_at).toLocaleTimeString()}
-              </Text>
-            </Stack>
-          </Card>
-        </Grid.Col>
+          {/* Main Status Card */}
+          <Grid.Col span={3}>
+            <motion.div variants={cardVariants}>
+              <Card
+                shadow="sm"
+                padding="sm"
+                style={{
+                  backgroundColor: statusColor,
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Stack align="center" gap="sm" justify="center">
+                  <IconBolt size={80} stroke={1.5} />
+                  <Title order={2} style={{ fontSize: 'calc(var(--font-lg) * 1.5)' }}>
+                    {data.status.toUpperCase()}
+                  </Title>
+                  <Text size="sm">
+                    Last updated: {new Date(data.checked_at).toLocaleTimeString()}
+                  </Text>
+                </Stack>
+              </Card>
+            </motion.div>
+          </Grid.Col>
 
-        {/* Fuel Mix Ring Progress */}
-        <Grid.Col span={5}>
-          <Card shadow="sm" padding="sm" style={{ height: 'auto' }}>
-            {fuelSections.length > 0 ? (
-              <Group align="center" justify="center" gap="lg" wrap="nowrap">
-                <RingProgress
-                  size={240}
-                  thickness={28}
-                  sections={fuelSections}
-                  label={
-                    <Stack align="center" gap={0}>
-                      <Text size="xs" c="dimmed">Generation</Text>
-                      <Text size="lg" fw={700}>Sources</Text>
+          {/* Fuel Mix Ring Progress */}
+          <Grid.Col span={5}>
+            <motion.div variants={cardVariants}>
+              <Card shadow="sm" padding="sm" style={{ height: 'auto' }}>
+                {fuelSections.length > 0 ? (
+                  <Group align="center" justify="center" gap="lg" wrap="nowrap">
+                    <RingProgress
+                      size={240}
+                      thickness={28}
+                      sections={fuelSections}
+                      label={
+                        <Stack align="center" gap={0}>
+                          <Text size="xs" c="dimmed">Generation</Text>
+                          <Text size="lg" fw={700}>Sources</Text>
+                        </Stack>
+                      }
+                    />
+                    {/* Legend */}
+                    <Stack gap={6} justify="center" style={{ minWidth: '160px' }}>
+                      {Object.entries(data.fuel_mix!)
+                        .sort(([, a], [, b]) => b - a) // Sort by percentage descending
+                        .map(([fuel, percentage]) => (
+                        <Group key={fuel} justify="space-between" gap="sm" wrap="nowrap">
+                          <Group gap="xs" wrap="nowrap">
+                            <Box
+                              style={{
+                                width: 12,
+                                height: 12,
+                                borderRadius: 3,
+                                backgroundColor: FUEL_CONFIG[fuel]?.color || '#9e9e9e',
+                                flexShrink: 0,
+                              }}
+                            />
+                            <Text size="sm" style={{ whiteSpace: 'nowrap' }}>{FUEL_CONFIG[fuel]?.name || fuel}</Text>
+                          </Group>
+                          <AnimatedFuelPercentage percentage={percentage} />
+                        </Group>
+                      ))}
                     </Stack>
-                  }
-                />
-                {/* Legend */}
-                <Stack gap={6} justify="center" style={{ minWidth: '160px' }}>
-                  {Object.entries(data.fuel_mix!)
-                    .sort(([, a], [, b]) => b - a) // Sort by percentage descending
-                    .map(([fuel, percentage]) => (
-                    <Group key={fuel} justify="space-between" gap="sm" wrap="nowrap">
-                      <Group gap="xs" wrap="nowrap">
-                        <Box
-                          style={{
-                            width: 12,
-                            height: 12,
-                            borderRadius: 3,
-                            backgroundColor: FUEL_CONFIG[fuel]?.color || '#9e9e9e',
-                            flexShrink: 0,
-                          }}
-                        />
-                        <Text size="sm" style={{ whiteSpace: 'nowrap' }}>{FUEL_CONFIG[fuel]?.name || fuel}</Text>
-                      </Group>
-                      <AnimatedFuelPercentage percentage={percentage} />
-                    </Group>
+                  </Group>
+                ) : (
+                  <Text c="dimmed" size="md" ta="center">Fuel mix data not available</Text>
+                )}
+              </Card>
+            </motion.div>
+          </Grid.Col>
+
+          {/* Right spacer */}
+          <Grid.Col span={2}></Grid.Col>
+
+          {/* Active Alerts */}
+          <Grid.Col span={12}>
+            <motion.div variants={cardVariants}>
+              <Group mb="md" mt="lg">
+                <IconAlertTriangle size={28} />
+                <Title order={3} style={{ fontSize: 'var(--font-lg)' }}>
+                  Active Alerts
+                </Title>
+              </Group>
+              {data.alerts && data.alerts.length > 0 ? (
+                <Stack gap="md">
+                  {data.alerts.map((alert, idx) => (
+                    <Card
+                      key={idx}
+                      shadow="sm"
+                      padding="md"
+                      style={{
+                        backgroundColor: '#e03131',
+                      }}
+                    >
+                      <Text size="md" fw={500}>{alert}</Text>
+                    </Card>
                   ))}
                 </Stack>
-              </Group>
-            ) : (
-              <Text c="dimmed" size="md" ta="center">Fuel mix data not available</Text>
-            )}
-          </Card>
-        </Grid.Col>
-
-        {/* Right spacer */}
-        <Grid.Col span={2}></Grid.Col>
-
-        {/* Active Alerts */}
-        <Grid.Col span={12}>
-          <Group mb="md" mt="lg">
-            <IconAlertTriangle size={28} />
-            <Title order={3} style={{ fontSize: 'var(--font-lg)' }}>
-              Active Alerts
-            </Title>
-          </Group>
-          {data.alerts && data.alerts.length > 0 ? (
-            <Stack gap="md">
-              {data.alerts.map((alert, idx) => (
-                <Card
-                  key={idx}
-                  shadow="sm"
-                  padding="md"
-                  style={{
-                    backgroundColor: '#e03131',
-                  }}
-                >
-                  <Text size="md" fw={500}>{alert}</Text>
-                </Card>
-              ))}
-            </Stack>
-          ) : (
-            <Text size="md" c="dimmed" ml="md">No active alerts</Text>
-          )}
-        </Grid.Col>
-      </Grid>
+              ) : (
+                <Text size="md" c="dimmed" ml="md">No active alerts</Text>
+              )}
+            </motion.div>
+          </Grid.Col>
+        </Grid>
+      </motion.div>
     </Box>
   );
 }
