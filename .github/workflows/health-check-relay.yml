@@ -59,36 +59,22 @@ jobs:
 
       - name: Build JSON Payload
         id: payload
+        env:
+          MANAGE_CODE: ${{ steps.manage.outputs.http_code }}
+          MANAGE_TIME: ${{ steps.manage.outputs.response_time || 0 }}
+          AUTOMATE_CODE: ${{ steps.automate.outputs.http_code }}
+          AUTOMATE_TIME: ${{ steps.automate.outputs.response_time || 0 }}
+          SCREENCONNECT_CODE: ${{ steps.screenconnect.outputs.http_code }}
+          SCREENCONNECT_TIME: ${{ steps.screenconnect.outputs.response_time || 0 }}
         run: |
-          # Create JSON payload with all results
-          cat > payload.json <<EOF
-          {
-            "checks": [
-              {
-                "service_id": 1,
-                "service_name": "Manage",
-                "http_code": "${{ steps.manage.outputs.http_code }}",
-                "response_time": ${{ steps.manage.outputs.response_time || 0 }},
-                "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-              },
-              {
-                "service_id": 2,
-                "service_name": "Automate",
-                "http_code": "${{ steps.automate.outputs.http_code }}",
-                "response_time": ${{ steps.automate.outputs.response_time || 0 }},
-                "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-              },
-              {
-                "service_id": 3,
-                "service_name": "ScreenConnect",
-                "http_code": "${{ steps.screenconnect.outputs.http_code }}",
-                "response_time": ${{ steps.screenconnect.outputs.response_time || 0 }},
-                "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-              }
-            ]
-          }
-          EOF
+          # Create JSON payload with all results (compact, no whitespace)
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
+          cat > payload.json <<EOF
+{"checks":[{"service_id":1,"service_name":"Manage","http_code":"${MANAGE_CODE}","response_time":${MANAGE_TIME},"timestamp":"${TIMESTAMP}"},{"service_id":2,"service_name":"Automate","http_code":"${AUTOMATE_CODE}","response_time":${AUTOMATE_TIME},"timestamp":"${TIMESTAMP}"},{"service_id":3,"service_name":"ScreenConnect","http_code":"${SCREENCONNECT_CODE}","response_time":${SCREENCONNECT_TIME},"timestamp":"${TIMESTAMP}"}]}
+EOF
+
+          echo "Generated payload:"
           cat payload.json
 
       - name: Send to Cloudflare Worker
@@ -96,8 +82,8 @@ jobs:
           WORKER_URL: ${{ secrets.WORKER_HEALTH_RELAY_URL }}
           RELAY_SECRET: ${{ secrets.HEALTH_RELAY_SECRET }}
         run: |
-          # Generate HMAC signature for authentication
-          SIGNATURE=$(echo -n "$(cat payload.json)" | openssl dgst -sha256 -hmac "$RELAY_SECRET" | sed 's/^.* //')
+          # Generate HMAC signature for authentication (sign the exact file bytes)
+          SIGNATURE=$(openssl dgst -sha256 -hmac "$RELAY_SECRET" < payload.json | sed 's/^.* //')
 
           curl -X POST "$WORKER_URL/api/health-relay" \
             -H "Content-Type: application/json" \
