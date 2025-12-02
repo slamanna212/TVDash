@@ -28,7 +28,7 @@ async function checkForChanges(env: Env, since: string): Promise<SSEChange[]> {
 
     // Check for cloud status updates
     const cloudCheck = await env.DB.prepare(
-      'SELECT MAX(updated_at) as last_update FROM cloud_status WHERE updated_at > ?'
+      'SELECT MAX(checked_at) as last_update FROM cloud_status WHERE checked_at > ?'
     )
       .bind(since)
       .first<{ last_update: string | null }>();
