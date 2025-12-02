@@ -126,7 +126,9 @@ export function PowerGridPage() {
                 />
                 {/* Legend */}
                 <Stack gap={6} justify="center" style={{ minWidth: '160px' }}>
-                  {Object.entries(data.fuel_mix!).map(([fuel, percentage]) => (
+                  {Object.entries(data.fuel_mix!)
+                    .sort(([, a], [, b]) => b - a) // Sort by percentage descending
+                    .map(([fuel, percentage]) => (
                     <Group key={fuel} justify="space-between" gap="sm" wrap="nowrap">
                       <Group gap="xs" wrap="nowrap">
                         <Box
