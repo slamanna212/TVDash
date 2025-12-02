@@ -49,10 +49,14 @@ export function ServiceTicker() {
     if (!element || scrollingCards.length === 0) return;
 
     let position = 0;
-    const speed = 0.5; // pixels per frame
+    let lastTime = performance.now();
+    const speed = 0.03; // pixels per millisecond (30 pixels/second)
 
-    const animate = () => {
-      position -= speed;
+    const animate = (currentTime: number) => {
+      const delta = currentTime - lastTime;
+      lastTime = currentTime;
+
+      position -= speed * delta;
 
       // Reset position when we've scrolled through half the content
       // This creates a seamless loop since we duplicate the cards
