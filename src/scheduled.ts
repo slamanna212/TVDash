@@ -1,6 +1,6 @@
 import type { Env, Service, CheckResult, ServiceStatus } from './types';
 import { performHttpCheck } from './collectors/http-check';
-import { checkStatuspageStatus, checkStatuspageStatusWithGroups } from './collectors/statuspage';
+import { checkStatuspageStatusWithGroups } from './collectors/statuspage';
 import { checkStatusHubStatus } from './collectors/statushub';
 import { checkProofpointCommunityStatus } from './collectors/proofpoint-community';
 import { collectAWSStatus } from './collectors/cloud/aws';
@@ -14,7 +14,6 @@ import {
   createEventIfChanged,
   getAlertState,
   updateAlertState,
-  shouldLogDegraded,
   hashIncident,
 } from './utils/events';
 import { createEvent, getPreviousCloudIncidents, getPreviousM365Issues } from './db/queries';
@@ -23,7 +22,7 @@ import { EVENT_TYPES } from './config/events';
 export async function handleScheduled(
   event: ScheduledEvent,
   env: Env,
-  ctx: ExecutionContext
+  _ctx: ExecutionContext
 ): Promise<void> {
   const cron = event.cron;
   console.log(`Cron triggered: ${cron} at ${new Date(event.scheduledTime).toISOString()}`);
@@ -571,9 +570,9 @@ function formatISPMetrics(metric: any): string {
   const parts = [];
 
   if (metric.metrics) {
-    if (metric.metrics.latency) parts.push(`Latency: ${metric.metrics.latency}ms`);
-    if (metric.metrics.jitter) parts.push(`Jitter: ${metric.metrics.jitter}ms`);
-    if (metric.metrics.packetLoss) parts.push(`Packet loss: ${metric.metrics.packetLoss}%`);
+    if (metric.metrics.latency) {parts.push(`Latency: ${metric.metrics.latency}ms`);}
+    if (metric.metrics.jitter) {parts.push(`Jitter: ${metric.metrics.jitter}ms`);}
+    if (metric.metrics.packetLoss) {parts.push(`Packet loss: ${metric.metrics.packetLoss}%`);}
   }
 
   if (metric.anomalies && metric.anomalies.length > 0) {
@@ -609,7 +608,7 @@ async function recordStatusHistory(
       SELECT id, name FROM services WHERE id = ?
     `).bind(serviceId).first();
 
-    if (!service) return;
+    if (!service) {return;}
 
     const serviceName = (service as any).name;
     const entityId = `service-${serviceId}`;

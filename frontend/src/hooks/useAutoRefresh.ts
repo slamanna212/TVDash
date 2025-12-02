@@ -37,19 +37,19 @@ export function useAutoRefresh<T>(
 
   useEffect(() => {
     if (initialFetch) {
-      fetchData();
+      void fetchData();
     } else {
       setLoading(false);
     }
 
-    const interval = setInterval(fetchData, intervalSeconds * 1000);
+    const interval = setInterval(() => void fetchData(), intervalSeconds * 1000);
 
     return () => clearInterval(interval);
   }, [fetchData, intervalSeconds, initialFetch]);
 
   const refetch = useCallback(() => {
     setLoading(true);
-    fetchData();
+    void fetchData();
   }, [fetchData]);
 
   return {

@@ -18,7 +18,7 @@ export function statusPriority(status: ServiceStatus): number {
  * Get the most severe status from an array of statuses
  */
 export function getMostSevereStatus(statuses: ServiceStatus[]): ServiceStatus {
-  if (statuses.length === 0) return 'unknown';
+  if (statuses.length === 0) {return 'unknown';}
 
   return statuses.reduce((mostSevere, current) => {
     return statusPriority(current) > statusPriority(mostSevere) ? current : mostSevere;
@@ -30,10 +30,10 @@ export function getMostSevereStatus(statuses: ServiceStatus[]): ServiceStatus {
  */
 export function shouldAlert(oldStatus: ServiceStatus, newStatus: ServiceStatus): boolean {
   // Always alert on outages
-  if (newStatus === 'outage') return true;
+  if (newStatus === 'outage') {return true;}
 
   // Alert on degradation from operational
-  if (oldStatus === 'operational' && newStatus === 'degraded') return true;
+  if (oldStatus === 'operational' && newStatus === 'degraded') {return true;}
 
   // Alert on recovery
   if ((oldStatus === 'outage' || oldStatus === 'degraded') && newStatus === 'operational') {
@@ -75,7 +75,7 @@ export function getStatusChangeDescription(
 export function calculateUptime(
   statusHistory: Array<{ status: ServiceStatus; checked_at: string }>
 ): number {
-  if (statusHistory.length === 0) return 100;
+  if (statusHistory.length === 0) {return 100;}
 
   const operationalCount = statusHistory.filter(h => h.status === 'operational').length;
   return (operationalCount / statusHistory.length) * 100;

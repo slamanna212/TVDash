@@ -1,4 +1,4 @@
-import type { Env, M365Service, M365Issue } from '../../types';
+import type { Env, M365Service } from '../../types';
 import { fetchWithCache, getCachedData, setCachedData } from '../../utils/cache';
 
 interface M365HealthOverview {
@@ -137,7 +137,7 @@ async function getM365AccessToken(env: Env): Promise<string | null> {
       throw new Error(`Token request failed: ${response.status}`);
     }
 
-    const tokenData = await response.json() as { access_token: string; expires_in: number };
+    const tokenData = await response.json() ;
 
     // Cache the token (with 5 minute buffer before expiration)
     await setCachedData(

@@ -1,4 +1,4 @@
-import type { Env, Service, ServiceWithStatus, LocalISP } from '../types';
+import type { Env, Service, LocalISP } from '../types';
 
 /**
  * Database query helpers for common operations
@@ -185,7 +185,7 @@ export async function getRecentEvents(
   limit: number = 50,
   source?: string
 ): Promise<Array<any>> {
-  let query = `
+  const query = `
     SELECT *
     FROM events
     ${source ? 'WHERE source = ?' : ''}
@@ -268,7 +268,7 @@ export async function checkEventExists(
  */
 export async function getPreviousCloudIncidents(
   env: Env,
-  provider: string
+  _provider: string
 ): Promise<Set<string>> {
   const result = await env.DB.prepare(`
     SELECT entity_id
@@ -277,7 +277,7 @@ export async function getPreviousCloudIncidents(
   `)
     .all();
 
-  if (!result.success) return new Set();
+  if (!result.success) {return new Set();}
 
   return new Set((result.results as any[]).map((r) => r.entity_id));
 }
@@ -298,7 +298,7 @@ export async function getPreviousM365Issues(
     .bind(`${serviceName}-%`)
     .all();
 
-  if (!result.success) return new Set();
+  if (!result.success) {return new Set();}
 
   return new Set(
     (result.results as any[]).map((r) => {

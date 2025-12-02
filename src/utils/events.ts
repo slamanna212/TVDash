@@ -20,7 +20,7 @@ export async function getAlertState(
     .bind(entityType, entityId)
     .first();
 
-  if (!result) return null;
+  if (!result) {return null;}
 
   return {
     last_status: (result as any).last_status,

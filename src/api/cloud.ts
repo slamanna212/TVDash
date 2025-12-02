@@ -34,9 +34,9 @@ export async function getCloudStatus(env: Env): Promise<Response> {
 
       // Determine provider name (capitalize properly)
       let providerName = row.provider.toUpperCase();
-      if (row.provider === 'gcp') providerName = 'Google Cloud';
-      if (row.provider === 'azure') providerName = 'Azure';
-      if (row.provider === 'aws') providerName = 'AWS';
+      if (row.provider === 'gcp') {providerName = 'Google Cloud';}
+      if (row.provider === 'azure') {providerName = 'Azure';}
+      if (row.provider === 'aws') {providerName = 'AWS';}
 
       return {
         name: providerName,

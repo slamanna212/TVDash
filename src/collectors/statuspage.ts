@@ -44,8 +44,8 @@ function determineStatusFromComponents(components: Array<{ name: string; status:
     c.status === 'degraded_performance' || c.status === 'under_maintenance'
   );
 
-  if (hasOutage) return 'outage';
-  if (hasDegraded) return 'degraded';
+  if (hasOutage) {return 'outage';}
+  if (hasDegraded) {return 'degraded';}
   return 'operational';
 }
 

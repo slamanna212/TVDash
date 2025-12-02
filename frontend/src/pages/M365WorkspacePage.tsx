@@ -1,8 +1,9 @@
 import { Box, Title, Text, Loader, Center, SimpleGrid } from '@mantine/core';
 import { useMemo } from 'react';
-import { useAutoRefresh } from '../hooks/useAutoRefresh';
-import { apiClient, M365Service } from '../api/client';
+import type { M365Service } from '../api/client';
+import { apiClient } from '../api/client';
 import { M365ServiceCard } from '../components/M365ServiceCard';
+import { useAutoRefresh } from '../hooks/useAutoRefresh';
 
 // Status priority for sorting (extracted to avoid recreating on every render)
 const statusPriority: Record<string, number> = {

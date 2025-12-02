@@ -97,7 +97,7 @@ async function fetchPJMFuelMix(apiKey: string): Promise<Record<string, number>> 
 
     // Get latest period's data
     const latestPeriod = data.response?.data?.[0]?.period;
-    if (!latestPeriod) return {};
+    if (!latestPeriod) {return {};}
 
     // Aggregate fuel types for the latest hour
     let totalGeneration = 0;

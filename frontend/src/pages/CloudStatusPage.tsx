@@ -1,8 +1,9 @@
 import { Box, Title, Grid, Text, Badge, Stack, Group, Loader, Center } from '@mantine/core';
 import { useMemo } from 'react';
-import { useAutoRefresh } from '../hooks/useAutoRefresh';
-import { apiClient, CloudRegion } from '../api/client';
+import type { CloudRegion } from '../api/client';
+import { apiClient } from '../api/client';
 import { CloudRegionCard } from '../components/CloudRegionCard';
+import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import { getProviderIcon } from '../utils/cloudIcons';
 
 // Status priority for sorting (extracted to avoid recreating on every render)

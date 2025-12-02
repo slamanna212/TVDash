@@ -1,6 +1,6 @@
 import { Box, Stack } from '@mantine/core';
-import { ServiceTicker } from './ServiceTicker';
 import { PageContainer } from './PageContainer';
+import { ServiceTicker } from './ServiceTicker';
 
 export function Layout() {
   return (

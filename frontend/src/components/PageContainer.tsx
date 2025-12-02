@@ -1,11 +1,11 @@
 import { Box, RingProgress, ActionIcon, Group } from '@mantine/core';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import { usePageRotation } from '../hooks/usePageRotation';
-import { InternetStatusPage } from '../pages/InternetStatusPage';
 import { CloudStatusPage } from '../pages/CloudStatusPage';
+import { EventsPage } from '../pages/EventsPage';
+import { InternetStatusPage } from '../pages/InternetStatusPage';
 import { M365WorkspacePage } from '../pages/M365WorkspacePage';
 import { PowerGridPage } from '../pages/PowerGridPage';
-import { EventsPage } from '../pages/EventsPage';
 
 const pages = [
   { name: 'Internet Status', component: InternetStatusPage },

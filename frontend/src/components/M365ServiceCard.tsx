@@ -1,8 +1,8 @@
 import { Card, Stack, Group, Text, Box } from '@mantine/core';
-import { M365Service } from '../api/client';
-import { StatusBadge } from './StatusBadge';
+import type { M365Service } from '../api/client';
 import { statusColors } from '../theme';
 import { getTimeAgo, formatUpdateTime } from '../utils/time';
+import { StatusBadge } from './StatusBadge';
 
 interface M365ServiceCardProps {
   service: M365Service;

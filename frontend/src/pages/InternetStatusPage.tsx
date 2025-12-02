@@ -1,8 +1,9 @@
 import { Box, Title, Grid, Card, Text, Badge, Stack, Group, Loader, Center, RingProgress } from '@mantine/core';
 import { useMemo } from 'react';
-import { useAutoRefresh } from '../hooks/useAutoRefresh';
-import { apiClient, ISPMetrics } from '../api/client';
+import type { ISPMetrics } from '../api/client';
+import { apiClient } from '../api/client';
 import { StatusBadge } from '../components/StatusBadge';
+import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import { statusColors } from '../theme';
 
 function getSecondaryASNsText(secondaryAsns: string | null | undefined): string {

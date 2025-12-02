@@ -20,8 +20,8 @@ export function ServiceTicker() {
   const lastTimeRef = useRef<number>(performance.now());
 
   useEffect(() => {
-    fetchServices();
-    const interval = setInterval(fetchServices, 30000); // Refresh every 30 seconds
+    void fetchServices();
+    const interval = setInterval(() => void fetchServices(), 30000); // Refresh every 30 seconds
     return () => clearInterval(interval);
   }, []);
 

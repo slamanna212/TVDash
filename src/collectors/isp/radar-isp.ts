@@ -98,7 +98,13 @@ export async function checkISPStatus(env: Env, isp: LocalISP): Promise<ISPMetric
 /**
  * Check a single ASN
  */
-async function checkSingleASN(asn: number, headers: Record<string, string>) {
+async function checkSingleASN(asn: number, headers: Record<string, string>): Promise<{
+  asn: number;
+  iqiMetrics: { latencyMs: number | null; jitterMs: number | null };
+  rpkiMetrics: { validPercentage: number; unknownPercentage: number; invalidPercentage: number } | null;
+  anomalies: Array<{ type: string; severity: string; startTime: string; endTime?: string }>;
+  bgpIncidents: Array<{ type: 'hijack' | 'leak'; description: string; startTime: string; endTime?: string }>;
+}> {
   console.log(`[AS${asn}] Starting checks...`);
 
   // Fetch IQI (Internet Quality Index) metrics
@@ -133,7 +139,13 @@ function aggregateASNResults(results: Array<{
   rpkiMetrics: { validPercentage: number; unknownPercentage: number; invalidPercentage: number } | null;
   anomalies: Array<{ type: string; severity: string; startTime: string; endTime?: string }>;
   bgpIncidents: Array<{ type: 'hijack' | 'leak'; description: string; startTime: string; endTime?: string }>;
-}>) {
+}>): {
+  status: 'operational' | 'degraded' | 'outage' | 'unknown';
+  metrics: { latencyMs: number | null; jitterMs: null };
+  rpki: { validPercentage: number; unknownPercentage: number; invalidPercentage: number } | null;
+  anomalies: Array<{ type: string; severity: string; startTime: string; endTime?: string }>;
+  bgpIncidents: Array<{ type: 'hijack' | 'leak'; description: string; startTime: string; endTime?: string }>;
+} {
   // Combine all anomalies and BGP incidents
   const allAnomalies = results.flatMap(r => r.anomalies);
   const allBGPIncidents = results.flatMap(r => r.bgpIncidents);
@@ -159,7 +171,7 @@ function aggregateASNResults(results: Array<{
 
   // Average RPKI metrics across all ASNs
   const rpkiResults = results
-    .map((r, idx) => ({ asn: r.asn, data: r.rpkiMetrics }))
+    .map((r) => ({ asn: r.asn, data: r.rpkiMetrics }))
     .filter((r): r is { asn: number; data: NonNullable<typeof r.data> } => r.data !== null);
 
   console.log(`Aggregating RPKI from ${results.length} ASNs: ${rpkiResults.length} have data`);
