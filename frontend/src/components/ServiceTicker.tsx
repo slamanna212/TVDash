@@ -1,43 +1,17 @@
 import { Box } from '@mantine/core';
 import { AnimatePresence } from 'framer-motion';
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
+import { useServices } from '../hooks/useServices';
 import { ServiceCard } from './ServiceCard';
 
-interface ServiceStatus {
-  id: number;
-  name: string;
-  status: 'operational' | 'degraded' | 'outage' | 'unknown';
-  statusText?: string;
-  responseTime?: number;
-  lastChecked: string;
-}
-
 export function ServiceTicker() {
-  const [services, setServices] = useState<ServiceStatus[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading } = useServices();
+  const services = data?.services || [];
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number | null>(null);
   const positionRef = useRef<number>(0); // Persist position across re-renders
   const lastTimeRef = useRef<number>(performance.now());
-
-  useEffect(() => {
-    void fetchServices();
-    const interval = setInterval(() => void fetchServices(), 30000); // Refresh every 30 seconds
-    return () => clearInterval(interval);
-  }, []);
-
-  const fetchServices = async () => {
-    try {
-      const response = await fetch('/api/services');
-      const data = await response.json();
-      if (data.services) {
-        setServices(data.services);
-        setLoading(false);
-      }
-    } catch (error) {
-      console.error('Error fetching services:', error);
-    }
-  };
 
   // Memoize the separated cards to prevent unnecessary re-renders
   const { outageCards, scrollingCards } = useMemo(() => {
@@ -87,7 +61,7 @@ export function ServiceTicker() {
     };
   }, [scrollingCards.length]); // Only restart if the NUMBER of cards changes, not the cards themselves
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Box
         style={{

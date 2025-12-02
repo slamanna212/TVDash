@@ -15,6 +15,8 @@
     "@mantine/core": "^7.14.0",
     "@mantine/hooks": "^7.14.0",
     "@tabler/icons-react": "^3.21.0",
+    "@tanstack/react-query": "^5.90.11",
+    "@tanstack/react-query-devtools": "^5.91.1",
     "framer-motion": "^12.23.25",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",

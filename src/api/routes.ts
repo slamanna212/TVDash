@@ -8,6 +8,7 @@ import { getEvents } from './events';
 import { getServiceHistory } from '../db/queries';
 import { getGridStatus } from './grid';
 import { handleHealthRelay } from './health-relay';
+import { handleSSEStream } from './sse';
 
 export async function handleApiRequest(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
@@ -81,6 +82,11 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
     // POST /api/health-relay - Receive health checks from GitHub Actions
     if (path === '/api/health-relay' && request.method === 'POST') {
       return await handleHealthRelay(request, env);
+    }
+
+    // GET /api/stream - Server-Sent Events for real-time updates
+    if (path === '/api/stream' && request.method === 'GET') {
+      return await handleSSEStream(request, env);
     }
 
     // 404 - Route not found

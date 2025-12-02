@@ -2,9 +2,7 @@ import { Box, Title, Grid, Card, Text, Stack, Skeleton, Center, RingProgress, Gr
 import { IconBolt, IconAlertTriangle } from '@tabler/icons-react';
 import { motion } from 'framer-motion';
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { apiClient } from '../api/client';
-import { useAutoRefresh } from '../hooks/useAutoRefresh';
-import { useCountUp } from '../hooks/useCountUp';
+import { useGrid } from '../hooks/useGrid';
 
 // Fuel type display names and colors
 const FUEL_CONFIG: Record<string, { name: string; color: string }> = {
@@ -60,10 +58,7 @@ function AnimatedFuelPercentage({ percentage }: { percentage: number }) {
 }
 
 export function PowerGridPage() {
-  const { data, loading, error } = useAutoRefresh(
-    () => apiClient.getGrid(),
-    60 // Refresh every minute
-  );
+  const { data, isLoading, error } = useGrid();
 
   // Track if we've animated yet
   const hasAnimated = useRef(false);
@@ -113,7 +108,7 @@ export function PowerGridPage() {
     }));
   }, [animatedFuelMix, data]);
 
-  if (loading && !data) {
+  if (isLoading && !data) {
     return (
       <Box style={{ height: '100%', width: '100%', padding: '1.5vw', overflow: 'auto' }}>
         <Title order={1} style={{ fontSize: 'var(--font-xl)', marginBottom: '1.5vw' }}>
@@ -235,7 +230,7 @@ export function PowerGridPage() {
                             />
                             <Text size="sm" style={{ whiteSpace: 'nowrap' }}>{FUEL_CONFIG[fuel]?.name || fuel}</Text>
                           </Group>
-                          <AnimatedFuelPercentage percentage={data.fuel_mix![fuel]} />
+                          <AnimatedFuelPercentage percentage={percentage} />
                         </Group>
                       ))}
                     </Stack>

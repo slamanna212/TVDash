@@ -2,9 +2,8 @@ import { Box, Title, Grid, Text, Badge, Stack, Group, Skeleton, Center } from '@
 import { motion } from 'framer-motion';
 import { useMemo } from 'react';
 import type { CloudRegion } from '../api/client';
-import { apiClient } from '../api/client';
 import { CloudRegionCard } from '../components/CloudRegionCard';
-import { useAutoRefresh } from '../hooks/useAutoRefresh';
+import { useCloud } from '../hooks/useCloud';
 import { getProviderIcon } from '../utils/cloudIcons';
 
 // Status priority for sorting (extracted to avoid recreating on every render)
@@ -47,10 +46,7 @@ const cardVariants = {
 };
 
 export function CloudStatusPage() {
-  const { data, loading, error } = useAutoRefresh(
-    () => apiClient.getCloud(),
-    60 // Refresh every minute
-  );
+  const { data, isLoading, error } = useCloud();
 
   // Memoize ordered and sorted providers to prevent recalculation on every render
   const orderedProviders = useMemo(() => {
@@ -68,7 +64,7 @@ export function CloudStatusPage() {
       }));
   }, [data]);
 
-  if (loading && !data) {
+  if (isLoading && !data) {
     return (
       <Box style={{ height: '100%', width: '100%', overflow: 'auto' }} className="cloud-status-container">
         <Title order={1} style={{ fontSize: 'var(--font-xl)', marginBottom: '2vw' }}>

@@ -2,9 +2,8 @@ import { Box, Title, Grid, Card, Text, Badge, Stack, Group, Skeleton, Center, Ri
 import { motion } from 'framer-motion';
 import { useMemo } from 'react';
 import type { ISPMetrics } from '../api/client';
-import { apiClient } from '../api/client';
 import { StatusBadge } from '../components/StatusBadge';
-import { useAutoRefresh } from '../hooks/useAutoRefresh';
+import { useInternet } from '../hooks/useInternet';
 import { useCountUp } from '../hooks/useCountUp';
 import { statusColors } from '../theme';
 
@@ -46,13 +45,10 @@ function getSecondaryASNsText(secondaryAsns: string | null | undefined): string 
 }
 
 export function InternetStatusPage() {
-  const { data, loading, error } = useAutoRefresh(
-    () => apiClient.getInternet(),
-    60 // Refresh every minute
-  );
+  const { data, isLoading, error } = useInternet();
 
 
-  if (loading && !data) {
+  if (isLoading && !data) {
     return (
       <Box style={{ height: '100%', width: '100%' }}>
         <Title order={1} style={{ fontSize: 'var(--font-xl)', marginBottom: '2vw' }}>

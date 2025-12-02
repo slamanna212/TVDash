@@ -2,10 +2,9 @@ import { Box, Title, Stack, Center, Text, ScrollArea, Skeleton } from '@mantine/
 import { motion } from 'framer-motion';
 import { useMemo } from 'react';
 import type { Event } from '../api/client';
-import { apiClient } from '../api/client';
 import { DaySeparator } from '../components/DaySeparator';
 import { EventCard } from '../components/EventCard';
-import { useAutoRefresh } from '../hooks/useAutoRefresh';
+import { useEvents } from '../hooks/useEvents';
 
 // Helper function to group events by day (extracted to avoid recreating on every render)
 function groupEventsByDay(events: Event[]): { [key: string]: Event[] } {
@@ -49,10 +48,7 @@ const cardVariants = {
 };
 
 export function EventsPage() {
-  const { data, loading, error } = useAutoRefresh(
-    () => apiClient.getEvents({ limit: 100 }),
-    60 // Refresh every 60 seconds
-  );
+  const { data, isLoading, error } = useEvents({ limit: 100 });
 
   // Memoize grouped events to prevent re-grouping on every render
   const groupedEvents = useMemo(
@@ -68,7 +64,7 @@ export function EventsPage() {
     [groupedEvents]
   );
 
-  if (loading && !data) {
+  if (isLoading && !data) {
     return (
       <Box style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column' }}>
         <Title order={1} style={{ fontSize: 'var(--font-xl)', marginBottom: '2vw' }}>

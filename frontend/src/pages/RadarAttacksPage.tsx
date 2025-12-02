@@ -1,8 +1,7 @@
 import { Box, Title, Grid, Card, Text, Stack, Group, Skeleton, Center, SimpleGrid } from '@mantine/core';
 import { useMemo } from 'react';
 import { LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import { apiClient } from '../api/client';
-import { useAutoRefresh } from '../hooks/useAutoRefresh';
+import { useRadarAttacks } from '../hooks/useRadarAttacks';
 import { useCountUp } from '../hooks/useCountUp';
 
 const CHART_COLORS = ['#e03131', '#fd7e14', '#fab005', '#82c91e', '#40c057', '#12b886', '#15aabf', '#228be6', '#4c6ef5', '#7950f2'];
@@ -18,10 +17,7 @@ function AnimatedVectorValue({ value, color }: { value: number; color: string })
 }
 
 export function RadarAttacksPage() {
-  const { data, loading, error } = useAutoRefresh(
-    () => apiClient.getRadarAttacks(),
-    60 // Refresh every minute
-  );
+  const { data, isLoading, error } = useRadarAttacks();
 
   // Animate attack totals
   const layer3Total = useCountUp(data?.layer3.total, { duration: 800 });
@@ -43,7 +39,7 @@ export function RadarAttacksPage() {
     };
   }, [data]);
 
-  if (loading && !data) {
+  if (isLoading && !data) {
     return (
       <Box style={{ height: '100%', width: '100%', overflow: 'auto' }}>
         <Title order={1} style={{ fontSize: 'var(--font-xl)', marginBottom: '2vw' }}>

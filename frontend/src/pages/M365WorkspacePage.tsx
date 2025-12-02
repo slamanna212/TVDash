@@ -2,9 +2,8 @@ import { Box, Title, Text, Skeleton, Center, SimpleGrid } from '@mantine/core';
 import { motion } from 'framer-motion';
 import { useMemo } from 'react';
 import type { M365Service } from '../api/client';
-import { apiClient } from '../api/client';
 import { M365ServiceCard } from '../components/M365ServiceCard';
-import { useAutoRefresh } from '../hooks/useAutoRefresh';
+import { useM365 } from '../hooks/useM365';
 
 // Status priority for sorting (extracted to avoid recreating on every render)
 const statusPriority: Record<string, number> = {
@@ -39,10 +38,7 @@ const cardVariants = {
 };
 
 export function M365WorkspacePage() {
-  const { data: m365Data, loading: m365Loading, error: m365Error } = useAutoRefresh(
-    () => apiClient.getM365(),
-    60
-  );
+  const { data: m365Data, isLoading: m365Loading, error: m365Error } = useM365();
 
   if (m365Loading && !m365Data) {
     return (
