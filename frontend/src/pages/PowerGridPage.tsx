@@ -1,4 +1,5 @@
 import { Box, Title, Grid, Card, Text, Stack, Loader, Center, RingProgress, Group } from '@mantine/core';
+import { useMemo } from 'react';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import { apiClient } from '../api/client';
 import { IconBolt, IconAlertTriangle } from '@tabler/icons-react';
@@ -15,11 +16,32 @@ const FUEL_CONFIG: Record<string, { name: string; color: string }> = {
   OTH: { name: 'Other', color: '#9e9e9e' },        // Gray
 };
 
+// Status color mapping (extracted to avoid recreating on every render)
+const STATUS_COLORS: Record<string, string> = {
+  operational: '#2f9e44',  // Green (matches app theme)
+  degraded: '#fab005',     // Yellow (matches app theme)
+  outage: '#e03131',       // Red (matches app theme)
+  unknown: '#495057',      // Gray (matches app theme)
+};
+
 export function PowerGridPage() {
   const { data, loading, error } = useAutoRefresh(
     () => apiClient.getGrid(),
     60 // Refresh every minute
   );
+
+  // Memoize fuel mix sections to prevent recalculation on every render
+  const fuelSections = useMemo(() => {
+    if (!data?.fuel_mix || Object.keys(data.fuel_mix).length === 0) {
+      return [];
+    }
+
+    return Object.entries(data.fuel_mix).map(([fuel, percentage]) => ({
+      value: percentage,
+      color: FUEL_CONFIG[fuel]?.color || '#9e9e9e',
+      tooltip: `${FUEL_CONFIG[fuel]?.name || fuel}: ${percentage}%`,
+    }));
+  }, [data]);
 
   if (loading && !data) {
     return (
@@ -49,21 +71,7 @@ export function PowerGridPage() {
     );
   }
 
-  const statusColor = {
-    operational: '#2f9e44',  // Green (matches app theme)
-    degraded: '#fab005',     // Yellow (matches app theme)
-    outage: '#e03131',       // Red (matches app theme)
-    unknown: '#495057',      // Gray (matches app theme)
-  }[data.status];
-
-  // Prepare fuel mix sections for RingProgress
-  const fuelSections = data.fuel_mix && Object.keys(data.fuel_mix).length > 0
-    ? Object.entries(data.fuel_mix).map(([fuel, percentage]) => ({
-        value: percentage,
-        color: FUEL_CONFIG[fuel]?.color || '#9e9e9e',
-        tooltip: `${FUEL_CONFIG[fuel]?.name || fuel}: ${percentage}%`,
-      }))
-    : [];
+  const statusColor = STATUS_COLORS[data.status];
 
   return (
     <Box style={{ height: '100%', width: '100%', padding: '1.5vw', overflow: 'auto' }}>

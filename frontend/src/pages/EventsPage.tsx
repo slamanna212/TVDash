@@ -1,8 +1,26 @@
 import { Box, Title, Stack, Loader, Center, Text, ScrollArea } from '@mantine/core';
+import { useMemo } from 'react';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import { apiClient, Event } from '../api/client';
 import { EventCard } from '../components/EventCard';
 import { DaySeparator } from '../components/DaySeparator';
+
+// Helper function to group events by day (extracted to avoid recreating on every render)
+function groupEventsByDay(events: Event[]): { [key: string]: Event[] } {
+  const groups: { [key: string]: Event[] } = {};
+
+  events.forEach((event) => {
+    const date = new Date(event.occurred_at);
+    const dateKey = date.toDateString();
+
+    if (!groups[dateKey]) {
+      groups[dateKey] = [];
+    }
+    groups[dateKey].push(event);
+  });
+
+  return groups;
+}
 
 export function EventsPage() {
   const { data, loading, error } = useAutoRefresh(
@@ -10,26 +28,18 @@ export function EventsPage() {
     60 // Refresh every 60 seconds
   );
 
-  // Group events by day
-  const groupEventsByDay = (events: Event[]) => {
-    const groups: { [key: string]: Event[] } = {};
+  // Memoize grouped events to prevent re-grouping on every render
+  const groupedEvents = useMemo(
+    () => groupEventsByDay(data?.events || []),
+    [data]
+  );
 
-    events.forEach((event) => {
-      const date = new Date(event.occurred_at);
-      const dateKey = date.toDateString();
-
-      if (!groups[dateKey]) {
-        groups[dateKey] = [];
-      }
-      groups[dateKey].push(event);
-    });
-
-    return groups;
-  };
-
-  const groupedEvents = groupEventsByDay(data?.events || []);
-  const sortedDates = Object.keys(groupedEvents).sort((a, b) =>
-    new Date(b).getTime() - new Date(a).getTime()
+  // Memoize sorted dates to prevent re-sorting on every render
+  const sortedDates = useMemo(
+    () => Object.keys(groupedEvents).sort((a, b) =>
+      new Date(b).getTime() - new Date(a).getTime()
+    ),
+    [groupedEvents]
   );
 
   if (loading && !data) {

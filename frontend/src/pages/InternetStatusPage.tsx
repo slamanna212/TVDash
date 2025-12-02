@@ -5,7 +5,7 @@ import { apiClient, ISPMetrics } from '../api/client';
 import { StatusBadge } from '../components/StatusBadge';
 import { statusColors } from '../theme';
 
-function getSecondaryASNsText(secondaryAsns: string | null): string {
+function getSecondaryASNsText(secondaryAsns: string | null | undefined): string {
   if (!secondaryAsns) return '';
   try {
     const asns = JSON.parse(secondaryAsns);
