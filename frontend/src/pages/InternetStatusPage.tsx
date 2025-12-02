@@ -62,7 +62,7 @@ export function InternetStatusPage() {
 function ISPCard({ ispMetrics }: { ispMetrics: ISPMetrics }) {
   // Memoize secondary ASNs text to avoid re-parsing on every render
   const secondaryASNsText = useMemo(
-    () => getSecondaryASNsText(ispMetrics.isp.secondary_asns),
+    () => getSecondaryASNsText(ispMetrics.isp.secondary_asns ?? null),
     [ispMetrics.isp.secondary_asns]
   );
 
