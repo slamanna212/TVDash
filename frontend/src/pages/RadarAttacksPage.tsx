@@ -1,8 +1,8 @@
 import { Box, Title, Grid, Card, Text, Stack, Group, Loader, Center, SimpleGrid } from '@mantine/core';
 import { useMemo } from 'react';
 import { LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import { apiClient } from '../api/client';
+import { useAutoRefresh } from '../hooks/useAutoRefresh';
 
 const CHART_COLORS = ['#e03131', '#fd7e14', '#fab005', '#82c91e', '#40c057', '#12b886', '#15aabf', '#228be6', '#4c6ef5', '#7950f2'];
 

@@ -3,7 +3,7 @@ import type { Env } from '../types';
 export async function getCachedData<T>(
   env: Env,
   cacheKey: string,
-  source: string
+  _source: string
 ): Promise<T | null> {
   try {
     const result = await env.DB.prepare(`

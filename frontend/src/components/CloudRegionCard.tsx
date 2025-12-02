@@ -1,8 +1,8 @@
 import { Card, Stack, Group, Text, Box } from '@mantine/core';
-import { CloudRegion } from '../api/client';
-import { StatusBadge } from './StatusBadge';
-import { getRegionIcon } from '../utils/cloudIcons';
+import type { CloudRegion } from '../api/client';
 import { statusColors } from '../theme';
+import { getRegionIcon } from '../utils/cloudIcons';
+import { StatusBadge } from './StatusBadge';
 
 interface CloudRegionCardProps {
   region: CloudRegion;

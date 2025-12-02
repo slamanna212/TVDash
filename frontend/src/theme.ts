@@ -1,4 +1,5 @@
-import { createTheme, MantineColorsTuple } from '@mantine/core';
+import type { MantineColorsTuple } from '@mantine/core';
+import { createTheme } from '@mantine/core';
 
 const redAccent: MantineColorsTuple = [
   '#ffe9e9',

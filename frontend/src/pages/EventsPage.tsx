@@ -1,9 +1,10 @@
 import { Box, Title, Stack, Loader, Center, Text, ScrollArea } from '@mantine/core';
 import { useMemo } from 'react';
-import { useAutoRefresh } from '../hooks/useAutoRefresh';
-import { apiClient, Event } from '../api/client';
-import { EventCard } from '../components/EventCard';
+import type { Event } from '../api/client';
+import { apiClient } from '../api/client';
 import { DaySeparator } from '../components/DaySeparator';
+import { EventCard } from '../components/EventCard';
+import { useAutoRefresh } from '../hooks/useAutoRefresh';
 
 // Helper function to group events by day (extracted to avoid recreating on every render)
 function groupEventsByDay(events: Event[]): { [key: string]: Event[] } {

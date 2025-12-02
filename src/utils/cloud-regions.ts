@@ -74,9 +74,9 @@ export function incidentAffectsRegion(incident: CloudIncident, regionKey: string
   if (incident.regions && incident.regions.length > 0) {
     // Normalize region names for comparison
     const normalizedRegions = incident.regions.map(r => {
-      if (provider === 'AWS') return r.toLowerCase().replace(/\s+/g, '-');
-      if (provider === 'Azure') return normalizeAzureRegion(r);
-      if (provider === 'Google Cloud') return normalizeGCPRegion(r);
+      if (provider === 'AWS') {return r.toLowerCase().replace(/\s+/g, '-');}
+      if (provider === 'Azure') {return normalizeAzureRegion(r);}
+      if (provider === 'Google Cloud') {return normalizeGCPRegion(r);}
       return r.toLowerCase();
     });
 

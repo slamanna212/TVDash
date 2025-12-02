@@ -1,8 +1,8 @@
 import { Box, Title, Grid, Card, Text, Stack, Loader, Center, RingProgress, Group } from '@mantine/core';
-import { useMemo } from 'react';
-import { useAutoRefresh } from '../hooks/useAutoRefresh';
-import { apiClient } from '../api/client';
 import { IconBolt, IconAlertTriangle } from '@tabler/icons-react';
+import { useMemo } from 'react';
+import { apiClient } from '../api/client';
+import { useAutoRefresh } from '../hooks/useAutoRefresh';
 
 // Fuel type display names and colors
 const FUEL_CONFIG: Record<string, { name: string; color: string }> = {

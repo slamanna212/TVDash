@@ -107,7 +107,7 @@ function cleanDescription(desc: string): string {
  * Check if any RSS items indicate an active incident
  */
 export function hasActiveIncidents(items: RSSItem[], hoursToCheck = 24): boolean {
-  if (items.length === 0) return false;
+  if (items.length === 0) {return false;}
 
   const now = new Date();
   const cutoffTime = new Date(now.getTime() - hoursToCheck * 60 * 60 * 1000);

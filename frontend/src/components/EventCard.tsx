@@ -1,6 +1,6 @@
 import { Card, Group, Text, Badge, Stack, Collapse } from '@mantine/core';
-import { useState } from 'react';
 import { IconAlertCircle, IconAlertTriangle, IconInfoCircle } from '@tabler/icons-react';
+import { useState } from 'react';
 import type { Event } from '../api/client';
 
 interface EventCardProps {
