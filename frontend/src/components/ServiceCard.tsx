@@ -7,18 +7,42 @@ interface ServiceCardProps {
     status: 'operational' | 'degraded' | 'outage' | 'unknown';
     statusText?: string;
     responseTime?: number;
+    lastChecked?: string;
   };
+}
+
+function formatTimeAgo(timestamp: string | undefined): string {
+  if (!timestamp) return 'Never';
+
+  const now = new Date();
+  const then = new Date(timestamp);
+  const diffMs = now.getTime() - then.getTime();
+  const diffSeconds = Math.floor(diffMs / 1000);
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffSeconds < 60) {
+    return diffSeconds === 1 ? '1 second ago' : `${diffSeconds} seconds ago`;
+  } else if (diffMinutes < 60) {
+    return diffMinutes === 1 ? '1 minute ago' : `${diffMinutes} minutes ago`;
+  } else if (diffHours < 24) {
+    return diffHours === 1 ? '1 hour ago' : `${diffHours} hours ago`;
+  } else {
+    return diffDays === 1 ? '1 day ago' : `${diffDays} days ago`;
+  }
 }
 
 export function ServiceCard({ service }: ServiceCardProps) {
   const backgroundColor = statusColors[service.status];
+  const timeAgo = formatTimeAgo(service.lastChecked);
 
   return (
     <Box
       className={service.status === 'outage' ? 'status-outage' : ''}
       style={{
         backgroundColor,
-        padding: '0 2vw',
+        padding: '0 1vw',
         borderRadius: '8px',
         minWidth: 'var(--card-min-width)',
         height: '16vh',
@@ -33,7 +57,7 @@ export function ServiceCard({ service }: ServiceCardProps) {
     >
       <Text
         style={{
-          fontSize: 'var(--font-base)',
+          fontSize: 'var(--font-lg)',
           fontWeight: 600,
           color: '#fff',
           textAlign: 'center',
@@ -41,6 +65,17 @@ export function ServiceCard({ service }: ServiceCardProps) {
         }}
       >
         {service.name}
+      </Text>
+      <Text
+        style={{
+          fontSize: 'var(--font-base)',
+          fontWeight: 400,
+          color: 'rgba(255, 255, 255, 0.8)',
+          textAlign: 'center',
+          lineHeight: 1,
+        }}
+      >
+        Updated {timeAgo}
       </Text>
     </Box>
   );
