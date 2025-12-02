@@ -502,6 +502,39 @@
         "id": "trash",
         "color": "terminal.ansiRed"
       }
+    },
+    {
+      "label": "Lint: Worker",
+      "type": "shell",
+      "command": "npm run lint",
+      "problemMatcher": ["$eslint-stylish"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": "test",
+      "icon": {
+        "id": "check",
+        "color": "terminal.ansiYellow"
+      }
+    },
+    {
+      "label": "Lint: Frontend",
+      "type": "shell",
+      "command": "npm run lint",
+      "options": {
+        "cwd": "${workspaceFolder}/frontend"
+      },
+      "problemMatcher": ["$eslint-stylish"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": "test",
+      "icon": {
+        "id": "check",
+        "color": "terminal.ansiCyan"
+      }
     }
   ],
   "inputs": [

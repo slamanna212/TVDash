@@ -8,10 +8,16 @@
     "deploy": "npm run build && wrangler deploy",
     "postinstall": "cd frontend && npm install && npm run build",
     "db:migrate": "wrangler d1 migrations apply msp-dashboard",
-    "db:create": "wrangler d1 create msp-dashboard"
+    "db:create": "wrangler d1 create msp-dashboard",
+    "lint": "eslint src --ext .ts --cache",
+    "lint:fix": "eslint src --ext .ts --cache --fix",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241127.0",
+    "@typescript-eslint/eslint-plugin": "^6.14.0",
+    "@typescript-eslint/parser": "^6.14.0",
+    "eslint": "^8.55.0",
     "typescript": "^5.3.0",
     "wrangler": "^4.51.0"
   }
