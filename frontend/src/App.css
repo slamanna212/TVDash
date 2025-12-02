@@ -52,8 +52,14 @@ body {
 
 /* Animations */
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 20px rgba(224, 49, 49, 0.3);
+  }
+  50% {
+    opacity: 0.7;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 30px rgba(224, 49, 49, 0.6);
+  }
 }
 
 .status-outage {
@@ -144,10 +150,11 @@ body {
 
 .region-card {
   transition: all 0.2s ease-in-out;
+  cursor: pointer;
 }
 
 .region-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-4px) scale(1.02) rotate(1deg);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
@@ -155,18 +162,37 @@ body {
   animation: pulse-border 2s ease-in-out infinite;
 }
 
+.region-card-outage:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 20px rgba(224, 49, 49, 0.5);
+}
+
+/* Add glow for degraded cards */
+.region-card[class*="degraded"]:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 20px rgba(250, 176, 5, 0.5);
+}
+
 /* M365 Service Card Animations */
 .service-card {
   transition: all 0.2s ease-in-out;
+  cursor: pointer;
 }
 
 .service-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-4px) scale(1.02) rotate(-1deg);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 .service-card-outage {
   animation: pulse-border 2s ease-in-out infinite;
+}
+
+.service-card-outage:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 20px rgba(224, 49, 49, 0.5);
+}
+
+/* Add glow for degraded M365 service cards */
+.service-card[class*="degraded"]:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 20px rgba(250, 176, 5, 0.5);
 }
 
 /* Hide scrollbars in Cloud Status page while keeping scroll functionality */

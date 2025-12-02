@@ -1,5 +1,6 @@
 import { Box, RingProgress, ActionIcon, Group } from '@mantine/core';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { usePageRotation } from '../hooks/usePageRotation';
 import { CloudStatusPage } from '../pages/CloudStatusPage';
 import { EventsPage } from '../pages/EventsPage';
@@ -88,7 +89,24 @@ export function PageContainer() {
         />
       </Group>
 
-      <CurrentPage />
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentPage}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{
+            duration: 0.4,
+            ease: 'easeInOut',
+          }}
+          style={{
+            height: '100%',
+            width: '100%',
+          }}
+        >
+          <CurrentPage />
+        </motion.div>
+      </AnimatePresence>
     </Box>
   );
 }

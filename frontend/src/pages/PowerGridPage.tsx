@@ -1,8 +1,9 @@
-import { Box, Title, Grid, Card, Text, Stack, Loader, Center, RingProgress, Group } from '@mantine/core';
+import { Box, Title, Grid, Card, Text, Stack, Skeleton, Center, RingProgress, Group } from '@mantine/core';
 import { IconBolt, IconAlertTriangle } from '@tabler/icons-react';
 import { useMemo } from 'react';
 import { apiClient } from '../api/client';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
+import { useCountUp } from '../hooks/useCountUp';
 
 // Fuel type display names and colors
 const FUEL_CONFIG: Record<string, { name: string; color: string }> = {
@@ -23,6 +24,16 @@ const STATUS_COLORS: Record<string, string> = {
   outage: '#e03131',       // Red (matches app theme)
   unknown: '#495057',      // Gray (matches app theme)
 };
+
+// Helper component for animated fuel percentage
+function AnimatedFuelPercentage({ percentage }: { percentage: number }) {
+  const animatedValue = useCountUp(percentage, { duration: 600 });
+  return (
+    <Text size="sm" fw={600} style={{ whiteSpace: 'nowrap' }}>
+      {animatedValue}%
+    </Text>
+  );
+}
 
 export function PowerGridPage() {
   const { data, loading, error } = useAutoRefresh(
@@ -45,9 +56,21 @@ export function PowerGridPage() {
 
   if (loading && !data) {
     return (
-      <Center style={{ height: '100%' }}>
-        <Loader size="xl" />
-      </Center>
+      <Box style={{ height: '100%', width: '100%', padding: '1.5vw', overflow: 'auto' }}>
+        <Title order={1} style={{ fontSize: 'var(--font-xl)', marginBottom: '1.5vw' }}>
+          Power Grid - PJM Region (PA, NJ, DE)
+        </Title>
+        <Grid gutter="md">
+          <Grid.Col span={2}></Grid.Col>
+          <Grid.Col span={3}>
+            <Skeleton height={250} radius="md" animate />
+          </Grid.Col>
+          <Grid.Col span={5}>
+            <Skeleton height={250} radius="md" animate />
+          </Grid.Col>
+          <Grid.Col span={2}></Grid.Col>
+        </Grid>
+      </Box>
     );
   }
 
@@ -142,7 +165,7 @@ export function PowerGridPage() {
                         />
                         <Text size="sm" style={{ whiteSpace: 'nowrap' }}>{FUEL_CONFIG[fuel]?.name || fuel}</Text>
                       </Group>
-                      <Text size="sm" fw={600} style={{ whiteSpace: 'nowrap' }}>{percentage}%</Text>
+                      <AnimatedFuelPercentage percentage={percentage} />
                     </Group>
                   ))}
                 </Stack>

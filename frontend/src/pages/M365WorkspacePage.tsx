@@ -1,4 +1,5 @@
-import { Box, Title, Text, Loader, Center, SimpleGrid } from '@mantine/core';
+import { Box, Title, Text, Skeleton, Center, SimpleGrid } from '@mantine/core';
+import { motion } from 'framer-motion';
 import { useMemo } from 'react';
 import type { M365Service } from '../api/client';
 import { apiClient } from '../api/client';
@@ -13,6 +14,30 @@ const statusPriority: Record<string, number> = {
   unknown: 3,
 };
 
+// Animation variants for card entry
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05,
+    },
+  },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: 'spring' as const,
+      stiffness: 300,
+      damping: 24,
+    },
+  },
+};
+
 export function M365WorkspacePage() {
   const { data: m365Data, loading: m365Loading, error: m365Error } = useAutoRefresh(
     () => apiClient.getM365(),
@@ -21,9 +46,16 @@ export function M365WorkspacePage() {
 
   if (m365Loading && !m365Data) {
     return (
-      <Center style={{ height: '100%' }}>
-        <Loader size="xl" />
-      </Center>
+      <Box style={{ height: '100%', width: '100%' }}>
+        <Title order={1} style={{ fontSize: 'var(--font-xl)', marginBottom: '2vw' }}>
+          Microsoft 365
+        </Title>
+        <SimpleGrid cols={5} spacing="md">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
+            <Skeleton key={i} height={180} radius="md" animate />
+          ))}
+        </SimpleGrid>
+      </Box>
     );
   }
 
@@ -63,15 +95,22 @@ function M365Section({ data, error }: { data: any; error: Error | null }) {
   return (
     <Box style={{ height: '100%' }}>
       {sortedServices.length > 0 ? (
-        <SimpleGrid cols={5} spacing="md">
-          {sortedServices.map((service: M365Service) => (
-            <M365ServiceCard
-              key={service.name}
-              service={service}
-              updatedAt={data.lastChecked}
-            />
-          ))}
-        </SimpleGrid>
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <SimpleGrid cols={5} spacing="md">
+            {sortedServices.map((service: M365Service) => (
+              <motion.div key={service.name} variants={cardVariants}>
+                <M365ServiceCard
+                  service={service}
+                  updatedAt={data.lastChecked}
+                />
+              </motion.div>
+            ))}
+          </SimpleGrid>
+        </motion.div>
       ) : (
         <Center style={{ height: '100%' }}>
           <Text c="dimmed">No M365 data available</Text>

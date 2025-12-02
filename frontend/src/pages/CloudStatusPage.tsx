@@ -1,4 +1,5 @@
-import { Box, Title, Grid, Text, Badge, Stack, Group, Loader, Center } from '@mantine/core';
+import { Box, Title, Grid, Text, Badge, Stack, Group, Skeleton, Center } from '@mantine/core';
+import { motion } from 'framer-motion';
 import { useMemo } from 'react';
 import type { CloudRegion } from '../api/client';
 import { apiClient } from '../api/client';
@@ -20,6 +21,30 @@ function sortRegionsByStatus(regions: CloudRegion[]): CloudRegion[] {
     statusPriority[a.status] - statusPriority[b.status]
   );
 }
+
+// Animation variants for card entry
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05,
+    },
+  },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: 'spring' as const,
+      stiffness: 300,
+      damping: 24,
+    },
+  },
+};
 
 export function CloudStatusPage() {
   const { data, loading, error } = useAutoRefresh(
@@ -45,9 +70,22 @@ export function CloudStatusPage() {
 
   if (loading && !data) {
     return (
-      <Center style={{ height: '100%' }}>
-        <Loader size="xl" />
-      </Center>
+      <Box style={{ height: '100%', width: '100%', overflow: 'auto' }} className="cloud-status-container">
+        <Title order={1} style={{ fontSize: 'var(--font-xl)', marginBottom: '2vw' }}>
+          Cloud Status
+        </Title>
+        <Grid gutter="md">
+          {[1, 2, 3].map((col) => (
+            <Grid.Col key={col} span={4}>
+              <Stack gap="md">
+                {[1, 2, 3, 4].map((row) => (
+                  <Skeleton key={row} height={160} radius="md" animate />
+                ))}
+              </Stack>
+            </Grid.Col>
+          ))}
+        </Grid>
+      </Box>
     );
   }
 
@@ -92,11 +130,19 @@ export function CloudStatusPage() {
             </Group>
 
             {/* Vertical Stack of Region Cards - Sorted by Status */}
-            <Stack gap="md">
-              {provider.regions.map((region) => (
-                <CloudRegionCard key={region.key} region={region} />
-              ))}
-            </Stack>
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              <Stack gap="md">
+                {provider.regions.map((region) => (
+                  <motion.div key={region.key} variants={cardVariants}>
+                    <CloudRegionCard region={region} />
+                  </motion.div>
+                ))}
+              </Stack>
+            </motion.div>
           </Grid.Col>
         ))}
       </Grid>

@@ -1,4 +1,5 @@
 import { Box, Text } from '@mantine/core';
+import { motion } from 'framer-motion';
 import { statusColors } from '../theme';
 
 interface ServiceCardProps {
@@ -9,6 +10,7 @@ interface ServiceCardProps {
     responseTime?: number;
     lastChecked?: string;
   };
+  layoutId?: string;
 }
 
 function formatTimeAgo(timestamp: string | undefined): string {
@@ -33,13 +35,25 @@ function formatTimeAgo(timestamp: string | undefined): string {
   }
 }
 
-export function ServiceCard({ service }: ServiceCardProps) {
+export function ServiceCard({ service, layoutId }: ServiceCardProps) {
   const backgroundColor = statusColors[service.status];
   const timeAgo = formatTimeAgo(service.lastChecked);
 
   return (
     <Box
+      component={motion.div}
+      layoutId={layoutId}
       className={service.status === 'outage' ? 'status-outage' : ''}
+      initial={false}
+      animate={{
+        backgroundColor,
+        scale: service.status === 'outage' ? [1, 1.05, 1] : 1,
+      }}
+      transition={{
+        layout: { type: 'spring', stiffness: 300, damping: 30 },
+        backgroundColor: { duration: 0.3 },
+        scale: { duration: 0.5, times: [0, 0.5, 1] },
+      }}
       style={{
         backgroundColor,
         padding: '0 1vw',

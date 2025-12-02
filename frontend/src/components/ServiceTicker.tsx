@@ -1,4 +1,5 @@
 import { Box } from '@mantine/core';
+import { AnimatePresence } from 'framer-motion';
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { ServiceCard } from './ServiceCard';
 
@@ -106,23 +107,36 @@ export function ServiceTicker() {
   return (
     <Box className="ticker-container">
       {/* Static outage cards on the left */}
-      {outageCards.length > 0 && (
-        <Box className="outage-cards-static">
-          {outageCards.map(service => (
-            <ServiceCard key={service.id} service={service} />
-          ))}
-        </Box>
-      )}
+      <AnimatePresence mode="popLayout">
+        {outageCards.length > 0 && (
+          <Box className="outage-cards-static">
+            {outageCards.map(service => (
+              <ServiceCard
+                key={service.id}
+                service={service}
+                layoutId={`service-${service.id}`}
+              />
+            ))}
+          </Box>
+        )}
+      </AnimatePresence>
 
       {/* Scrolling cards */}
       <Box className="ticker-scroll-wrapper">
         <Box ref={scrollRef} className="ticker-scroll-content-js">
           {/* Duplicate cards for seamless loop */}
           {scrollingCards.map(service => (
-            <ServiceCard key={`a-${service.id}`} service={service} />
+            <ServiceCard
+              key={`a-${service.id}`}
+              service={service}
+              layoutId={`service-${service.id}`}
+            />
           ))}
           {scrollingCards.map(service => (
-            <ServiceCard key={`b-${service.id}`} service={service} />
+            <ServiceCard
+              key={`b-${service.id}`}
+              service={service}
+            />
           ))}
         </Box>
       </Box>

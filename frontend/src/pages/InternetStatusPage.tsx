@@ -1,10 +1,36 @@
-import { Box, Title, Grid, Card, Text, Badge, Stack, Group, Loader, Center, RingProgress } from '@mantine/core';
+import { Box, Title, Grid, Card, Text, Badge, Stack, Group, Skeleton, Center, RingProgress } from '@mantine/core';
+import { motion } from 'framer-motion';
 import { useMemo } from 'react';
 import type { ISPMetrics } from '../api/client';
 import { apiClient } from '../api/client';
 import { StatusBadge } from '../components/StatusBadge';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
+import { useCountUp } from '../hooks/useCountUp';
 import { statusColors } from '../theme';
+
+// Animation variants for card entry
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: 'spring' as const,
+      stiffness: 300,
+      damping: 24,
+    },
+  },
+};
 
 function getSecondaryASNsText(secondaryAsns: string | null | undefined): string {
   if (!secondaryAsns) return '';
@@ -27,9 +53,18 @@ export function InternetStatusPage() {
 
   if (loading && !data) {
     return (
-      <Center style={{ height: '100%' }}>
-        <Loader size="xl" />
-      </Center>
+      <Box style={{ height: '100%', width: '100%' }}>
+        <Title order={1} style={{ fontSize: 'var(--font-xl)', marginBottom: '2vw' }}>
+          Internet Status
+        </Title>
+        <Grid gutter="xl">
+          {[1, 2, 3].map((i) => (
+            <Grid.Col key={i} span={4}>
+              <Skeleton height={400} radius="md" animate />
+            </Grid.Col>
+          ))}
+        </Grid>
+      </Box>
     );
   }
 
@@ -49,13 +84,21 @@ export function InternetStatusPage() {
         Internet Status
       </Title>
 
-      <Grid gutter="xl">
-        {data?.isps.map((ispMetrics) => (
-          <Grid.Col key={ispMetrics.isp.id} span={4}>
-            <ISPCard ispMetrics={ispMetrics} />
-          </Grid.Col>
-        ))}
-      </Grid>
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <Grid gutter="xl">
+          {data?.isps.map((ispMetrics) => (
+            <Grid.Col key={ispMetrics.isp.id} span={4}>
+              <motion.div variants={cardVariants}>
+                <ISPCard ispMetrics={ispMetrics} />
+              </motion.div>
+            </Grid.Col>
+          ))}
+        </Grid>
+      </motion.div>
     </Box>
   );
 }
@@ -68,6 +111,12 @@ function ISPCard({ ispMetrics }: { ispMetrics: ISPMetrics }) {
   );
 
   const hasIssues = ispMetrics.anomalies.length > 0 || ispMetrics.bgpIncidents.length > 0;
+
+  // Animate RPKI percentages and latency
+  const validPercentage = useCountUp(ispMetrics.rpki?.validPercentage ?? undefined, { duration: 600, decimals: 1 });
+  const unknownPercentage = useCountUp(ispMetrics.rpki?.unknownPercentage ?? undefined, { duration: 600, decimals: 1 });
+  const invalidPercentage = useCountUp(ispMetrics.rpki?.invalidPercentage ?? undefined, { duration: 600, decimals: 1 });
+  const latencyMs = useCountUp(ispMetrics.metrics.latencyMs ?? undefined, { duration: 600, decimals: 1 });
 
   return (
     <Card
@@ -93,9 +142,9 @@ function ISPCard({ ispMetrics }: { ispMetrics: ISPMetrics }) {
                   size={120}
                   thickness={12}
                   sections={[
-                    { value: ispMetrics.rpki.validPercentage, color: 'green', tooltip: `Valid: ${ispMetrics.rpki.validPercentage.toFixed(1)}%` },
-                    { value: ispMetrics.rpki.unknownPercentage, color: 'gray', tooltip: `Unknown: ${ispMetrics.rpki.unknownPercentage.toFixed(1)}%` },
-                    { value: ispMetrics.rpki.invalidPercentage, color: 'red', tooltip: `Invalid: ${ispMetrics.rpki.invalidPercentage.toFixed(1)}%` },
+                    { value: validPercentage, color: 'green', tooltip: `Valid: ${validPercentage.toFixed(1)}%` },
+                    { value: unknownPercentage, color: 'gray', tooltip: `Unknown: ${unknownPercentage.toFixed(1)}%` },
+                    { value: invalidPercentage, color: 'red', tooltip: `Invalid: ${invalidPercentage.toFixed(1)}%` },
                   ]}
                   label={
                     <Text size="xs" ta="center" fw={700}>
@@ -199,7 +248,7 @@ function ISPCard({ ispMetrics }: { ispMetrics: ISPMetrics }) {
           </Text>
           {ispMetrics.metrics.latencyMs !== null && (
             <Text size="sm" fw={600}>
-              Average Latency: {ispMetrics.metrics.latencyMs.toFixed(1)}ms
+              Average Latency: {latencyMs.toFixed(1)}ms
             </Text>
           )}
         </Group>

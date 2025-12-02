@@ -1,16 +1,31 @@
-import { Box, Title, Grid, Card, Text, Stack, Group, Loader, Center, SimpleGrid } from '@mantine/core';
+import { Box, Title, Grid, Card, Text, Stack, Group, Skeleton, Center, SimpleGrid } from '@mantine/core';
 import { useMemo } from 'react';
 import { LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { apiClient } from '../api/client';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
+import { useCountUp } from '../hooks/useCountUp';
 
 const CHART_COLORS = ['#e03131', '#fd7e14', '#fab005', '#82c91e', '#40c057', '#12b886', '#15aabf', '#228be6', '#4c6ef5', '#7950f2'];
+
+// Helper component for animated vector values
+function AnimatedVectorValue({ value, color }: { value: number; color: string }) {
+  const animatedValue = useCountUp(value, { duration: 600 });
+  return (
+    <Text size="lg" fw={700} c={color}>
+      {animatedValue.toLocaleString()}
+    </Text>
+  );
+}
 
 export function RadarAttacksPage() {
   const { data, loading, error } = useAutoRefresh(
     () => apiClient.getRadarAttacks(),
     60 // Refresh every minute
   );
+
+  // Animate attack totals
+  const layer3Total = useCountUp(data?.layer3.total, { duration: 800 });
+  const layer7Total = useCountUp(data?.layer7.total, { duration: 800 });
 
   // Memoize chart data transformations to prevent recalculation on every render
   const chartData = useMemo(() => {
@@ -30,9 +45,23 @@ export function RadarAttacksPage() {
 
   if (loading && !data) {
     return (
-      <Center style={{ height: '100%' }}>
-        <Loader size="xl" />
-      </Center>
+      <Box style={{ height: '100%', width: '100%', overflow: 'auto' }}>
+        <Title order={1} style={{ fontSize: 'var(--font-xl)', marginBottom: '2vw' }}>
+          DDoS Attack Activity
+        </Title>
+        <SimpleGrid cols={2} mb="2vw" spacing="xl">
+          <Skeleton height={100} radius="md" animate />
+          <Skeleton height={100} radius="md" animate />
+        </SimpleGrid>
+        <Grid gutter="xl" mb="2vw">
+          <Grid.Col span={6}>
+            <Skeleton height={400} radius="md" animate />
+          </Grid.Col>
+          <Grid.Col span={6}>
+            <Skeleton height={400} radius="md" animate />
+          </Grid.Col>
+        </Grid>
+      </Box>
     );
   }
 
@@ -68,7 +97,7 @@ export function RadarAttacksPage() {
           <Stack gap="xs">
             <Text size="sm" c="dimmed">Layer 3 Attacks (24h)</Text>
             <Text size="calc(var(--font-lg) * 1.5)" fw={700} c="red">
-              {data.layer3.total.toLocaleString()}
+              {layer3Total.toLocaleString()}
             </Text>
           </Stack>
         </Card>
@@ -76,7 +105,7 @@ export function RadarAttacksPage() {
           <Stack gap="xs">
             <Text size="sm" c="dimmed">Layer 7 Attacks (24h)</Text>
             <Text size="calc(var(--font-lg) * 1.5)" fw={700} c="orange">
-              {data.layer7.total.toLocaleString()}
+              {layer7Total.toLocaleString()}
             </Text>
           </Stack>
         </Card>
@@ -228,9 +257,10 @@ export function RadarAttacksPage() {
                     >
                       <Group justify="space-between" align="center">
                         <Text size="md" fw={600}>{vector.name}</Text>
-                        <Text size="lg" fw={700} c={CHART_COLORS[index % CHART_COLORS.length]}>
-                          {vector.value.toLocaleString()}
-                        </Text>
+                        <AnimatedVectorValue
+                          value={vector.value}
+                          color={CHART_COLORS[index % CHART_COLORS.length]}
+                        />
                       </Group>
                     </Card>
                   ))}
