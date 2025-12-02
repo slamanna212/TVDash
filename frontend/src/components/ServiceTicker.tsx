@@ -16,6 +16,8 @@ export function ServiceTicker() {
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number | null>(null);
+  const positionRef = useRef<number>(0); // Persist position across re-renders
+  const lastTimeRef = useRef<number>(performance.now());
 
   useEffect(() => {
     fetchServices();
@@ -48,24 +50,30 @@ export function ServiceTicker() {
     const element = scrollRef.current;
     if (!element || scrollingCards.length === 0) return;
 
-    let position = 0;
-    let lastTime = performance.now();
     const speed = 0.03; // pixels per millisecond (30 pixels/second)
 
     const animate = (currentTime: number) => {
-      const delta = currentTime - lastTime;
-      lastTime = currentTime;
+      const delta = currentTime - lastTimeRef.current;
+      lastTimeRef.current = currentTime;
 
-      position -= speed * delta;
+      positionRef.current -= speed * delta;
 
-      // Reset position when we've scrolled through half the content
-      // This creates a seamless loop since we duplicate the cards
-      const resetPoint = element.scrollWidth / 2;
-      if (Math.abs(position) >= resetPoint) {
-        position = 0;
+      // Get the actual width of half the content (first set of duplicated cards)
+      const children = element.children;
+      const halfCount = Math.floor(children.length / 2);
+      let halfWidth = 0;
+      for (let i = 0; i < halfCount; i++) {
+        halfWidth += children[i].getBoundingClientRect().width;
+      }
+      halfWidth += 16 * halfCount; // Add gap width
+
+      // Seamlessly loop when we've scrolled through the first set
+      if (Math.abs(positionRef.current) >= halfWidth) {
+        positionRef.current = positionRef.current + halfWidth;
       }
 
-      element.style.transform = `translateX(${position}px)`;
+      // Use translate3d for hardware acceleration
+      element.style.transform = `translate3d(${positionRef.current}px, 0, 0)`;
       animationRef.current = requestAnimationFrame(animate);
     };
 
@@ -76,7 +84,7 @@ export function ServiceTicker() {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [scrollingCards]);
+  }, [scrollingCards.length]); // Only restart if the NUMBER of cards changes, not the cards themselves
 
   if (loading) {
     return (

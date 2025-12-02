@@ -104,6 +104,10 @@ body {
   display: flex;
   gap: 16px;
   will-change: transform;
+  /* Hardware acceleration for smoother animation */
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
 /* Legacy CSS animation version (not used) */
