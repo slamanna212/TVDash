@@ -173,7 +173,7 @@ export function PowerGridPage() {
                 padding="sm"
                 style={{
                   backgroundColor: statusColor,
-                  height: '100%',
+                  height: '250px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -195,9 +195,9 @@ export function PowerGridPage() {
           {/* Fuel Mix Ring Progress */}
           <Grid.Col span={5}>
             <motion.div variants={cardVariants}>
-              <Card shadow="sm" padding="sm" style={{ height: 'auto' }}>
+              <Card shadow="sm" padding={0} style={{ height: '250px', overflow: 'hidden' }}>
                 {fuelSections.length > 0 && showRing ? (
-                  <Group align="center" justify="center" gap="lg" wrap="nowrap">
+                  <Group align="center" justify="center" gap="md" wrap="nowrap" h="100%">
                     <Box>
                       <RingProgress
                         size={240}
