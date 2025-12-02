@@ -3,7 +3,7 @@ name: US-Based Health Check Relay
 on:
   schedule:
     # Run every 5 minutes (matching Cloudflare cron)
-    - cron: '*/5 * * * *'
+    - cron: '*/10 * * * *'
   workflow_dispatch:  # Allow manual triggering for testing
 
 jobs:
