@@ -1,7 +1,7 @@
 import { Box, Title, Grid, Card, Text, Stack, Skeleton, Center, RingProgress, Group } from '@mantine/core';
 import { IconBolt, IconAlertTriangle } from '@tabler/icons-react';
 import { motion } from 'framer-motion';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { apiClient } from '../api/client';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import { useCountUp } from '../hooks/useCountUp';
@@ -52,10 +52,9 @@ const cardVariants = {
 
 // Helper component for animated fuel percentage
 function AnimatedFuelPercentage({ percentage }: { percentage: number }) {
-  const animatedValue = useCountUp(percentage, { duration: 600 });
   return (
     <Text size="sm" fw={600} style={{ whiteSpace: 'nowrap' }}>
-      {animatedValue}%
+      {percentage}%
     </Text>
   );
 }
@@ -66,18 +65,53 @@ export function PowerGridPage() {
     60 // Refresh every minute
   );
 
+  // Track if we've animated yet
+  const hasAnimated = useRef(false);
+  const [showRing, setShowRing] = useState(false);
+
+  // Animated fuel sections for initial fill animation
+  const [animatedFuelMix, setAnimatedFuelMix] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    if (!data?.fuel_mix) return;
+
+    if (!hasAnimated.current) {
+      // First time: mount with 0, then animate to real values
+      hasAnimated.current = true;
+
+      // Initialize to 0
+      const zeroedMix = Object.keys(data.fuel_mix).reduce((acc, fuel) => {
+        acc[fuel] = 0;
+        return acc;
+      }, {} as Record<string, number>);
+      setAnimatedFuelMix(zeroedMix);
+
+      // Show the ring with 0 values
+      setShowRing(true);
+
+      // Use setTimeout to ensure showRing state update is committed first
+      setTimeout(() => {
+        setAnimatedFuelMix(data.fuel_mix!);
+      }, 50);
+    } else {
+      // Subsequent updates: ensure showRing is true and update values
+      if (!showRing) setShowRing(true);
+      setAnimatedFuelMix(data.fuel_mix);
+    }
+  }, [data, showRing]);
+
   // Memoize fuel mix sections to prevent recalculation on every render
   const fuelSections = useMemo(() => {
-    if (!data?.fuel_mix || Object.keys(data.fuel_mix).length === 0) {
+    if (!data?.fuel_mix || Object.keys(animatedFuelMix).length === 0) {
       return [];
     }
 
-    return Object.entries(data.fuel_mix).map(([fuel, percentage]) => ({
+    return Object.entries(animatedFuelMix).map(([fuel, percentage]) => ({
       value: percentage,
       color: FUEL_CONFIG[fuel]?.color || '#9e9e9e',
-      tooltip: `${FUEL_CONFIG[fuel]?.name || fuel}: ${percentage}%`,
+      tooltip: `${FUEL_CONFIG[fuel]?.name || fuel}: ${data.fuel_mix![fuel]}%`,
     }));
-  }, [data]);
+  }, [animatedFuelMix, data]);
 
   if (loading && !data) {
     return (
@@ -167,19 +201,22 @@ export function PowerGridPage() {
           <Grid.Col span={5}>
             <motion.div variants={cardVariants}>
               <Card shadow="sm" padding="sm" style={{ height: 'auto' }}>
-                {fuelSections.length > 0 ? (
+                {fuelSections.length > 0 && showRing ? (
                   <Group align="center" justify="center" gap="lg" wrap="nowrap">
-                    <RingProgress
-                      size={240}
-                      thickness={28}
-                      sections={fuelSections}
-                      label={
-                        <Stack align="center" gap={0}>
-                          <Text size="xs" c="dimmed">Generation</Text>
-                          <Text size="lg" fw={700}>Sources</Text>
-                        </Stack>
-                      }
-                    />
+                    <Box>
+                      <RingProgress
+                        size={240}
+                        thickness={28}
+                        sections={fuelSections}
+                        transitionDuration={1500}
+                        label={
+                          <Stack align="center" gap={0}>
+                            <Text size="xs" c="dimmed">Generation</Text>
+                            <Text size="lg" fw={700}>Sources</Text>
+                          </Stack>
+                        }
+                      />
+                    </Box>
                     {/* Legend */}
                     <Stack gap={6} justify="center" style={{ minWidth: '160px' }}>
                       {Object.entries(data.fuel_mix!)
@@ -198,7 +235,7 @@ export function PowerGridPage() {
                             />
                             <Text size="sm" style={{ whiteSpace: 'nowrap' }}>{FUEL_CONFIG[fuel]?.name || fuel}</Text>
                           </Group>
-                          <AnimatedFuelPercentage percentage={percentage} />
+                          <AnimatedFuelPercentage percentage={data.fuel_mix![fuel]} />
                         </Group>
                       ))}
                     </Stack>

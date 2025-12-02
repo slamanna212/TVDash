@@ -51,6 +51,7 @@ export function InternetStatusPage() {
     60 // Refresh every minute
   );
 
+
   if (loading && !data) {
     return (
       <Box style={{ height: '100%', width: '100%' }}>
@@ -111,11 +112,6 @@ function ISPCard({ ispMetrics }: { ispMetrics: ISPMetrics }) {
   );
 
   const hasIssues = ispMetrics.anomalies.length > 0 || ispMetrics.bgpIncidents.length > 0;
-
-  // Animate RPKI percentages and latency
-  const validPercentage = useCountUp(ispMetrics.rpki?.validPercentage ?? undefined, { duration: 600, decimals: 1 });
-  const unknownPercentage = useCountUp(ispMetrics.rpki?.unknownPercentage ?? undefined, { duration: 600, decimals: 1 });
-  const invalidPercentage = useCountUp(ispMetrics.rpki?.invalidPercentage ?? undefined, { duration: 600, decimals: 1 });
   const latencyMs = useCountUp(ispMetrics.metrics.latencyMs ?? undefined, { duration: 600, decimals: 1 });
 
   return (
@@ -142,9 +138,9 @@ function ISPCard({ ispMetrics }: { ispMetrics: ISPMetrics }) {
                   size={120}
                   thickness={12}
                   sections={[
-                    { value: validPercentage, color: 'green', tooltip: `Valid: ${validPercentage.toFixed(1)}%` },
-                    { value: unknownPercentage, color: 'gray', tooltip: `Unknown: ${unknownPercentage.toFixed(1)}%` },
-                    { value: invalidPercentage, color: 'red', tooltip: `Invalid: ${invalidPercentage.toFixed(1)}%` },
+                    { value: ispMetrics.rpki.validPercentage, color: 'green', tooltip: `Valid: ${ispMetrics.rpki.validPercentage.toFixed(1)}%` },
+                    { value: ispMetrics.rpki.unknownPercentage, color: 'gray', tooltip: `Unknown: ${ispMetrics.rpki.unknownPercentage.toFixed(1)}%` },
+                    { value: ispMetrics.rpki.invalidPercentage, color: 'red', tooltip: `Invalid: ${ispMetrics.rpki.invalidPercentage.toFixed(1)}%` },
                   ]}
                   label={
                     <Text size="xs" ta="center" fw={700}>
