@@ -1,10 +1,12 @@
 import { Box, Title, Grid, Card, Text, Badge, Stack, Group, Loader, Center, RingProgress } from '@mantine/core';
+import { useMemo } from 'react';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import { apiClient, ISPMetrics } from '../api/client';
 import { StatusBadge } from '../components/StatusBadge';
 import { statusColors } from '../theme';
 
-function getSecondaryASNsText(secondaryAsns: string): string {
+function getSecondaryASNsText(secondaryAsns: string | null): string {
+  if (!secondaryAsns) return '';
   try {
     const asns = JSON.parse(secondaryAsns);
     if (Array.isArray(asns) && asns.length > 0) {
@@ -58,6 +60,12 @@ export function InternetStatusPage() {
 }
 
 function ISPCard({ ispMetrics }: { ispMetrics: ISPMetrics }) {
+  // Memoize secondary ASNs text to avoid re-parsing on every render
+  const secondaryASNsText = useMemo(
+    () => getSecondaryASNsText(ispMetrics.isp.secondary_asns),
+    [ispMetrics.isp.secondary_asns]
+  );
+
   const hasIssues = ispMetrics.anomalies.length > 0 || ispMetrics.bgpIncidents.length > 0;
 
   return (
@@ -106,8 +114,7 @@ function ISPCard({ ispMetrics }: { ispMetrics: ISPMetrics }) {
                 {ispMetrics.isp.name}
               </Text>
               <Text size="sm" c="dimmed">
-                AS{ispMetrics.isp.primary_asn}
-                {ispMetrics.isp.secondary_asns && getSecondaryASNsText(ispMetrics.isp.secondary_asns)}
+                AS{ispMetrics.isp.primary_asn}{secondaryASNsText}
               </Text>
             </Box>
           </Group>

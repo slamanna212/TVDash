@@ -1,11 +1,57 @@
-import type { Env } from '../types';
-import { collectM365Status } from '../collectors/productivity/microsoft';
+import type { Env, M365Service, M365Issue, ServiceStatus } from '../types';
 
 export async function getM365Status(env: Env): Promise<Response> {
   try {
-    const m365Data = await collectM365Status(env);
+    // Read from m365_current table instead of making external API calls
+    const latestServices = await env.DB.prepare(`
+      SELECT service_name, status, issues, checked_at
+      FROM m365_current
+      ORDER BY service_name
+    `).all();
 
-    return new Response(JSON.stringify(m365Data), {
+    if (!latestServices.success || !latestServices.results) {
+      throw new Error('Failed to fetch M365 status from database');
+    }
+
+    // Parse database results into M365Service objects
+    const services: M365Service[] = latestServices.results.map((row: any) => {
+      let issues: M365Issue[] = [];
+      try {
+        issues = JSON.parse(row.issues || '[]');
+      } catch (e) {
+        console.error(`Error parsing issues for ${row.service_name}:`, e);
+      }
+
+      return {
+        name: row.service_name,
+        status: row.status as ServiceStatus,
+        issues,
+      };
+    });
+
+    // Calculate overall status from all services
+    let overall: ServiceStatus = 'operational';
+    const hasOutage = services.some(s => s.status === 'outage');
+    const hasDegraded = services.some(s => s.status === 'degraded');
+
+    if (hasOutage) {
+      overall = 'outage';
+    } else if (hasDegraded) {
+      overall = 'degraded';
+    } else if (services.length === 0) {
+      overall = 'unknown';
+    }
+
+    // Get the most recent checked_at timestamp
+    const lastChecked = latestServices.results.length > 0
+      ? latestServices.results[0].checked_at as string
+      : new Date().toISOString();
+
+    return new Response(JSON.stringify({
+      overall,
+      services,
+      lastChecked,
+    }), {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {

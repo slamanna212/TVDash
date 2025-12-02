@@ -1,8 +1,24 @@
 import { Box, Title, Grid, Text, Badge, Stack, Group, Loader, Center } from '@mantine/core';
+import { useMemo } from 'react';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import { apiClient, CloudRegion } from '../api/client';
 import { CloudRegionCard } from '../components/CloudRegionCard';
 import { getProviderIcon } from '../utils/cloudIcons';
+
+// Status priority for sorting (extracted to avoid recreating on every render)
+const statusPriority: Record<string, number> = {
+  outage: 0,
+  degraded: 1,
+  operational: 2,
+  unknown: 3,
+};
+
+// Sort regions by status priority (outage > degraded > operational)
+function sortRegionsByStatus(regions: CloudRegion[]): CloudRegion[] {
+  return [...regions].sort((a, b) =>
+    statusPriority[a.status] - statusPriority[b.status]
+  );
+}
 
 export function CloudStatusPage() {
   const { data, loading, error } = useAutoRefresh(
@@ -10,27 +26,21 @@ export function CloudStatusPage() {
     60 // Refresh every minute
   );
 
-  // Sort regions by status priority (outage > degraded > operational)
-  const sortRegionsByStatus = (regions: CloudRegion[]) => {
-    const statusPriority: Record<string, number> = {
-      outage: 0,
-      degraded: 1,
-      operational: 2,
-      unknown: 3,
-    };
-    return [...regions].sort((a, b) =>
-      statusPriority[a.status] - statusPriority[b.status]
-    );
-  };
+  // Memoize ordered and sorted providers to prevent recalculation on every render
+  const orderedProviders = useMemo(() => {
+    if (!data?.providers) return [];
 
-  // Reorder providers: Azure, AWS, Google Cloud
-  const orderedProviders = data?.providers
-    ? [
-        data.providers.find((p) => p.name === 'Azure'),
-        data.providers.find((p) => p.name === 'AWS'),
-        data.providers.find((p) => p.name === 'Google Cloud'),
-      ].filter((p): p is NonNullable<typeof p> => p !== undefined)
-    : [];
+    return [
+      data.providers.find((p) => p.name === 'Azure'),
+      data.providers.find((p) => p.name === 'AWS'),
+      data.providers.find((p) => p.name === 'Google Cloud'),
+    ]
+      .filter((p): p is NonNullable<typeof p> => p !== undefined)
+      .map(provider => ({
+        ...provider,
+        regions: sortRegionsByStatus(provider.regions), // Sort regions once during memoization
+      }));
+  }, [data]);
 
   if (loading && !data) {
     return (
@@ -82,7 +92,7 @@ export function CloudStatusPage() {
 
             {/* Vertical Stack of Region Cards - Sorted by Status */}
             <Stack gap="md">
-              {sortRegionsByStatus(provider.regions).map((region) => (
+              {provider.regions.map((region) => (
                 <CloudRegionCard key={region.key} region={region} />
               ))}
             </Stack>

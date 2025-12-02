@@ -1,7 +1,16 @@
 import { Box, Title, Text, Loader, Center, SimpleGrid } from '@mantine/core';
+import { useMemo } from 'react';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import { apiClient, M365Service } from '../api/client';
 import { M365ServiceCard } from '../components/M365ServiceCard';
+
+// Status priority for sorting (extracted to avoid recreating on every render)
+const statusPriority: Record<string, number> = {
+  outage: 0,
+  degraded: 1,
+  operational: 2,
+  unknown: 3,
+};
 
 export function M365WorkspacePage() {
   const { data: m365Data, loading: m365Loading, error: m365Error } = useAutoRefresh(
@@ -29,19 +38,15 @@ export function M365WorkspacePage() {
 }
 
 function M365Section({ data, error }: { data: any; error: Error | null }) {
-  // Sort services by status priority
-  const statusPriority: Record<string, number> = {
-    outage: 0,
-    degraded: 1,
-    operational: 2,
-    unknown: 3,
-  };
-
-  const sortedServices = data?.services
-    ? [...data.services].sort((a: M365Service, b: M365Service) =>
-        statusPriority[a.status] - statusPriority[b.status]
-      )
-    : [];
+  // Memoize sorted services to prevent re-sorting on every render
+  const sortedServices = useMemo(
+    () => data?.services
+      ? [...data.services].sort((a: M365Service, b: M365Service) =>
+          statusPriority[a.status] - statusPriority[b.status]
+        )
+      : [],
+    [data]
+  );
 
   if (error) {
     return (

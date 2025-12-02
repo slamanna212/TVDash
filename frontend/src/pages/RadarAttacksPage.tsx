@@ -1,4 +1,5 @@
 import { Box, Title, Grid, Card, Text, Stack, Group, Loader, Center, SimpleGrid } from '@mantine/core';
+import { useMemo } from 'react';
 import { LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import { apiClient } from '../api/client';
@@ -10,6 +11,22 @@ export function RadarAttacksPage() {
     () => apiClient.getRadarAttacks(),
     60 // Refresh every minute
   );
+
+  // Memoize chart data transformations to prevent recalculation on every render
+  const chartData = useMemo(() => {
+    if (!data) return { layer3: [], layer7: [] };
+
+    return {
+      layer3: data.layer3.timeseries.map(point => ({
+        time: new Date(point.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        attacks: point.value,
+      })),
+      layer7: data.layer7.timeseries.map(point => ({
+        time: new Date(point.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        attacks: point.value,
+      })),
+    };
+  }, [data]);
 
   if (loading && !data) {
     return (
@@ -38,17 +55,6 @@ export function RadarAttacksPage() {
       </Center>
     );
   }
-
-  // Format timeseries data for charts
-  const layer3ChartData = data.layer3.timeseries.map(point => ({
-    time: new Date(point.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    attacks: point.value,
-  }));
-
-  const layer7ChartData = data.layer7.timeseries.map(point => ({
-    time: new Date(point.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    attacks: point.value,
-  }));
 
   return (
     <Box style={{ height: '100%', width: '100%', overflow: 'auto' }}>
@@ -82,9 +88,9 @@ export function RadarAttacksPage() {
           <Card shadow="md" padding="lg" radius="md" style={{ background: 'var(--bg-secondary)', height: '400px' }}>
             <Stack gap="md" style={{ height: '100%' }}>
               <Text size="lg" fw={600}>Layer 3 DDoS Attacks</Text>
-              {layer3ChartData.length > 0 ? (
+              {chartData.layer3.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={layer3ChartData}>
+                  <LineChart data={chartData.layer3}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#444" />
                     <XAxis
                       dataKey="time"
@@ -124,9 +130,9 @@ export function RadarAttacksPage() {
           <Card shadow="md" padding="lg" radius="md" style={{ background: 'var(--bg-secondary)', height: '400px' }}>
             <Stack gap="md" style={{ height: '100%' }}>
               <Text size="lg" fw={600}>Layer 7 DDoS Attacks</Text>
-              {layer7ChartData.length > 0 ? (
+              {chartData.layer7.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={layer7ChartData}>
+                  <LineChart data={chartData.layer7}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#444" />
                     <XAxis
                       dataKey="time"
