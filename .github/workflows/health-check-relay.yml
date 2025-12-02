@@ -70,9 +70,12 @@ jobs:
           # Create JSON payload with all results (compact, no whitespace)
           TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
-          cat > payload.json <<EOF
-{"checks":[{"service_id":1,"service_name":"Manage","http_code":"${MANAGE_CODE}","response_time":${MANAGE_TIME},"timestamp":"${TIMESTAMP}"},{"service_id":2,"service_name":"Automate","http_code":"${AUTOMATE_CODE}","response_time":${AUTOMATE_TIME},"timestamp":"${TIMESTAMP}"},{"service_id":3,"service_name":"ScreenConnect","http_code":"${SCREENCONNECT_CODE}","response_time":${SCREENCONNECT_TIME},"timestamp":"${TIMESTAMP}"}]}
-EOF
+          # Write JSON payload using printf to avoid YAML parsing issues
+          printf '{"checks":[{"service_id":1,"service_name":"Manage","http_code":"%s","response_time":%s,"timestamp":"%s"},{"service_id":2,"service_name":"Automate","http_code":"%s","response_time":%s,"timestamp":"%s"},{"service_id":3,"service_name":"ScreenConnect","http_code":"%s","response_time":%s,"timestamp":"%s"}]}' \
+            "${MANAGE_CODE}" "${MANAGE_TIME}" "${TIMESTAMP}" \
+            "${AUTOMATE_CODE}" "${AUTOMATE_TIME}" "${TIMESTAMP}" \
+            "${SCREENCONNECT_CODE}" "${SCREENCONNECT_TIME}" "${TIMESTAMP}" \
+            > payload.json
 
           echo "Generated payload:"
           cat payload.json
