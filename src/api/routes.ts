@@ -4,9 +4,9 @@ import { getCloudStatus } from './cloud';
 import { getM365Status } from './m365';
 import { getInternetStatus } from './internet';
 import { getRadarAttacks } from './radar';
+import { getRansomwareStatus } from './ransomware';
 import { getEvents } from './events';
 import { getServiceHistory } from '../db/queries';
-import { getGridStatus } from './grid';
 import { handleHealthRelay } from './health-relay';
 import { handleSSEStream } from './sse';
 
@@ -64,14 +64,14 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
       return await getM365Status(env);
     }
 
+    // GET /api/ransomware - Ransomware data
+    if (path === '/api/ransomware' && request.method === 'GET') {
+      return await getRansomwareStatus(env);
+    }
+
     // GET /api/radar/attacks - Attack activity data
     if (path === '/api/radar/attacks' && request.method === 'GET') {
       return await getRadarAttacks(env);
-    }
-
-    // GET /api/grid - Power grid status
-    if (path === '/api/grid' && request.method === 'GET') {
-      return await getGridStatus(env);
     }
 
     // GET /api/events - Unified event timeline

@@ -2,8 +2,6 @@ export interface Env {
   DB: D1Database;
   ASSETS: Fetcher;
   CF_RADAR_API_TOKEN: string;
-  EIA_API_KEY?: string;
-  PJM_API_KEY?: string;
   TEAMS_WEBHOOK_URL?: string;
   M365_TENANT_ID?: string;
   M365_CLIENT_ID?: string;
@@ -13,6 +11,7 @@ export interface Env {
   ALERTS_ENABLED: string;
   PAGE_ROTATION_SECONDS: string;
   TICKER_REFRESH_SECONDS: string;
+  RANSOMWARE_API_KEY: string;
 }
 
 export type ServiceStatus = 'operational' | 'degraded' | 'outage' | 'unknown';
@@ -125,16 +124,4 @@ export interface CheckResult {
   status: ServiceStatus;
   responseTime?: number;
   message?: string;
-}
-
-export interface GridStatus {
-  region: string;
-  status: string;
-  demand_mw?: number;
-  capacity_mw?: number;
-  reserve_margin?: number;
-  lmp_price?: number;
-  fuel_mix?: Record<string, number>;
-  alerts?: string[];
-  checked_at: string;
 }

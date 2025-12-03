@@ -83,7 +83,7 @@ CREATE TABLE api_cache (
 -- Unified events timeline
 CREATE TABLE events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    source TEXT NOT NULL, -- 'service', 'isp', 'cloud', 'grid', 'm365', 'gworkspace', 'radar'
+    source TEXT NOT NULL, -- 'service', 'isp', 'cloud', 'm365', 'gworkspace', 'radar'
     event_type TEXT NOT NULL,
     severity TEXT NOT NULL, -- 'info', 'warning', 'critical'
     title TEXT NOT NULL,
@@ -96,24 +96,10 @@ CREATE TABLE events (
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
--- Power grid status
-CREATE TABLE grid_status (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    region TEXT NOT NULL DEFAULT 'PJM',
-    status TEXT NOT NULL,
-    demand_mw REAL,
-    capacity_mw REAL,
-    reserve_margin REAL,
-    lmp_price REAL,
-    fuel_mix TEXT, -- JSON object
-    alerts TEXT, -- JSON array
-    checked_at TEXT DEFAULT CURRENT_TIMESTAMP
-);
-
 -- Alert state tracking (for Teams webhooks)
 CREATE TABLE alert_state (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    entity_type TEXT NOT NULL, -- 'service', 'isp', 'cloud', 'grid', 'm365'
+    entity_type TEXT NOT NULL, -- 'service', 'isp', 'cloud', 'm365'
     entity_id TEXT NOT NULL,
     last_status TEXT NOT NULL,
     last_checked TEXT DEFAULT CURRENT_TIMESTAMP,

@@ -68,7 +68,7 @@ export function CloudStatusPage() {
     return (
       <Box style={{ height: '100%', width: '100%', overflow: 'auto' }} className="cloud-status-container">
         <Title order={1} style={{ fontSize: 'var(--font-xl)', marginBottom: '2vw' }}>
-          Cloud Status
+          Cloud Providers
         </Title>
         <Grid gutter="md">
           {[1, 2, 3].map((col) => (
@@ -107,7 +107,7 @@ export function CloudStatusPage() {
       className="cloud-status-container"
     >
       <Title order={1} style={{ fontSize: 'var(--font-xl)', marginBottom: '2vw' }}>
-        Cloud Status
+        Cloud Providers
       </Title>
 
       {/* 3-Column Grid Layout - One column per provider */}

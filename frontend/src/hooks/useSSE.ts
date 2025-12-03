@@ -91,10 +91,10 @@ export function useSSE({
         onMessage?.(event);
       });
 
-      // Power grid update event
-      eventSource.addEventListener('grid', (event) => {
-        console.log('[SSE] Grid status updated:', event.data);
-        queryClient.invalidateQueries({ queryKey: ['grid'] });
+      // Ransomware update event
+      eventSource.addEventListener('ransomware', (event) => {
+        console.log('[SSE] Ransomware data updated:', event.data);
+        queryClient.invalidateQueries({ queryKey: ['ransomware'] });
         onMessage?.(event);
       });
 

@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-A real-time status dashboard designed to be displayed on a 4K TV in an MSP office, running 24/7. Monitors the health of MSP tools, cloud providers, productivity suites, local ISPs, power grid, and internet threats.
+A real-time status dashboard designed to be displayed on a 4K TV in an MSP office, running 24/7. Monitors the health of MSP tools, cloud providers, productivity suites, local ISPs, and internet threats.
 
 **Key Goal:** Provide at-a-glance visibility of service health across the entire MSP technology stack.
 
@@ -53,7 +53,6 @@ Monitored via Cloudflare Radar API:
 
 ### Additional Monitoring
 - **Cloudflare Radar:** DDoS attack data, BGP incidents, traffic anomalies
-- **Power Grid:** PJM region (via EIA API) - planned
 - **Events:** Unified timeline of all incidents
 
 ## Visual Layout
@@ -125,7 +124,6 @@ Monitored via Cloudflare Radar API:
 │       │   ├── CloudStatusPage.tsx       # ✅ FULLY BUILT
 │       │   ├── M365WorkspacePage.tsx     # ✅ FULLY BUILT
 │       │   ├── RadarAttacksPage.tsx      # Placeholder
-│       │   ├── PowerGridPage.tsx         # Placeholder
 │       │   └── EventsPage.tsx            # Placeholder
 │       ├── hooks/
 │       │   ├── usePageRotation.ts        # Page rotation logic
@@ -139,7 +137,7 @@ Monitored via Cloudflare Radar API:
 
 ```
 
-## Database Schema (13 Tables)
+## Database Schema (12 Tables)
 
 **Core Tables:**
 - `services` - MSP tools and productivity suites (13 seeded)
@@ -151,7 +149,6 @@ Monitored via Cloudflare Radar API:
 - `gworkspace_status` - Google Workspace status
 - `api_cache` - Response caching with TTL
 - `events` - Unified incident timeline
-- `grid_status` - Power grid data
 - `alert_state` - Alert tracking for Teams notifications
 - `alert_history` - Alert audit log
 
@@ -188,7 +185,6 @@ Monitored via Cloudflare Radar API:
 | `GET /api/internet` | ✅ | ISP status via Radar |
 | `GET /api/radar/attacks` | ✅ | DDoS attack data |
 | `GET /api/services/:id/history` | ✅ | Historical data with configurable date range |
-| `GET /api/grid` | 🔲 | Power grid status (TODO) |
 | `GET /api/events` | 🔲 | Event timeline (TODO) |
 
 ## Required Secrets
@@ -209,8 +205,6 @@ Monitored via Cloudflare Radar API:
   - Grant admin consent
 
 - `TEAMS_WEBHOOK_URL` - For alerts (planned)
-- `EIA_API_KEY` - Power grid data (planned)
-- `PJM_API_KEY` - PJM grid data (optional)
 
 ## Key Features Implemented
 
@@ -330,7 +324,7 @@ unknown    - Cannot determine status (API error, not configured)
 - Pulse animation on outages
 
 ### Page Rotation
-- 6 pages total
+- 5 pages total
 - 45 seconds per page
 - Automatic cycling
 - No manual navigation (designed for unattended display)
@@ -428,7 +422,6 @@ unknown    - Cannot determine status (API error, not configured)
 ## Future Enhancements
 
 **Planned:**
-- [ ] Power grid monitoring (EIA API)
 - [ ] Teams alerting on status changes
 - [ ] Events timeline page
 - [ ] Uptime percentage display on service cards

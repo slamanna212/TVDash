@@ -38,10 +38,9 @@ head_sampling_rate = 1
 
 # Secrets (set via: wrangler secret put SECRET_NAME)
 # CF_RADAR_API_TOKEN
-# EIA_API_KEY
-# PJM_API_KEY
 # TEAMS_WEBHOOK_URL
 # M365_TENANT_ID
 # M365_CLIENT_ID
 # M365_CLIENT_SECRET
 # HEALTH_RELAY_SECRET - Shared secret for GitHub Actions health relay (HMAC-SHA256)
+# RANSOMWARE_API_KEY - API key for ransomware.live

@@ -9,7 +9,7 @@ import { collectGCPStatus } from './collectors/cloud/gcp';
 import { collectM365Status } from './collectors/productivity/microsoft';
 import { checkAllISPs } from './collectors/isp/radar-isp';
 import { checkAndCreateAttackEvents } from './collectors/radar/attacks';
-import { collectPJMGridStatus } from './collectors/grid/eia';
+import { collectRansomwareData } from './collectors/ransomware/processor';
 import {
   createEventIfChanged,
   getAlertState,
@@ -36,6 +36,7 @@ export async function handleScheduled(
         runStatuspageChecks(env),
         runCustomChecks(env),
         runProductivityChecks(env),
+        collectRansomwareData(env),
       ]);
     }
 
@@ -46,7 +47,6 @@ export async function handleScheduled(
         runCloudStatusChecks(env),
         runISPChecks(env),
         checkAndCreateAttackEvents(env),
-        runGridCheck(env),
       ]);
     }
 
@@ -630,34 +630,6 @@ async function recordStatusHistory(
 }
 
 /**
- * Check power grid status (PJM)
- */
-async function runGridCheck(env: Env): Promise<void> {
-  try {
-    const gridData = await collectPJMGridStatus(env);
-    const now = new Date().toISOString();
-
-    await env.DB.prepare(`
-      INSERT INTO grid_status (
-        region, status, demand_mw, fuel_mix, alerts, checked_at
-      )
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).bind(
-      gridData.region,
-      gridData.status,
-      gridData.demand_mw || null,
-      JSON.stringify(gridData.fuel_mix || {}),
-      JSON.stringify(gridData.alerts || []),
-      now
-    ).run();
-
-    console.log(`✓ Grid status: ${gridData.status}`);
-  } catch (error) {
-    console.error('Error checking grid:', error);
-  }
-}
-
-/**
  * Clean up old data (runs daily at 3 AM)
  */
 async function cleanupOldData(env: Env): Promise<void> {
@@ -691,12 +663,33 @@ async function cleanupOldData(env: Env): Promise<void> {
       'DELETE FROM api_cache WHERE expires_at < ?'
     ).bind(new Date().toISOString()).run();
 
+    // Clean up old ransomware data
+    const ransomwareStatsResult = await env.DB.prepare(
+      'DELETE FROM ransomware_stats WHERE checked_at < datetime(?, "-90 days")'
+    ).bind(timestamp).run();
+
+    const ransomwareVictimsResult = await env.DB.prepare(
+      'DELETE FROM ransomware_victims WHERE last_seen < datetime(?, "-30 days")'
+    ).bind(timestamp).run();
+
+    const ransomwareDailyResult = await env.DB.prepare(
+      'DELETE FROM ransomware_daily_counts WHERE date < date(?, "-180 days")'
+    ).bind(timestamp).run();
+
+    const ransomwareSectorsResult = await env.DB.prepare(
+      'DELETE FROM ransomware_sectors WHERE checked_at < datetime(?, "-7 days")'
+    ).bind(timestamp).run();
+
     console.log('Data cleanup completed:', {
       statusHistory: statusResult.meta?.changes || 0,
       cloudStatus: cloudResult.meta?.changes || 0,
       m365Health: m365Result.meta?.changes || 0,
       events: eventsResult.meta?.changes || 0,
       cache: cacheResult.meta?.changes || 0,
+      ransomwareStats: ransomwareStatsResult.meta?.changes || 0,
+      ransomwareVictims: ransomwareVictimsResult.meta?.changes || 0,
+      ransomwareDaily: ransomwareDailyResult.meta?.changes || 0,
+      ransomwareSectors: ransomwareSectorsResult.meta?.changes || 0,
     });
   } catch (error) {
     console.error('Error during data cleanup:', error);

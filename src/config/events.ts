@@ -48,5 +48,4 @@ export const SOURCE_LABELS: Record<string, string> = {
   gworkspace: 'Google Workspace',
   isp: 'ISP',
   radar: 'Security',
-  grid: 'Power Grid',
 };

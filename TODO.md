@@ -1,17 +1,6 @@
 # MSP Dashboard - TODO List
 
-### 3. Power Grid Monitoring
-**Effort**: 4-6 hours
-**Dependencies**: EIA_API_KEY secret (free from eia.gov)
-
-Tasks:
-- [ ] Implement EIA API collector (src/collectors/grid/eia.ts)
-- [ ] Wire up `/api/grid` endpoint
-- [ ] Build PowerGridPage.tsx with demand/capacity charts
-- [ ] Add to cron schedule (every 5 minutes)
-- [ ] Show PJM region status, LMP prices, fuel mix
-
-### 4. Teams Alerting System
+### 3. Teams Alerting System
 **Effort**: 4-6 hours
 **Dependencies**: TEAMS_WEBHOOK_URL secret
 
@@ -51,7 +40,6 @@ These features have been removed from the roadmap:
 - ✅ `/api/gworkspace` - Google Workspace status
 - ✅ `/api/internet` - ISP status via Radar
 - ✅ `/api/radar/attacks` - DDoS attack data
-- 🔲 `/api/grid` - Power grid status (TODO)
 - 🔲 `/api/events` - Event timeline (TODO)
 
 **Frontend Pages Status:**
@@ -59,5 +47,4 @@ These features have been removed from the roadmap:
 - ✅ M365WorkspacePage - Fully built
 - ✅ InternetStatusPage - Fully built
 - ✅ RadarAttacksPage - Fully built
-- 🔲 PowerGridPage - Placeholder
 - 🔲 EventsPage - Placeholder

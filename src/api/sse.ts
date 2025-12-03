@@ -1,7 +1,7 @@
 import type { Env } from '../types';
 
 export interface SSEChange {
-  type: 'services' | 'cloud' | 'm365' | 'internet' | 'radar' | 'grid';
+  type: 'services' | 'cloud' | 'm365' | 'internet' | 'radar' | 'ransomware';
   data: { updated: boolean; timestamp: string };
 }
 
@@ -68,17 +68,17 @@ async function checkForChanges(env: Env, since: string): Promise<SSEChange[]> {
       });
     }
 
-    // Check for grid status updates
-    const gridCheck = await env.DB.prepare(
-      'SELECT MAX(checked_at) as last_update FROM grid_status WHERE checked_at > ?'
+    // Check for ransomware updates
+    const ransomwareCheck = await env.DB.prepare(
+      'SELECT MAX(checked_at) as last_update FROM ransomware_stats WHERE checked_at > ?'
     )
       .bind(since)
       .first<{ last_update: string | null }>();
 
-    if (gridCheck?.last_update) {
+    if (ransomwareCheck?.last_update) {
       changes.push({
-        type: 'grid',
-        data: { updated: true, timestamp: gridCheck.last_update },
+        type: 'ransomware',
+        data: { updated: true, timestamp: ransomwareCheck.last_update },
       });
     }
 

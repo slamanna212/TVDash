@@ -6,13 +6,13 @@ import { CloudStatusPage } from '../pages/CloudStatusPage';
 import { EventsPage } from '../pages/EventsPage';
 import { InternetStatusPage } from '../pages/InternetStatusPage';
 import { M365WorkspacePage } from '../pages/M365WorkspacePage';
-import { PowerGridPage } from '../pages/PowerGridPage';
+import { RansomwarePage } from '../pages/RansomwarePage';
 
 const pages = [
   { name: 'Internet Status', component: InternetStatusPage },
   { name: 'Cloud Status', component: CloudStatusPage },
   { name: 'M365 & Workspace', component: M365WorkspacePage },
-  { name: 'Power Grid', component: PowerGridPage },
+  { name: 'Ransomware', component: RansomwarePage },
   { name: 'Events Timeline', component: EventsPage },
 ];
 

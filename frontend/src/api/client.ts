@@ -76,6 +76,39 @@ export interface M365Response {
   lastChecked: string;
 }
 
+export interface RansomwareStats {
+  totalVictims: number;
+  totalGroups: number;
+  lastUpdated: string;
+}
+
+export interface RansomwareVictim {
+  id: string;
+  name: string;
+  group: string;
+  countryCode: string | null;
+  sector: string;
+  discoveredDate: string;
+}
+
+export interface RansomwareDailyCount {
+  date: string;
+  count: number;
+}
+
+export interface RansomwareSector {
+  name: string;
+  count: number;
+}
+
+export interface RansomwareResponse {
+  stats: RansomwareStats;
+  recentVictims: RansomwareVictim[];
+  dailyCounts: RansomwareDailyCount[];
+  topSectors: RansomwareSector[];
+  lastUpdated: string;
+}
+
 export interface ISPMetrics {
   isp: {
     id: number;
@@ -165,15 +198,6 @@ export interface EventsResponse {
   lastUpdated: string;
 }
 
-export interface GridResponse {
-  region: string;
-  status: 'operational' | 'degraded' | 'outage' | 'unknown';
-  demand_mw?: number;
-  fuel_mix?: Record<string, number>;
-  alerts?: string[];
-  checked_at: string;
-}
-
 class APIClient {
   private baseUrl: string;
 
@@ -209,12 +233,12 @@ class APIClient {
     return this.fetch<M365Response>('/api/m365');
   }
 
-  async getRadarAttacks(): Promise<AttackData> {
-    return this.fetch<AttackData>('/api/radar/attacks');
+  async getRansomware(): Promise<RansomwareResponse> {
+    return this.fetch<RansomwareResponse>('/api/ransomware');
   }
 
-  async getGrid(): Promise<GridResponse> {
-    return this.fetch<GridResponse>('/api/grid');
+  async getRadarAttacks(): Promise<AttackData> {
+    return this.fetch<AttackData>('/api/radar/attacks');
   }
 
   async getEvents(params?: { source?: string; limit?: number }): Promise<EventsResponse> {
