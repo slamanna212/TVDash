@@ -98,7 +98,7 @@ export function RansomwarePage() {
       return;
     }
 
-    const timers: NodeJS.Timeout[] = [];
+    const timers: number[] = [];
 
     // Animate each section sequentially with stagger
     sectorData.slice(0, 8).forEach((sector, index) => {
@@ -127,7 +127,7 @@ export function RansomwarePage() {
           }
         }, stepDuration);
 
-        timers.push(animationInterval as any);
+        timers.push(animationInterval);
       }, startDelay);
 
       timers.push(startTimer);

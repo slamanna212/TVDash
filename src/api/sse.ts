@@ -96,7 +96,7 @@ async function checkForChanges(env: Env, since: string): Promise<SSEChange[]> {
  * Handle SSE stream endpoint
  * Polls D1 every 10 seconds for changes and sends events to client
  */
-export async function handleSSEStream(request: Request, env: Env): Promise<Response> {
+export function handleSSEStream(request: Request, env: Env): Response {
   // Verify client accepts SSE
   const accept = request.headers.get('Accept');
   if (!accept?.includes('text/event-stream')) {
@@ -111,7 +111,7 @@ export async function handleSSEStream(request: Request, env: Env): Promise<Respo
   let lastCheck = new Date().toISOString();
 
   const stream = new ReadableStream({
-    async start(controller) {
+    start(controller) {
       try {
         // Send initial connection event
         const connectMessage = `event: connected\ndata: ${JSON.stringify({
@@ -121,30 +121,32 @@ export async function handleSSEStream(request: Request, env: Env): Promise<Respo
         controller.enqueue(encoder.encode(connectMessage));
 
         // Poll for changes every 10 seconds
-        intervalId = setInterval(async () => {
-          try {
-            // Check for data changes
-            const changes = await checkForChanges(env, lastCheck);
+        intervalId = setInterval(() => {
+          void (async () => {
+            try {
+              // Check for data changes
+              const changes = await checkForChanges(env, lastCheck);
 
-            if (changes.length > 0) {
-              // Send each change as a separate event
-              for (const change of changes) {
-                const eventMessage = `event: ${change.type}\ndata: ${JSON.stringify(change.data)}\n\n`;
-                controller.enqueue(encoder.encode(eventMessage));
+              if (changes.length > 0) {
+                // Send each change as a separate event
+                for (const change of changes) {
+                  const eventMessage = `event: ${change.type}\ndata: ${JSON.stringify(change.data)}\n\n`;
+                  controller.enqueue(encoder.encode(eventMessage));
+                }
+                // Update lastCheck to the latest timestamp
+                const latestTimestamp = changes.reduce((latest, change) => {
+                  return change.data.timestamp > latest ? change.data.timestamp : latest;
+                }, lastCheck);
+                lastCheck = latestTimestamp;
               }
-              // Update lastCheck to the latest timestamp
-              const latestTimestamp = changes.reduce((latest, change) => {
-                return change.data.timestamp > latest ? change.data.timestamp : latest;
-              }, lastCheck);
-              lastCheck = latestTimestamp;
-            }
 
-            // Send heartbeat to keep connection alive
-            controller.enqueue(encoder.encode(': heartbeat\n\n'));
-          } catch (error) {
-            console.error('Error in SSE poll interval:', error);
-            // Don't close connection on error, just log it
-          }
+              // Send heartbeat to keep connection alive
+              controller.enqueue(encoder.encode(': heartbeat\n\n'));
+            } catch (error) {
+              console.error('Error in SSE poll interval:', error);
+              // Don't close connection on error, just log it
+            }
+          })();
         }, 10000) as unknown as number;
 
       } catch (error) {

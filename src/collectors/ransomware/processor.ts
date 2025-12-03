@@ -109,7 +109,9 @@ async function updateDailyCounts(env: Env): Promise<void> {
  * Ransomware.live API may return country names or codes
  */
 function extractCountryCode(country: string | undefined): string | null {
-  if (!country) return null;
+  if (!country) {
+    return null;
+  }
 
   // If already 2-letter code
   if (country.length === 2) {
