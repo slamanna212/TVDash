@@ -19,11 +19,11 @@ export async function collectRansomwareData(env: Env): Promise<void> {
 
     // 2. Collect and store recent victims
     const victims = await fetchRecentVictims(env);
-    for (const victim of victims) {
+    const victimPromises = victims.map(async (victim) => {
       // Extract country code (may need parsing from victim.country)
       const countryCode = extractCountryCode(victim.country);
 
-      await env.DB.prepare(`
+      return env.DB.prepare(`
         INSERT INTO ransomware_victims
         (victim_id, victim_name, group_name, country_code, sector, discovered_date, last_seen)
         VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -38,19 +38,26 @@ export async function collectRansomwareData(env: Env): Promise<void> {
         victim.discovered,
         now
       ).run();
-    }
+    });
+
+    // Wait for all victim inserts to complete
+    await Promise.all(victimPromises);
+    console.log(`✓ Inserted ${victims.length} victims into database`);
 
     // 3. Update daily counts (aggregate victims by date)
     await updateDailyCounts(env);
 
     // 4. Collect and store sector data
     const sectors = await fetchSectors(env);
-    for (const sector of sectors) {
-      await env.DB.prepare(`
+    const sectorPromises = sectors.map(async (sector) => {
+      return env.DB.prepare(`
         INSERT INTO ransomware_sectors (sector_name, victim_count, checked_at)
         VALUES (?, ?, ?)
       `).bind(sector.sector, sector.count, now).run();
-    }
+    });
+
+    // Wait for all sector inserts to complete
+    await Promise.all(sectorPromises);
 
     console.log(`✓ Ransomware data collected: ${victims.length} victims, ${sectors.length} sectors`);
   } catch (error) {
@@ -75,19 +82,23 @@ async function updateDailyCounts(env: Env): Promise<void> {
     `).all();
 
     if (!result.success || !result.results) {
+      console.log('⚠ No daily count data to update');
       return;
     }
 
     // Update or insert daily counts
-    for (const row of result.results as any[]) {
-      await env.DB.prepare(`
+    const updatePromises = (result.results as any[]).map(async (row) => {
+      return env.DB.prepare(`
         INSERT INTO ransomware_daily_counts (date, victim_count, updated_at)
         VALUES (?, ?, ?)
         ON CONFLICT(date) DO UPDATE SET
           victim_count = excluded.victim_count,
           updated_at = excluded.updated_at
       `).bind(row.date, row.count, new Date().toISOString()).run();
-    }
+    });
+
+    await Promise.all(updatePromises);
+    console.log(`✓ Updated ${result.results.length} daily count records`);
   } catch (error) {
     console.error('Error updating daily counts:', error);
   }
