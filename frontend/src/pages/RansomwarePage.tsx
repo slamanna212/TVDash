@@ -14,7 +14,7 @@ import {
 } from '@mantine/core';
 import { LineChart } from '@mantine/charts';
 import { motion } from 'framer-motion';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import ReactCountryFlag from 'react-country-flag';
 import { useRansomware } from '../hooks/useRansomware';
 import { getTimeAgo } from '../utils/time';
@@ -73,6 +73,71 @@ export function RansomwarePage() {
       percentage: (sector.count / total) * 100,
     }));
   }, [data]);
+
+  // Animated values for ring progress sections
+  const [animatedSections, setAnimatedSections] = useState<number[]>([]);
+
+  // Detect prefers-reduced-motion
+  const prefersReducedMotion =
+    typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Animate ring progress sections sequentially
+  useEffect(() => {
+    if (!sectorData.length) {
+      setAnimatedSections([]);
+      return;
+    }
+
+    // Initialize all sections to 0
+    setAnimatedSections(new Array(sectorData.length).fill(0));
+
+    // If user prefers reduced motion, skip animation
+    if (prefersReducedMotion) {
+      setAnimatedSections(sectorData.map((s) => s.percentage));
+      return;
+    }
+
+    const timers: NodeJS.Timeout[] = [];
+
+    // Animate each section sequentially with stagger
+    sectorData.slice(0, 8).forEach((sector, index) => {
+      const startDelay = 500 + index * 150; // Start at 500ms, stagger by 150ms
+      const duration = 600; // Animation duration in ms
+      const steps = 30; // Number of animation steps
+      const stepDuration = duration / steps;
+      const increment = sector.percentage / steps;
+
+      // Delay before starting this section's animation
+      const startTimer = setTimeout(() => {
+        let currentStep = 0;
+
+        const animationInterval = setInterval(() => {
+          currentStep++;
+          const newValue = Math.min(increment * currentStep, sector.percentage);
+
+          setAnimatedSections((prev) => {
+            const updated = [...prev];
+            updated[index] = newValue;
+            return updated;
+          });
+
+          if (currentStep >= steps) {
+            clearInterval(animationInterval);
+          }
+        }, stepDuration);
+
+        timers.push(animationInterval as any);
+      }, startDelay);
+
+      timers.push(startTimer);
+    });
+
+    // Cleanup timers on unmount or data change
+    return () => {
+      timers.forEach((timer) => clearTimeout(timer));
+    };
+  }, [sectorData, prefersReducedMotion]);
 
   // Loading state
   if (isLoading && !data) {
@@ -247,7 +312,7 @@ export function RansomwarePage() {
                             '#ffa726', // Orange
                           ];
                           return {
-                            value: sector.percentage,
+                            value: animatedSections[index] || 0,
                             color: colors[index % colors.length],
                             tooltip: `${sector.name}: ${sector.count} (${sector.percentage.toFixed(
                               1
