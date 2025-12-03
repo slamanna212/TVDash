@@ -86,7 +86,7 @@ export async function collectM365Status(env: Env): Promise<{
           lastChecked: new Date().toISOString(),
         };
       },
-      300 // Cache for 5 minutes
+      480 // Cache for 8 minutes (matches 10-minute cron interval)
     );
   } catch (error) {
     console.error('Error collecting M365 status:', error);

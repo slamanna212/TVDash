@@ -1,4 +1,5 @@
 import type { Env } from '../types';
+import { withApiCache } from '../utils/api-cache';
 
 interface LocalISP {
   id: number;
@@ -10,8 +11,13 @@ interface LocalISP {
 
 export async function getInternetStatus(env: Env): Promise<Response> {
   try {
-    // Read from database instead of making external API calls
-    const ispsResult = await env.DB.prepare('SELECT * FROM local_isps ORDER BY display_order').all();
+    const data = await withApiCache(
+      env,
+      'api:internet',
+      30, // 30 second cache
+      async () => {
+        // Read from database instead of making external API calls
+        const ispsResult = await env.DB.prepare('SELECT * FROM local_isps ORDER BY display_order').all();
 
     if (!ispsResult.success || !ispsResult.results) {
       throw new Error('Failed to fetch ISPs from database');
@@ -70,18 +76,25 @@ export async function getInternetStatus(env: Env): Promise<Response> {
     const hasOutage = ispMetrics.some(m => m.status === 'outage');
     const hasDegraded = ispMetrics.some(m => m.status === 'degraded');
 
-    if (hasOutage) {
-      overallStatus = 'outage';
-    } else if (hasDegraded) {
-      overallStatus = 'degraded';
-    }
+        if (hasOutage) {
+          overallStatus = 'outage';
+        } else if (hasDegraded) {
+          overallStatus = 'degraded';
+        }
 
-    return new Response(JSON.stringify({
-      overallStatus,
-      isps: ispMetrics,
-      lastUpdated: new Date().toISOString(),
-    }), {
-      headers: { 'Content-Type': 'application/json' },
+        return {
+          overallStatus,
+          isps: ispMetrics,
+          lastUpdated: new Date().toISOString(),
+        };
+      }
+    );
+
+    return new Response(JSON.stringify(data), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, max-age=30',
+      },
     });
   } catch (error) {
     console.error('Error fetching internet status:', error);

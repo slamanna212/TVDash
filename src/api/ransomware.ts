@@ -1,4 +1,5 @@
 import type { Env } from '../types';
+import { withApiCache } from '../utils/api-cache';
 
 export interface RansomwareResponse {
   stats: {
@@ -27,8 +28,13 @@ export interface RansomwareResponse {
 
 export async function getRansomwareStatus(env: Env): Promise<Response> {
   try {
-    // 1. Get latest stats
-    const statsRow = await env.DB.prepare(`
+    const response = await withApiCache(
+      env,
+      'api:ransomware',
+      60, // 60 second cache (less frequently updated data)
+      async () => {
+        // 1. Get latest stats
+        const statsRow = await env.DB.prepare(`
       SELECT total_victims, total_groups, checked_at
       FROM ransomware_stats
       ORDER BY checked_at DESC
@@ -60,33 +66,38 @@ export async function getRansomwareStatus(env: Env): Promise<Response> {
       LIMIT 8
     `).all();
 
-    const response: RansomwareResponse = {
-      stats: {
-        totalVictims: statsRow?.total_victims || 0,
-        totalGroups: statsRow?.total_groups || 0,
-        lastUpdated: statsRow?.checked_at || new Date().toISOString(),
-      },
-      recentVictims: (victimsResult.results || []).map((v: any) => ({
-        id: v.victim_id,
-        name: v.victim_name,
-        group: v.group_name,
-        countryCode: v.country_code,
-        sector: v.sector,
-        discoveredDate: v.discovered_date,
-      })),
-      dailyCounts: (dailyResult.results || []).map((d: any) => ({
-        date: d.date,
-        count: d.victim_count,
-      })),
-      topSectors: (sectorsResult.results || []).map((s: any) => ({
-        name: s.sector_name,
-        count: s.victim_count,
-      })),
-      lastUpdated: new Date().toISOString(),
-    };
+        return {
+          stats: {
+            totalVictims: statsRow?.total_victims || 0,
+            totalGroups: statsRow?.total_groups || 0,
+            lastUpdated: statsRow?.checked_at || new Date().toISOString(),
+          },
+          recentVictims: (victimsResult.results || []).map((v: any) => ({
+            id: v.victim_id,
+            name: v.victim_name,
+            group: v.group_name,
+            countryCode: v.country_code,
+            sector: v.sector,
+            discoveredDate: v.discovered_date,
+          })),
+          dailyCounts: (dailyResult.results || []).map((d: any) => ({
+            date: d.date,
+            count: d.victim_count,
+          })),
+          topSectors: (sectorsResult.results || []).map((s: any) => ({
+            name: s.sector_name,
+            count: s.victim_count,
+          })),
+          lastUpdated: new Date().toISOString(),
+        } as RansomwareResponse;
+      }
+    );
 
     return new Response(JSON.stringify(response), {
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, max-age=60',
+      },
     });
   } catch (error) {
     console.error('Error fetching ransomware status:', error);

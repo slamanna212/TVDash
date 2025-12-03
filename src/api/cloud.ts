@@ -6,11 +6,17 @@ import {
   determineRegionStatus,
   incidentAffectsRegion,
 } from '../utils/cloud-regions';
+import { withApiCache } from '../utils/api-cache';
 
 export async function getCloudStatus(env: Env): Promise<Response> {
   try {
-    // Read from cloud_status table instead of making external API calls
-    const latestStatuses = await env.DB.prepare(`
+    const data = await withApiCache(
+      env,
+      'api:cloud',
+      30, // 30 second cache
+      async () => {
+        // Read from cloud_status table instead of making external API calls
+        const latestStatuses = await env.DB.prepare(`
       SELECT provider, overall_status, incidents, last_updated, checked_at
       FROM cloud_status
       WHERE checked_at IN (
@@ -73,11 +79,18 @@ export async function getCloudStatus(env: Env): Promise<Response> {
       });
     });
 
-    return new Response(JSON.stringify({
-      providers,
-      lastUpdated: new Date().toISOString(),
-    }), {
-      headers: { 'Content-Type': 'application/json' },
+        return {
+          providers,
+          lastUpdated: new Date().toISOString(),
+        };
+      }
+    );
+
+    return new Response(JSON.stringify(data), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, max-age=30',
+      },
     });
   } catch (error) {
     console.error('Error fetching cloud status:', error);

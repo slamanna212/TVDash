@@ -28,9 +28,9 @@ export async function handleScheduled(
   console.log(`Cron triggered: ${cron} at ${new Date(event.scheduledTime).toISOString()}`);
 
   try {
-    // Every 5 minute tasks
-    if (cron === '*/5 * * * *') {
-      console.log('Running 5-minute tasks');
+    // Every 10 minute tasks (changed from 5 to reduce database load)
+    if (cron === '*/10 * * * *') {
+      console.log('Running 10-minute tasks');
       await Promise.all([
         runHttpHealthChecks(env),
         runStatuspageChecks(env),

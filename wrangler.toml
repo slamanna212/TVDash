@@ -5,7 +5,7 @@ compatibility_flags = ["nodejs_compat"]
 
 [triggers]
 crons = [
-  "*/5 * * * *",      # Every 5 minutes
+  "*/10 * * * *",     # Every 10 minutes (changed from 5 for reduced DB load)
   "*/15 * * * *",     # Every 15 minutes
   "0 3 * * *"         # Daily at 3 AM
 ]

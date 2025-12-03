@@ -1,13 +1,19 @@
 import type { Env, M365Service, M365Issue, ServiceStatus } from '../types';
+import { withApiCache } from '../utils/api-cache';
 
 export async function getM365Status(env: Env): Promise<Response> {
   try {
-    // Read from m365_current table instead of making external API calls
-    const latestServices = await env.DB.prepare(`
-      SELECT service_name, status, issues, checked_at
-      FROM m365_current
-      ORDER BY service_name
-    `).all();
+    const data = await withApiCache(
+      env,
+      'api:m365',
+      30, // 30 second cache
+      async () => {
+        // Read from m365_current table instead of making external API calls
+        const latestServices = await env.DB.prepare(`
+          SELECT service_name, status, issues, checked_at
+          FROM m365_current
+          ORDER BY service_name
+        `).all();
 
     if (!latestServices.success || !latestServices.results) {
       throw new Error('Failed to fetch M365 status from database');
@@ -42,17 +48,24 @@ export async function getM365Status(env: Env): Promise<Response> {
       overall = 'unknown';
     }
 
-    // Get the most recent checked_at timestamp
-    const lastChecked = latestServices.results.length > 0
-      ? latestServices.results[0].checked_at as string
-      : new Date().toISOString();
+        // Get the most recent checked_at timestamp
+        const lastChecked = latestServices.results.length > 0
+          ? latestServices.results[0].checked_at as string
+          : new Date().toISOString();
 
-    return new Response(JSON.stringify({
-      overall,
-      services,
-      lastChecked,
-    }), {
-      headers: { 'Content-Type': 'application/json' },
+        return {
+          overall,
+          services,
+          lastChecked,
+        };
+      }
+    );
+
+    return new Response(JSON.stringify(data), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, max-age=30',
+      },
     });
   } catch (error) {
     console.error('Error fetching M365 status:', error);
