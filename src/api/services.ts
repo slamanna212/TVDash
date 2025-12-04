@@ -1,4 +1,4 @@
-import type { Env, Service, ServiceWithStatus, ServiceStatus } from '../types';
+import type { Env, ServiceWithStatus, ServiceStatus } from '../types';
 import { withApiCache } from '../utils/api-cache';
 
 export async function getServices(env: Env): Promise<Response> {
@@ -42,7 +42,24 @@ export async function getServices(env: Env): Promise<Response> {
       throw new Error('Failed to fetch services');
     }
 
-    const servicesWithStatus: ServiceWithStatus[] = result.results.map((row: any) => ({
+    interface ServiceRow {
+      id: number;
+      name: string;
+      category: string;
+      check_type: string;
+      check_url: string | null;
+      statuspage_id: string | null;
+      supports_warning: number;
+      display_order: number;
+      created_at: string;
+      status: string;
+      response_time_ms: number | null;
+      message: string;
+      checked_at: string;
+      is_maintenance: number;
+    }
+
+    const servicesWithStatus: ServiceWithStatus[] = (result.results as ServiceRow[]).map((row) => ({
       id: row.id,
       name: row.name,
       category: row.category,

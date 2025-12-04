@@ -1,3 +1,4 @@
+import { LineChart } from '@mantine/charts';
 import {
   Box,
   Title,
@@ -12,7 +13,6 @@ import {
   Center,
   RingProgress,
 } from '@mantine/core';
-import { LineChart } from '@mantine/charts';
 import { motion } from 'framer-motion';
 import { useMemo, useState, useEffect } from 'react';
 import ReactCountryFlag from 'react-country-flag';

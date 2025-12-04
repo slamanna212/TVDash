@@ -2,8 +2,8 @@ import { Box, Title, Grid, Card, Text, Badge, Stack, Group, Skeleton, Center, Ri
 import { motion } from 'framer-motion';
 import { useMemo } from 'react';
 import type { ISPMetrics } from '../api/client';
-import { useInternet } from '../hooks/useInternet';
 import { useCountUp } from '../hooks/useCountUp';
+import { useInternet } from '../hooks/useInternet';
 import { statusColors } from '../theme';
 
 // Animation variants for card entry

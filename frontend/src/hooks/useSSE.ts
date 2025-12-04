@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef, useState } from 'react';
 
 export interface UseSSEOptions {
   url: string;
@@ -59,42 +59,42 @@ export function useSSE({
       // Services update event
       eventSource.addEventListener('services', (event) => {
         console.log('[SSE] Services updated:', event.data);
-        queryClient.invalidateQueries({ queryKey: ['services'] });
+        void queryClient.invalidateQueries({ queryKey: ['services'] });
         onMessage?.(event);
       });
 
       // Cloud status update event
       eventSource.addEventListener('cloud', (event) => {
         console.log('[SSE] Cloud status updated:', event.data);
-        queryClient.invalidateQueries({ queryKey: ['cloud'] });
+        void queryClient.invalidateQueries({ queryKey: ['cloud'] });
         onMessage?.(event);
       });
 
       // M365 health update event
       eventSource.addEventListener('m365', (event) => {
         console.log('[SSE] M365 health updated:', event.data);
-        queryClient.invalidateQueries({ queryKey: ['m365'] });
+        void queryClient.invalidateQueries({ queryKey: ['m365'] });
         onMessage?.(event);
       });
 
       // Internet/ISP update event
       eventSource.addEventListener('internet', (event) => {
         console.log('[SSE] Internet status updated:', event.data);
-        queryClient.invalidateQueries({ queryKey: ['internet'] });
+        void queryClient.invalidateQueries({ queryKey: ['internet'] });
         onMessage?.(event);
       });
 
       // Radar attacks update event
       eventSource.addEventListener('radar', (event) => {
         console.log('[SSE] Radar data updated:', event.data);
-        queryClient.invalidateQueries({ queryKey: ['radar'] });
+        void queryClient.invalidateQueries({ queryKey: ['radar'] });
         onMessage?.(event);
       });
 
       // Ransomware update event
       eventSource.addEventListener('ransomware', (event) => {
         console.log('[SSE] Ransomware data updated:', event.data);
-        queryClient.invalidateQueries({ queryKey: ['ransomware'] });
+        void queryClient.invalidateQueries({ queryKey: ['ransomware'] });
         onMessage?.(event);
       });
 
