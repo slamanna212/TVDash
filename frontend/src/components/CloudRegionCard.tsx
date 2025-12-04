@@ -2,7 +2,6 @@ import { Card, Stack, Group, Text, Box } from '@mantine/core';
 import type { CloudRegion } from '../api/client';
 import { statusColors } from '../theme';
 import { getRegionIcon } from '../utils/cloudIcons';
-import { StatusBadge } from './StatusBadge';
 
 interface CloudRegionCardProps {
   region: CloudRegion;
@@ -52,32 +51,29 @@ export function CloudRegionCard({ region }: CloudRegionCardProps) {
         minHeight: '140px',
         maxHeight: '170px',
         background: 'var(--bg-secondary)',
-        borderLeft: `3px solid ${getBorderColor(region.status)}`,
+        borderLeft: `8px solid ${getBorderColor(region.status)}`,
         display: 'flex',
         flexDirection: 'column',
       }}
     >
       <Stack gap="sm" style={{ height: '100%' }}>
-        {/* Header with region name and status */}
-        <Group justify="space-between" align="flex-start" wrap="nowrap">
-          <Box style={{ flex: 1, minWidth: 0 }}>
-            <Group gap="xs" wrap="nowrap">
-              {getRegionIcon(20)}
-              <Text
-                size="calc(var(--font-md) * 1.1)"
-                fw={700}
-                style={{ lineHeight: 1.2 }}
-                truncate
-              >
-                {region.name}
-              </Text>
-            </Group>
-            <Text size="xs" c="dimmed" mt={2}>
-              {region.location}
+        {/* Header with region name */}
+        <Box style={{ flex: 1, minWidth: 0 }}>
+          <Group gap="xs" wrap="nowrap">
+            {getRegionIcon(20)}
+            <Text
+              size="calc(var(--font-md) * 1.4)"
+              fw={700}
+              style={{ lineHeight: 1.2 }}
+              truncate
+            >
+              {region.name}
             </Text>
-          </Box>
-          <StatusBadge status={region.status} size="sm" />
-        </Group>
+          </Group>
+          <Text size="xs" c="dimmed" mt={2}>
+            {region.location}
+          </Text>
+        </Box>
 
         {/* Incident preview or operational message */}
         <Box style={{ flex: 1, minWidth: 0 }}>

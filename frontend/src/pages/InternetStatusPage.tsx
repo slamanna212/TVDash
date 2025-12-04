@@ -2,7 +2,6 @@ import { Box, Title, Grid, Card, Text, Badge, Stack, Group, Skeleton, Center, Ri
 import { motion } from 'framer-motion';
 import { useMemo } from 'react';
 import type { ISPMetrics } from '../api/client';
-import { StatusBadge } from '../components/StatusBadge';
 import { useInternet } from '../hooks/useInternet';
 import { useCountUp } from '../hooks/useCountUp';
 import { statusColors } from '../theme';
@@ -42,6 +41,19 @@ function getSecondaryASNsText(secondaryAsns: string | null | undefined): string 
     // Ignore parse errors
   }
   return '';
+}
+
+function getBorderColor(status: string): string {
+  switch (status) {
+    case 'operational':
+      return statusColors.operational;
+    case 'degraded':
+      return statusColors.degraded;
+    case 'outage':
+      return statusColors.outage;
+    default:
+      return statusColors.unknown;
+  }
 }
 
 export function InternetStatusPage() {
@@ -118,6 +130,7 @@ function ISPCard({ ispMetrics }: { ispMetrics: ISPMetrics }) {
       style={{
         height: '100%',
         background: 'var(--bg-secondary)',
+        borderLeft: `8px solid ${getBorderColor(ispMetrics.status)}`,
       }}
     >
       <Stack gap="md">
@@ -160,8 +173,6 @@ function ISPCard({ ispMetrics }: { ispMetrics: ISPMetrics }) {
               </Text>
             </Box>
           </Group>
-
-          <StatusBadge status={ispMetrics.status} size="lg" />
         </Group>
 
         {/* Traffic Anomalies */}
