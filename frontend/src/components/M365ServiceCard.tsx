@@ -1,8 +1,7 @@
-import { Card, Stack, Group, Text, Box } from '@mantine/core';
+import { Card, Stack, Text, Box } from '@mantine/core';
 import type { M365Service } from '../api/client';
 import { statusColors } from '../theme';
 import { getTimeAgo, formatUpdateTime } from '../utils/time';
-import { StatusBadge } from './StatusBadge';
 
 interface M365ServiceCardProps {
   service: M365Service;
@@ -37,26 +36,22 @@ export function M365ServiceCard({ service, updatedAt }: M365ServiceCardProps) {
         minHeight: '140px',
         maxHeight: '170px',
         background: 'var(--bg-secondary)',
-        borderLeft: `3px solid ${getBorderColor(service.status)}`,
+        borderLeft: `8px solid ${getBorderColor(service.status)}`,
         display: 'flex',
         flexDirection: 'column',
       }}
     >
       <Stack gap="sm" style={{ height: '100%' }}>
-        {/* Header with service name and status */}
-        <Group justify="space-between" align="flex-start" wrap="nowrap">
-          <Box style={{ flex: 1, minWidth: 0 }}>
-            <Text
-              size="calc(var(--font-md) * 1.0)"
-              fw={700}
-              style={{ lineHeight: 1.2 }}
-              truncate
-            >
-              {service.name}
-            </Text>
-          </Box>
-          <StatusBadge status={service.status} size="sm" />
-        </Group>
+        {/* Header with service name */}
+        <Box>
+          <Text
+            size="calc(var(--font-md) * 1.0)"
+            fw={700}
+            style={{ lineHeight: 1.2 }}
+          >
+            {service.name}
+          </Text>
+        </Box>
 
         {/* Issue preview or operational message */}
         <Box style={{ flex: 1, minWidth: 0 }}>
@@ -71,9 +66,8 @@ export function M365ServiceCard({ service, updatedAt }: M365ServiceCardProps) {
                 fw={500}
                 style={{
                   overflow: 'hidden',
-                  display: '-webkit-box',
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
                   lineHeight: 1.4,
                 }}
               >
@@ -82,12 +76,6 @@ export function M365ServiceCard({ service, updatedAt }: M365ServiceCardProps) {
               <Text size="xs" c="dimmed">
                 Started: {getTimeAgo(mostRecentIssue.startTime)}
               </Text>
-              {service.issues.length > 1 && (
-                <Text size="xs" c="dimmed">
-                  + {service.issues.length - 1} more issue
-                  {service.issues.length - 1 !== 1 ? 's' : ''}
-                </Text>
-              )}
             </Stack>
           ) : service.status === 'outage' ? (
             <Text c="dimmed" size="sm" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

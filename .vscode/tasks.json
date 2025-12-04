@@ -289,9 +289,9 @@
       }
     },
     {
-      "label": "Cron: Trigger 5-Minute",
+      "label": "Cron: Trigger 10-Minute",
       "type": "shell",
-      "command": "curl -X POST 'http://localhost:8787/api/trigger-scheduled?cron=*%2F5%20*%20*%20*%20*' | jq",
+      "command": "curl -X POST 'http://localhost:8787/api/trigger-scheduled?cron=*%2F10%20*%20*%20*%20*' | jq",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -338,7 +338,7 @@
       "dependsOrder": "sequence",
       "dependsOn": [
         "Cron: Trigger 1-Minute",
-        "Cron: Trigger 5-Minute",
+        "Cron: Trigger 10-Minute",
         "Cron: Trigger 15-Minute"
       ],
       "problemMatcher": [],

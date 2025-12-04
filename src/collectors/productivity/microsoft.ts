@@ -54,7 +54,7 @@ export async function collectM365Status(env: Env): Promise<{
           const mappedStatus = mapM365Status(overview.status);
           console.log(`M365 Service: ${overview.service} - Raw Status: "${overview.status}" - Mapped: ${mappedStatus}`);
 
-          const serviceIssues = issues.filter(issue => issue.service === overview.id);
+          const serviceIssues = issues.filter(issue => issue.service === overview.service);
 
           return {
             name: overview.service,
