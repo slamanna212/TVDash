@@ -46,7 +46,7 @@ const cardVariants = {
 };
 
 export function EventsPage() {
-  const { data, isLoading, error } = useEvents({ limit: 25 });
+  const { data, isLoading, error } = useEvents({ limit: 10 });
 
   // Memoize grouped events to prevent re-grouping on every render
   const groupedEvents = useMemo(
