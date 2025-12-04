@@ -23,32 +23,30 @@ function groupEventsByDay(events: Event[]): { [key: string]: Event[] } {
   return groups;
 }
 
-// Animation variants for card entry
+// Animation variants for card entry (optimized for TV display)
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.08,
+      staggerChildren: 0.02, // Reduced from 0.08s for faster rendering
     },
   },
 };
 
 const cardVariants = {
-  hidden: { opacity: 0, x: -20 },
+  hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    x: 0,
     transition: {
-      type: 'spring' as const,
-      stiffness: 300,
-      damping: 24,
+      duration: 0.15,
+      ease: 'easeOut',
     },
   },
 };
 
 export function EventsPage() {
-  const { data, isLoading, error } = useEvents({ limit: 100 });
+  const { data, isLoading, error } = useEvents({ limit: 25 });
 
   // Memoize grouped events to prevent re-grouping on every render
   const groupedEvents = useMemo(

@@ -36,17 +36,23 @@ function mapStatuspageIndicator(indicator: string): ServiceStatus {
   }
 }
 
-function determineStatusFromComponents(components: Array<{ name: string; status: string }>): ServiceStatus {
+function determineStatusFromComponents(components: Array<{ name: string; status: string }>): { status: ServiceStatus; isMaintenance: boolean } {
   const hasOutage = components.some(c =>
     c.status === 'major_outage' || c.status === 'partial_outage'
   );
-  const hasDegraded = components.some(c =>
-    c.status === 'degraded_performance' || c.status === 'under_maintenance'
-  );
+  const hasMaintenance = components.some(c => c.status === 'under_maintenance');
+  const hasDegraded = components.some(c => c.status === 'degraded_performance');
 
-  if (hasOutage) {return 'outage';}
-  if (hasDegraded) {return 'degraded';}
-  return 'operational';
+  let status: ServiceStatus;
+  if (hasOutage) {
+    status = 'outage';
+  } else if (hasMaintenance || hasDegraded) {
+    status = 'degraded';
+  } else {
+    status = 'operational';
+  }
+
+  return { status, isMaintenance: hasMaintenance };
 }
 
 function statusPriority(status: ServiceStatus): number {
@@ -123,13 +129,16 @@ export async function checkStatuspageStatusWithGroups(
     const data: StatuspageResponse = await response.json();
 
     let finalStatus: ServiceStatus;
+    let finalIsMaintenance = false;
 
     // If component groups are specified, ONLY use those components (ignore overall page status)
     if (componentGroupNames && componentGroupNames.length > 0 && data.components && data.components.length > 0) {
       const componentsToCheck = filterComponentsByGroups(data.components, componentGroupNames);
 
       if (componentsToCheck.length > 0) {
-        finalStatus = determineStatusFromComponents(componentsToCheck);
+        const result = determineStatusFromComponents(componentsToCheck);
+        finalStatus = result.status;
+        finalIsMaintenance = result.isMaintenance;
       } else {
         // No components found for the specified groups - this might indicate a problem
         console.warn('No components found for groups:', componentGroupNames);
@@ -143,10 +152,14 @@ export async function checkStatuspageStatusWithGroups(
       if (data.components && data.components.length > 0) {
         const componentsToCheck = data.components.filter(c => !c.group);
         if (componentsToCheck.length > 0) {
-          const componentStatus = determineStatusFromComponents(componentsToCheck);
+          const result = determineStatusFromComponents(componentsToCheck);
           // Use the worse of the two statuses
-          if (statusPriority(componentStatus) > statusPriority(finalStatus)) {
-            finalStatus = componentStatus;
+          if (statusPriority(result.status) > statusPriority(finalStatus)) {
+            finalStatus = result.status;
+          }
+          // If any component is under maintenance, mark as maintenance
+          if (result.isMaintenance) {
+            finalIsMaintenance = true;
           }
         }
       }
@@ -156,6 +169,7 @@ export async function checkStatuspageStatusWithGroups(
       status: finalStatus,
       responseTime,
       message: data.status.description,
+      isMaintenance: finalIsMaintenance,
     };
   } catch (error) {
     const responseTime = Date.now() - startTime;
@@ -163,6 +177,7 @@ export async function checkStatuspageStatusWithGroups(
       status: 'unknown',
       responseTime,
       message: error instanceof Error ? error.message : 'Failed to check status',
+      isMaintenance: false,
     };
   }
 }

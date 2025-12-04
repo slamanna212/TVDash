@@ -60,18 +60,9 @@ export function EventCard({ event }: EventCardProps) {
       style={{
         borderLeft: `6px solid ${config.color}`,
         cursor: event.description ? 'pointer' : 'default',
-        transition: 'all 0.2s ease',
         background: 'var(--bg-secondary)',
       }}
       onClick={() => event.description && setExpanded(!expanded)}
-      onMouseEnter={(e) => {
-        if (event.description) {
-          e.currentTarget.style.transform = 'translateX(4px)';
-        }
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateX(0)';
-      }}
     >
       <Group justify="space-between" align="flex-start" wrap="nowrap">
         {/* Left: Icon + Content */}

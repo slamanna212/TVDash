@@ -9,6 +9,7 @@ interface ServiceCardProps {
     statusText?: string;
     responseTime?: number;
     lastChecked?: string;
+    isMaintenance?: boolean;
   };
   layoutId?: string;
 }
@@ -80,6 +81,20 @@ export function ServiceCard({ service, layoutId }: ServiceCardProps) {
       >
         {service.name}
       </Text>
+      {service.isMaintenance && (
+        <Text
+          style={{
+            fontSize: 'var(--font-sm)',
+            fontWeight: 500,
+            color: 'rgba(255, 255, 255, 0.95)',
+            textAlign: 'center',
+            lineHeight: 1,
+            marginTop: '0.25vh',
+          }}
+        >
+          🔧 Maintenance
+        </Text>
+      )}
       <Text
         style={{
           fontSize: 'var(--font-base)',

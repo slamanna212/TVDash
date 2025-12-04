@@ -37,6 +37,7 @@ export interface ServiceWithStatus extends Service {
   statusText?: string;
   responseTime?: number;
   lastChecked: string;
+  isMaintenance?: boolean;
 }
 
 export interface StatusHistory {
@@ -46,6 +47,7 @@ export interface StatusHistory {
   response_time_ms?: number;
   message?: string;
   checked_at: string;
+  is_maintenance?: number;
 }
 
 export interface LocalISP {
@@ -124,4 +126,5 @@ export interface CheckResult {
   status: ServiceStatus;
   responseTime?: number;
   message?: string;
+  isMaintenance?: boolean;
 }

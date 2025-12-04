@@ -593,13 +593,14 @@ async function recordStatusHistory(
   try {
     // Insert status history
     await env.DB.prepare(`
-      INSERT INTO status_history (service_id, status, response_time_ms, message, checked_at)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO status_history (service_id, status, response_time_ms, message, is_maintenance, checked_at)
+      VALUES (?, ?, ?, ?, ?, ?)
     `).bind(
       serviceId,
       result.status,
       result.responseTime || null,
       result.message || null,
+      result.isMaintenance ? 1 : 0,
       new Date().toISOString()
     ).run();
 

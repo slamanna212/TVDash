@@ -25,7 +25,8 @@ export async function getServices(env: Env): Promise<Response> {
         COALESCE(sh.status, 'unknown') as status,
         sh.response_time_ms,
         COALESCE(sh.message, 'Not yet checked') as message,
-        COALESCE(sh.checked_at, datetime('now')) as checked_at
+        COALESCE(sh.checked_at, datetime('now')) as checked_at,
+        COALESCE(sh.is_maintenance, 0) as is_maintenance
       FROM services s
       LEFT JOIN status_history sh ON sh.id = (
         SELECT id
@@ -55,6 +56,7 @@ export async function getServices(env: Env): Promise<Response> {
       statusText: row.message,
       responseTime: row.response_time_ms || undefined,
       lastChecked: row.checked_at,
+      isMaintenance: row.is_maintenance === 1,
     }));
 
         // Calculate summary
