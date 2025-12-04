@@ -44,4 +44,5 @@ export const statusColors = {
   degraded: '#fab005',
   outage: '#e03131',
   unknown: '#495057',
+  maintenance: '#1971c2', // Blue for maintenance
 };

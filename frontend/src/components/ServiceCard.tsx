@@ -37,7 +37,9 @@ function formatTimeAgo(timestamp: string | undefined): string {
 }
 
 export function ServiceCard({ service, layoutId }: ServiceCardProps) {
-  const backgroundColor = statusColors[service.status];
+  const backgroundColor = service.isMaintenance
+    ? statusColors.maintenance
+    : statusColors[service.status];
   const timeAgo = formatTimeAgo(service.lastChecked);
 
   return (

@@ -265,7 +265,8 @@ export function RansomwarePage() {
                         curveType="monotone"
                         gridAxis="xy"
                         withLegend={false}
-                        strokeWidth={2}
+                        strokeWidth={4}
+                        fillOpacity={0.3}
                         style={{ width: '100%' }}
                       />
                     ) : (
