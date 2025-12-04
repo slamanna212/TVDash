@@ -41,7 +41,7 @@ export function PageContainer() {
         }}
       >
         <ActionIcon
-          size={50}
+          size={36}
           variant="filled"
           color="dark.6"
           onClick={goPrevious}
@@ -58,11 +58,11 @@ export function PageContainer() {
             },
           }}
         >
-          <IconChevronLeft size={28} stroke={2} />
+          <IconChevronLeft size={20} stroke={2} />
         </ActionIcon>
 
         <ActionIcon
-          size={50}
+          size={36}
           variant="filled"
           color="dark.6"
           onClick={goNext}
@@ -79,7 +79,7 @@ export function PageContainer() {
             },
           }}
         >
-          <IconChevronRight size={28} stroke={2} />
+          <IconChevronRight size={20} stroke={2} />
         </ActionIcon>
 
         <RingProgress
