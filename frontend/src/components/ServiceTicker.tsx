@@ -24,7 +24,7 @@ export function ServiceTicker() {
 
   // Update speed on window resize with debouncing
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: number;
 
     const handleResize = () => {
       clearTimeout(timeoutId);
