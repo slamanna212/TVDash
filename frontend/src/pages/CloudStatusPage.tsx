@@ -75,7 +75,13 @@ export function CloudStatusPage() {
             <Grid.Col key={col} span={4}>
               <Stack gap="md">
                 {[1, 2, 3, 4].map((row) => (
-                  <Skeleton key={row} height={160} radius="md" animate />
+                  <Skeleton
+                    key={row}
+                    height={160}
+                    radius="md"
+                    animate
+                    style={{ height: 'var(--card-height-base)' }}
+                  />
                 ))}
               </Stack>
             </Grid.Col>

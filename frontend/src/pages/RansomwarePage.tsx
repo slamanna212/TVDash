@@ -301,6 +301,10 @@ export function RansomwarePage() {
                       <RingProgress
                         size={180}
                         thickness={22}
+                        style={{
+                          width: 'var(--ring-lg)',
+                          height: 'var(--ring-lg)',
+                        }}
                         sections={sectorData.slice(0, 8).map((sector, index) => {
                           const colors = [
                             '#e53935', // Red
@@ -339,8 +343,8 @@ export function RansomwarePage() {
                             <Group key={sector.name} gap="xs" wrap="nowrap">
                               <Box
                                 style={{
-                                  width: 14,
-                                  height: 14,
+                                  width: 'var(--icon-xs)',
+                                  height: 'var(--icon-xs)',
                                   borderRadius: 2,
                                   backgroundColor: colors[index % colors.length],
                                   flexShrink: 0,
@@ -376,8 +380,8 @@ export function RansomwarePage() {
                     radius="md"
                     style={{
                       background: 'var(--bg-secondary)',
-                      borderLeft: '3px solid #e53935',
-                      minHeight: '120px',
+                      borderLeft: 'var(--border-thick) solid #e53935',
+                      minHeight: 'var(--card-height-sm)',
                     }}
                   >
                     <Stack gap="xs">

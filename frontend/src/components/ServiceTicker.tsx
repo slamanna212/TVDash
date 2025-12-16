@@ -1,6 +1,6 @@
 import { Box } from '@mantine/core';
 import { AnimatePresence } from 'framer-motion';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useServices } from '../hooks/useServices';
 import { ServiceCard } from './ServiceCard';
 
@@ -12,6 +12,33 @@ export function ServiceTicker() {
   const animationRef = useRef<number | null>(null);
   const positionRef = useRef<number>(0); // Persist position across re-renders
   const lastTimeRef = useRef<number>(performance.now());
+
+  // Calculate viewport-relative scroll speed
+  const calculateSpeed = useCallback(() => {
+    const viewportWidth = window.innerWidth;
+    // Base speed: 30px/s at 1920px, scales linearly to 60px/s at 3840px
+    return (viewportWidth / 1920) * 0.03;
+  }, []);
+
+  const [scrollSpeed, setScrollSpeed] = useState(calculateSpeed);
+
+  // Update speed on window resize with debouncing
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    const handleResize = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        setScrollSpeed(calculateSpeed());
+      }, 100); // Debounce 100ms
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(timeoutId);
+    };
+  }, [calculateSpeed]);
 
   // Memoize the separated cards to prevent unnecessary re-renders
   const { outageCards, scrollingCards } = useMemo(() => {
@@ -25,13 +52,11 @@ export function ServiceTicker() {
     const element = scrollRef.current;
     if (!element || scrollingCards.length === 0) return;
 
-    const speed = 0.03; // pixels per millisecond (30 pixels/second)
-
     const animate = (currentTime: number) => {
       const delta = currentTime - lastTimeRef.current;
       lastTimeRef.current = currentTime;
 
-      positionRef.current -= speed * delta;
+      positionRef.current -= scrollSpeed * delta;
 
       // Get the actual width of half the content (first set of duplicated cards)
       const children = element.children;
@@ -59,7 +84,7 @@ export function ServiceTicker() {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [scrollingCards.length]); // Only restart if the NUMBER of cards changes, not the cards themselves
+  }, [scrollingCards.length, scrollSpeed]); // Restart if card count or scroll speed changes
 
   if (isLoading) {
     return (

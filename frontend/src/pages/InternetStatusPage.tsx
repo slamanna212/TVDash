@@ -69,7 +69,12 @@ export function InternetStatusPage() {
         <Grid gutter="xl">
           {[1, 2, 3].map((i) => (
             <Grid.Col key={i} span={4}>
-              <Skeleton height={400} radius="md" animate />
+              <Skeleton
+                height={400}
+                radius="md"
+                animate
+                style={{ height: '20vh' }}
+              />
             </Grid.Col>
           ))}
         </Grid>
@@ -130,7 +135,7 @@ function ISPCard({ ispMetrics }: { ispMetrics: ISPMetrics }) {
       style={{
         height: '100%',
         background: 'var(--bg-secondary)',
-        borderLeft: `8px solid ${getBorderColor(ispMetrics.status)}`,
+        borderLeft: `var(--border-emphasis) solid ${getBorderColor(ispMetrics.status)}`,
       }}
     >
       <Stack gap="md">
@@ -146,6 +151,10 @@ function ISPCard({ ispMetrics }: { ispMetrics: ISPMetrics }) {
                 <RingProgress
                   size={120}
                   thickness={12}
+                  style={{
+                    width: 'var(--ring-md)',
+                    height: 'var(--ring-md)',
+                  }}
                   sections={[
                     { value: ispMetrics.rpki.validPercentage, color: 'green', tooltip: `Valid: ${ispMetrics.rpki.validPercentage.toFixed(1)}%` },
                     { value: ispMetrics.rpki.unknownPercentage, color: 'gray', tooltip: `Unknown: ${ispMetrics.rpki.unknownPercentage.toFixed(1)}%` },

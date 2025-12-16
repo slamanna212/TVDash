@@ -48,7 +48,13 @@ export function M365WorkspacePage() {
         </Title>
         <SimpleGrid cols={5} spacing="md">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
-            <Skeleton key={i} height={180} radius="md" animate />
+            <Skeleton
+              key={i}
+              height={180}
+              radius="md"
+              animate
+              style={{ height: 'var(--card-height-max)' }}
+            />
           ))}
         </SimpleGrid>
       </Box>
@@ -96,7 +102,7 @@ function M365Section({ data, error }: { data: any; error: Error | null }) {
           initial="hidden"
           animate="visible"
         >
-          <SimpleGrid cols={5} spacing="md">
+          <SimpleGrid cols={5} spacing="md" verticalSpacing="md">
             {sortedServices.map((service: M365Service) => (
               <motion.div key={service.name} variants={cardVariants}>
                 <M365ServiceCard

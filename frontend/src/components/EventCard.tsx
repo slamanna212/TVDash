@@ -1,4 +1,4 @@
-import { Card, Group, Text, Badge, Stack, Collapse } from '@mantine/core';
+import { Card, Group, Text, Badge, Stack, Collapse, Box } from '@mantine/core';
 import { IconAlertCircle, IconAlertTriangle, IconInfoCircle } from '@tabler/icons-react';
 import { useState } from 'react';
 import type { Event } from '../api/client';
@@ -58,7 +58,7 @@ export function EventCard({ event }: EventCardProps) {
       padding="lg"
       radius="md"
       style={{
-        borderLeft: `6px solid ${config.color}`,
+        borderLeft: `var(--border-accent) solid ${config.color}`,
         cursor: event.description ? 'pointer' : 'default',
         background: 'var(--bg-secondary)',
       }}
@@ -67,11 +67,11 @@ export function EventCard({ event }: EventCardProps) {
       <Group justify="space-between" align="flex-start" wrap="nowrap">
         {/* Left: Icon + Content */}
         <Group align="flex-start" gap="md" style={{ flex: 1 }}>
-          <SeverityIcon
-            size={32}
-            color={config.color}
-            style={{ flexShrink: 0, marginTop: '0.25rem' }}
-          />
+          <Box style={{ fontSize: 'var(--icon-md)', flexShrink: 0, marginTop: '0.25rem' }}>
+            <SeverityIcon
+              color={config.color}
+            />
+          </Box>
 
           <Stack gap="xs" style={{ flex: 1 }}>
             <Group gap="sm">

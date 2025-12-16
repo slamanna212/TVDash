@@ -46,6 +46,8 @@ export function PageContainer() {
           color="dark.6"
           onClick={goPrevious}
           style={{
+            width: 'var(--button-size)',
+            height: 'var(--button-size)',
             border: '2px solid #1d2847',
             transition: 'all 0.2s ease',
           }}
@@ -58,7 +60,9 @@ export function PageContainer() {
             },
           }}
         >
-          <IconChevronLeft size={20} stroke={2} />
+          <Box style={{ fontSize: 'var(--icon-sm)' }}>
+            <IconChevronLeft stroke={2} />
+          </Box>
         </ActionIcon>
 
         <ActionIcon
@@ -67,6 +71,8 @@ export function PageContainer() {
           color="dark.6"
           onClick={goNext}
           style={{
+            width: 'var(--button-size)',
+            height: 'var(--button-size)',
             border: '2px solid #1d2847',
             transition: 'all 0.2s ease',
           }}
@@ -79,12 +85,18 @@ export function PageContainer() {
             },
           }}
         >
-          <IconChevronRight size={20} stroke={2} />
+          <Box style={{ fontSize: 'var(--icon-sm)' }}>
+            <IconChevronRight stroke={2} />
+          </Box>
         </ActionIcon>
 
         <RingProgress
           size={80}
           thickness={6}
+          style={{
+            width: 'var(--ring-sm)',
+            height: 'var(--ring-sm)',
+          }}
           sections={[{ value: progress, color: '#e53935' }]}
         />
       </Group>

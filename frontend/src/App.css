@@ -1,14 +1,58 @@
 :root {
   /* Layout */
   --ticker-height: 12vh;
-  --card-min-width: 8vw;
   --page-padding: 2vw;
 
-  /* Typography */
-  --font-base: 1.2vw;
-  --font-lg: 1.8vw;
-  --font-xl: 2.4vw;
-  --spacing-base: 1vw;
+  /* Fluid Typography - Scales smoothly from 1920px to 3840px (4K optimized) */
+  --font-xs: clamp(12px, 0.625vw, 24px);     /* 12px @ 1920, 24px @ 3840 */
+  --font-sm: clamp(14px, 0.729vw, 28px);     /* 14px @ 1920, 28px @ 3840 */
+  --font-base: clamp(16px, 0.833vw, 32px);   /* 16px @ 1920, 32px @ 3840 */
+  --font-md: clamp(20px, 1.042vw, 40px);     /* 20px @ 1920, 40px @ 3840 */
+  --font-lg: clamp(24px, 1.25vw, 52px);      /* 24px @ 1920, 52px @ 3840 */
+  --font-xl: clamp(32px, 1.667vw, 72px);     /* 32px @ 1920, 72px @ 3840 */
+
+  /* Component Sizing - Extended for 4K */
+  --button-size: clamp(36px, 1.875vw, 72px);     /* Buttons & ActionIcons */
+  --icon-xs: clamp(16px, 0.833vw, 32px);         /* Small icons */
+  --icon-sm: clamp(20px, 1.042vw, 40px);         /* Standard icons */
+  --icon-md: clamp(24px, 1.25vw, 48px);          /* Medium icons */
+  --icon-lg: clamp(28px, 1.458vw, 56px);         /* Large icons */
+  --icon-xl: clamp(80px, 4.167vw, 200px);        /* Extra large icons */
+
+  /* RingProgress - Larger for 4K */
+  --ring-sm: clamp(80px, 4.167vw, 200px);        /* Small ring progress */
+  --ring-md: clamp(120px, 6.25vw, 280px);        /* Medium ring progress */
+  --ring-lg: clamp(180px, 9.375vw, 420px);       /* Large ring progress */
+
+  /* Spacing - More generous for 4K */
+  --spacing-xs: clamp(8px, 0.417vw, 20px);       /* Extra small spacing */
+  --spacing-sm: clamp(12px, 0.625vw, 28px);      /* Small spacing */
+  --spacing-base: clamp(16px, 0.833vw, 36px);    /* Base spacing */
+  --spacing-md: clamp(24px, 1.25vw, 54px);       /* Medium spacing */
+  --spacing-lg: clamp(32px, 1.667vw, 72px);      /* Large spacing */
+
+  /* Border Radius - Larger for 4K */
+  --radius-sm: clamp(4px, 0.208vw, 10px);        /* Small radius */
+  --radius-md: clamp(8px, 0.417vw, 18px);        /* Medium radius */
+  --radius-lg: clamp(12px, 0.625vw, 28px);       /* Large radius */
+
+  /* Border Widths - All border scaling */
+  --border-thin: clamp(1px, 0.052vw, 2px);       /* 1-2px borders */
+  --border-base: clamp(2px, 0.104vw, 4px);       /* 2-4px borders */
+  --border-thick: clamp(3px, 0.156vw, 6px);      /* 3-6px borders */
+  --border-accent: clamp(6px, 0.313vw, 12px);    /* 6-12px accent borders */
+  --border-emphasis: clamp(8px, 0.417vw, 16px);  /* 8-16px emphasis borders */
+
+  /* Card Dimensions - Type-specific */
+  --card-height-sm: clamp(120px, 6.25vw, 280px);     /* Victim cards, small cards */
+  --card-height-base: clamp(140px, 7.292vw, 340px);  /* Region/service cards */
+  --card-height-max: clamp(170px, 8.854vw, 400px);   /* Max card height */
+  --card-min-width: clamp(150px, 7.813vw, 360px);    /* Min card width */
+
+  /* Animation Values - For scaling animations */
+  --anim-border-start: clamp(3px, 0.156vw, 6px);     /* Pulse border start width */
+  --anim-border-end: clamp(5px, 0.26vw, 10px);       /* Pulse border end width */
+  --anim-translate-y: clamp(4px, 0.208vw, 8px);      /* Hover transform distance */
 
   /* Status Colors */
   --status-operational: #2f9e44;
@@ -22,14 +66,6 @@
   --bg-secondary: #141c39;
   --text-primary: #c1c2c5;
   --text-secondary: #909296;
-}
-
-@media (max-width: 1920px) {
-  :root {
-    --font-base: 16px;
-    --font-lg: 24px;
-    --font-xl: 32px;
-  }
 }
 
 * {
@@ -83,15 +119,15 @@ body {
   height: 100%;
   overflow: hidden;
   position: relative;
-  gap: 16px;
+  gap: var(--spacing-base);
 }
 
 .outage-cards-static {
   display: flex;
-  gap: 16px;
+  gap: var(--spacing-base);
   flex-shrink: 0;
   z-index: 10;
-  padding-left: 16px;
+  padding-left: var(--spacing-base);
 }
 
 .ticker-scroll-wrapper {
@@ -118,7 +154,7 @@ body {
 /* JavaScript-controlled animation (no CSS animation to prevent resets) */
 .ticker-scroll-content-js {
   display: flex;
-  gap: 16px;
+  gap: var(--spacing-base);
   will-change: transform;
   /* Hardware acceleration for smoother animation */
   transform: translate3d(0, 0, 0);
@@ -129,7 +165,7 @@ body {
 /* Legacy CSS animation version (not used) */
 .ticker-scroll-content {
   display: flex;
-  gap: 16px;
+  gap: var(--spacing-base);
   animation: ticker-scroll 60s linear infinite;
   will-change: transform;
   /* Prevent animation from resetting on re-render */
@@ -149,11 +185,11 @@ body {
 /* Region Card Animations */
 @keyframes pulse-border {
   0%, 100% {
-    border-left-width: 3px;
+    border-left-width: var(--anim-border-start);
     opacity: 1;
   }
   50% {
-    border-left-width: 5px;
+    border-left-width: var(--anim-border-end);
     opacity: 0.8;
   }
 }
@@ -161,11 +197,13 @@ body {
 .region-card {
   transition: all 0.2s ease-in-out;
   cursor: pointer;
+  contain: layout style;  /* Optimizes layout recalculation */
 }
 
 .region-card:hover {
-  transform: translateY(-4px) scale(1.02) rotate(1deg);
+  transform: translateY(calc(-1 * var(--anim-translate-y))) scale(1.02) rotate(1deg);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  will-change: transform;
 }
 
 .region-card-outage {
@@ -185,11 +223,13 @@ body {
 .service-card {
   transition: all 0.2s ease-in-out;
   cursor: pointer;
+  contain: layout style;  /* Optimizes layout recalculation */
 }
 
 .service-card:hover {
-  transform: translateY(-4px) scale(1.02) rotate(-1deg);
+  transform: translateY(calc(-1 * var(--anim-translate-y))) scale(1.02) rotate(-1deg);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  will-change: transform;
 }
 
 .service-card-outage {

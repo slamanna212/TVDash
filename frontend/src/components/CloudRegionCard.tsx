@@ -48,10 +48,10 @@ export function CloudRegionCard({ region }: CloudRegionCardProps) {
       radius="md"
       className={region.status === 'outage' ? 'region-card region-card-outage' : 'region-card'}
       style={{
-        minHeight: '140px',
-        maxHeight: '170px',
+        minHeight: 'var(--card-height-base)',
+        maxHeight: 'var(--card-height-max)',
         background: 'var(--bg-secondary)',
-        borderLeft: `8px solid ${getBorderColor(region.status)}`,
+        borderLeft: `var(--border-emphasis) solid ${getBorderColor(region.status)}`,
         display: 'flex',
         flexDirection: 'column',
       }}
@@ -60,7 +60,9 @@ export function CloudRegionCard({ region }: CloudRegionCardProps) {
         {/* Header with region name */}
         <Box style={{ flex: 1, minWidth: 0 }}>
           <Group gap="xs" wrap="nowrap">
-            {getRegionIcon(20)}
+            <Box style={{ fontSize: 'var(--icon-sm)' }}>
+              {getRegionIcon()}
+            </Box>
             <Text
               size="calc(var(--font-md) * 1.4)"
               fw={700}

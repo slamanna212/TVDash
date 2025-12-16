@@ -36,6 +36,24 @@ export const theme = createTheme({
   headings: {
     fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
   },
+
+  // Custom breakpoints - optimized for 1920px → 4K range
+  breakpoints: {
+    xs: '1280px',   // HD
+    sm: '1920px',   // Full HD (base)
+    md: '2560px',   // QHD - intermediate breakpoint
+    lg: '3440px',   // Ultrawide
+    xl: '3840px',   // 4K (primary target)
+  },
+
+  // Optional - custom spacing scale using CSS variables
+  spacing: {
+    xs: 'var(--spacing-xs)',
+    sm: 'var(--spacing-sm)',
+    md: 'var(--spacing-base)',
+    lg: 'var(--spacing-md)',
+    xl: 'var(--spacing-lg)',
+  },
 });
 
 // Status colors for use in components

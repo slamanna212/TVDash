@@ -59,8 +59,8 @@ export function ServiceCard({ service, layoutId }: ServiceCardProps) {
       }}
       style={{
         backgroundColor,
-        padding: '0 1vw',
-        borderRadius: '8px',
+        padding: '0 var(--spacing-base)',
+        borderRadius: 'var(--radius-md)',
         minWidth: 'var(--card-min-width)',
         height: '16vh',
         display: 'flex',

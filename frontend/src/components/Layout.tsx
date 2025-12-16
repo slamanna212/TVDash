@@ -22,7 +22,7 @@ export function Layout() {
           height: '18vh',
           width: '100%',
           overflow: 'hidden',
-          borderTop: '2px solid #1d2847',
+          borderTop: 'var(--border-base) solid #1d2847',
         }}
       >
         <ServiceTicker />

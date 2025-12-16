@@ -33,10 +33,10 @@ export function M365ServiceCard({ service, updatedAt }: M365ServiceCardProps) {
       radius="md"
       className={service.status === 'outage' ? 'service-card service-card-outage' : 'service-card'}
       style={{
-        minHeight: '140px',
-        maxHeight: '170px',
+        minHeight: 'var(--card-height-base)',
+        maxHeight: 'var(--card-height-max)',
         background: 'var(--bg-secondary)',
-        borderLeft: `8px solid ${getBorderColor(service.status)}`,
+        borderLeft: `var(--border-emphasis) solid ${getBorderColor(service.status)}`,
         display: 'flex',
         flexDirection: 'column',
       }}
