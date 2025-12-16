@@ -247,9 +247,9 @@ function ISPCard({ ispMetrics }: { ispMetrics: ISPMetrics }) {
         )}
 
         {/* All Clear */}
-        {!hasIssues && ispMetrics.status === 'operational' && (
+        {!hasIssues && (
           <Text c="dimmed" size="lg">
-            ✓ No issues detected
+            {ispMetrics.status === 'operational' ? '✓ No issues detected' : 'Waiting for data...'}
           </Text>
         )}
 
@@ -258,11 +258,9 @@ function ISPCard({ ispMetrics }: { ispMetrics: ISPMetrics }) {
           <Text size="xs" c="dimmed">
             Last checked: {new Date(ispMetrics.lastChecked).toLocaleTimeString()}
           </Text>
-          {ispMetrics.metrics.latencyMs !== null && (
-            <Text size="sm" fw={600}>
-              Average Latency: {latencyMs.toFixed(1)}ms
-            </Text>
-          )}
+          <Text size="sm" fw={600}>
+            Average Latency: {ispMetrics.metrics.latencyMs !== null ? `${latencyMs.toFixed(1)}ms` : '--'}
+          </Text>
         </Group>
       </Stack>
     </Card>
