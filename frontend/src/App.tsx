@@ -24,7 +24,7 @@ function App() {
       padding={0}
       styles={{
         main: {
-          background: '#1A1B1E',
+          background: '#0a1023',
           height: '100vh',
           overflow: 'hidden',
         },

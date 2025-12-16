@@ -126,7 +126,7 @@ export function RadarAttacksPage() {
                     <YAxis stroke="#888" style={{ fontSize: '12px' }} />
                     <Tooltip
                       contentStyle={{
-                        background: '#25262b',
+                        background: '#141c39',
                         border: '1px solid #444',
                         borderRadius: '8px',
                       }}
@@ -168,7 +168,7 @@ export function RadarAttacksPage() {
                     <YAxis stroke="#888" style={{ fontSize: '12px' }} />
                     <Tooltip
                       contentStyle={{
-                        background: '#25262b',
+                        background: '#141c39',
                         border: '1px solid #444',
                         borderRadius: '8px',
                       }}
@@ -219,7 +219,7 @@ export function RadarAttacksPage() {
                     </Pie>
                     <Tooltip
                       contentStyle={{
-                        background: '#25262b',
+                        background: '#141c39',
                         border: '1px solid #444',
                         borderRadius: '8px',
                       }}

@@ -46,13 +46,13 @@ export function PageContainer() {
           color="dark.6"
           onClick={goPrevious}
           style={{
-            border: '2px solid #25262b',
+            border: '2px solid #1d2847',
             transition: 'all 0.2s ease',
           }}
           styles={{
             root: {
               '&:hover': {
-                backgroundColor: '#25262b',
+                backgroundColor: '#1d2847',
                 transform: 'scale(1.05)',
               },
             },
@@ -67,13 +67,13 @@ export function PageContainer() {
           color="dark.6"
           onClick={goNext}
           style={{
-            border: '2px solid #25262b',
+            border: '2px solid #1d2847',
             transition: 'all 0.2s ease',
           }}
           styles={{
             root: {
               '&:hover': {
-                backgroundColor: '#25262b',
+                backgroundColor: '#1d2847',
                 transform: 'scale(1.05)',
               },
             },

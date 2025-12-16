@@ -33,7 +33,7 @@ export function DaySeparator({ date }: DaySeparatorProps) {
       <Divider
         style={{
           flex: 1,
-          borderColor: '#2c2e33',
+          borderColor: '#1d2847',
         }}
       />
       <Text
@@ -51,7 +51,7 @@ export function DaySeparator({ date }: DaySeparatorProps) {
       <Divider
         style={{
           flex: 1,
-          borderColor: '#2c2e33',
+          borderColor: '#1d2847',
         }}
       />
     </Group>
