@@ -1,6 +1,8 @@
 import { Box, Text } from '@mantine/core';
 import { motion } from 'framer-motion';
+import { memo } from 'react';
 import { statusColors } from '../theme';
+import { formatTimeAgo } from '../utils/format';
 
 interface ServiceCardProps {
   service: {
@@ -14,29 +16,7 @@ interface ServiceCardProps {
   layoutId?: string;
 }
 
-function formatTimeAgo(timestamp: string | undefined): string {
-  if (!timestamp) return 'Never';
-
-  const now = new Date();
-  const then = new Date(timestamp);
-  const diffMs = now.getTime() - then.getTime();
-  const diffSeconds = Math.floor(diffMs / 1000);
-  const diffMinutes = Math.floor(diffSeconds / 60);
-  const diffHours = Math.floor(diffMinutes / 60);
-  const diffDays = Math.floor(diffHours / 24);
-
-  if (diffSeconds < 60) {
-    return diffSeconds === 1 ? '1 second ago' : `${diffSeconds} seconds ago`;
-  } else if (diffMinutes < 60) {
-    return diffMinutes === 1 ? '1 minute ago' : `${diffMinutes} minutes ago`;
-  } else if (diffHours < 24) {
-    return diffHours === 1 ? '1 hour ago' : `${diffHours} hours ago`;
-  } else {
-    return diffDays === 1 ? '1 day ago' : `${diffDays} days ago`;
-  }
-}
-
-export function ServiceCard({ service, layoutId }: ServiceCardProps) {
+export const ServiceCard = memo(function ServiceCard({ service, layoutId }: ServiceCardProps) {
   const backgroundColor = service.isMaintenance
     ? statusColors.maintenance
     : statusColors[service.status];
@@ -50,12 +30,10 @@ export function ServiceCard({ service, layoutId }: ServiceCardProps) {
       initial={false}
       animate={{
         backgroundColor,
-        scale: service.status === 'outage' ? [1, 1.05, 1] : 1,
       }}
       transition={{
         layout: { type: 'spring', stiffness: 300, damping: 30 },
         backgroundColor: { duration: 0.3 },
-        scale: { duration: 0.5, times: [0, 0.5, 1] },
       }}
       style={{
         backgroundColor,
@@ -110,4 +88,13 @@ export function ServiceCard({ service, layoutId }: ServiceCardProps) {
       </Text>
     </Box>
   );
-}
+}, (prevProps, nextProps) => {
+  // Only re-render if service data or layoutId actually changes
+  return (
+    prevProps.service.name === nextProps.service.name &&
+    prevProps.service.status === nextProps.service.status &&
+    prevProps.service.lastChecked === nextProps.service.lastChecked &&
+    prevProps.service.isMaintenance === nextProps.service.isMaintenance &&
+    prevProps.layoutId === nextProps.layoutId
+  );
+});

@@ -1,26 +1,15 @@
 import { Card, Stack, Text, Box } from '@mantine/core';
+import { memo } from 'react';
 import type { M365Service } from '../api/client';
-import { statusColors } from '../theme';
 import { getTimeAgo, formatUpdateTime } from '../utils/time';
+import { getBorderColor } from '../utils/format';
 
 interface M365ServiceCardProps {
   service: M365Service;
   updatedAt: string;
 }
 
-export function M365ServiceCard({ service, updatedAt }: M365ServiceCardProps) {
-  const getBorderColor = (status: string): string => {
-    switch (status) {
-      case 'operational':
-        return statusColors.operational;
-      case 'degraded':
-        return statusColors.degraded;
-      case 'outage':
-        return statusColors.outage;
-      default:
-        return statusColors.unknown;
-    }
-  };
+export const M365ServiceCard = memo(function M365ServiceCard({ service, updatedAt }: M365ServiceCardProps) {
 
   const mostRecentIssue = service.issues && service.issues.length > 0
     ? service.issues[0]
@@ -99,4 +88,4 @@ export function M365ServiceCard({ service, updatedAt }: M365ServiceCardProps) {
       </Stack>
     </Card>
   );
-}
+});

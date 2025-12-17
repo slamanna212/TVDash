@@ -1,41 +1,31 @@
 import { Card, Stack, Group, Text, Box } from '@mantine/core';
+import { memo } from 'react';
 import type { CloudRegion } from '../api/client';
-import { statusColors } from '../theme';
 import { getRegionIcon } from '../utils/cloudIcons';
+import { getBorderColor } from '../utils/format';
 
 interface CloudRegionCardProps {
   region: CloudRegion;
 }
 
-export function CloudRegionCard({ region }: CloudRegionCardProps) {
-  const getBorderColor = (status: string): string => {
-    switch (status) {
-      case 'operational':
-        return statusColors.operational;
-      case 'degraded':
-        return statusColors.degraded;
-      case 'outage':
-        return statusColors.outage;
-      default:
-        return statusColors.unknown;
-    }
-  };
+// Local utility for short time format specific to CloudRegionCard
+function getTimeAgo(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
 
-  const getTimeAgo = (dateString: string): string => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
+  if (diffHours > 0) {
+    return `${diffHours}h ago`;
+  } else if (diffMins > 0) {
+    return `${diffMins}m ago`;
+  } else {
+    return 'Just now';
+  }
+}
 
-    if (diffHours > 0) {
-      return `${diffHours}h ago`;
-    } else if (diffMins > 0) {
-      return `${diffMins}m ago`;
-    } else {
-      return 'Just now';
-    }
-  };
+export const CloudRegionCard = memo(function CloudRegionCard({ region }: CloudRegionCardProps) {
 
   const mostRecentIncident = region.affectedIncidents.length > 0
     ? region.affectedIncidents[0]
@@ -118,4 +108,4 @@ export function CloudRegionCard({ region }: CloudRegionCardProps) {
       </Stack>
     </Card>
   );
-}
+});

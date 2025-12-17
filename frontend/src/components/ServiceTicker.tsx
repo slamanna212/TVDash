@@ -12,6 +12,7 @@ export function ServiceTicker() {
   const animationRef = useRef<number | null>(null);
   const positionRef = useRef<number>(0); // Persist position across re-renders
   const lastTimeRef = useRef<number>(performance.now());
+  const widthCacheRef = useRef<number>(0); // Cache calculated width to avoid layout thrashing
 
   // Calculate viewport-relative scroll speed
   const calculateSpeed = useCallback(() => {
@@ -47,10 +48,29 @@ export function ServiceTicker() {
     return { outageCards: outage, scrollingCards: scrolling };
   }, [services]);
 
+  // Calculate width cache when content changes (avoids layout thrashing in RAF loop)
+  useEffect(() => {
+    const element = scrollRef.current;
+    if (!element || scrollingCards.length === 0) {
+      widthCacheRef.current = 0;
+      return;
+    }
+
+    // Calculate the width of half the content (first set of duplicated cards)
+    const children = element.children;
+    const halfCount = Math.floor(children.length / 2);
+    let halfWidth = 0;
+    for (let i = 0; i < halfCount; i++) {
+      halfWidth += children[i].getBoundingClientRect().width;
+    }
+    halfWidth += 16 * halfCount; // Add gap width
+    widthCacheRef.current = halfWidth;
+  }, [scrollingCards]);
+
   // Use smooth JavaScript animation instead of CSS to prevent resets
   useEffect(() => {
     const element = scrollRef.current;
-    if (!element || scrollingCards.length === 0) return;
+    if (!element || scrollingCards.length === 0 || widthCacheRef.current === 0) return;
 
     const animate = (currentTime: number) => {
       const delta = currentTime - lastTimeRef.current;
@@ -58,14 +78,8 @@ export function ServiceTicker() {
 
       positionRef.current -= scrollSpeed * delta;
 
-      // Get the actual width of half the content (first set of duplicated cards)
-      const children = element.children;
-      const halfCount = Math.floor(children.length / 2);
-      let halfWidth = 0;
-      for (let i = 0; i < halfCount; i++) {
-        halfWidth += children[i].getBoundingClientRect().width;
-      }
-      halfWidth += 16 * halfCount; // Add gap width
+      // Use cached width instead of recalculating (prevents layout thrashing)
+      const halfWidth = widthCacheRef.current;
 
       // Seamlessly loop when we've scrolled through the first set
       if (Math.abs(positionRef.current) >= halfWidth) {

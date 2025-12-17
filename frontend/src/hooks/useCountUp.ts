@@ -31,6 +31,7 @@ export function useCountUp(
     const startValue = count;
     const endValue = target;
     const startTime = performance.now();
+    let rafId: number | null = null;
 
     const animate = (currentTime: number) => {
       const elapsed = currentTime - startTime;
@@ -43,13 +44,21 @@ export function useCountUp(
       setCount(parseFloat(currentValue.toFixed(decimals)));
 
       if (progress < 1) {
-        requestAnimationFrame(animate);
+        rafId = requestAnimationFrame(animate);
       } else {
         setCount(endValue);
+        rafId = null;
       }
     };
 
-    requestAnimationFrame(animate);
+    rafId = requestAnimationFrame(animate);
+
+    // Cleanup: Cancel RAF on unmount or when dependencies change
+    return () => {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
+    };
   }, [target, duration, decimals, count]);
 
   return count;

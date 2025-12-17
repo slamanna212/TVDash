@@ -28,23 +28,33 @@ export function usePageRotation(pageCount: number, intervalSeconds: number) {
 
   useEffect(() => {
     startTimeRef.current = Date.now();
+    let rafId: number;
 
-    // Update progress every 100ms
-    const progressInterval = setInterval(() => {
+    // RAF-based progress update (only updates when browser paints, much more efficient)
+    const updateProgress = () => {
       const elapsed = Date.now() - startTimeRef.current;
       const newProgress = Math.min((elapsed / (intervalSeconds * 1000)) * 100, 100);
       setProgress(newProgress);
-    }, 100);
+
+      // Continue updating until rotation completes
+      if (elapsed < intervalSeconds * 1000) {
+        rafId = requestAnimationFrame(updateProgress);
+      }
+    };
+
+    rafId = requestAnimationFrame(updateProgress);
 
     // Rotate page at interval
     const rotationInterval = setInterval(() => {
       setCurrentPage((prev) => (prev + 1) % pageCount);
       startTimeRef.current = Date.now(); // Reset start time for next cycle
       setProgress(0);
+      // Restart progress animation
+      rafId = requestAnimationFrame(updateProgress);
     }, intervalSeconds * 1000);
 
     return () => {
-      clearInterval(progressInterval);
+      cancelAnimationFrame(rafId);
       clearInterval(rotationInterval);
     };
   }, [pageCount, intervalSeconds]);
