@@ -74,7 +74,7 @@ export function ServiceCard({ service, layoutId }: ServiceCardProps) {
     >
       <Text
         style={{
-          fontSize: 'var(--font-lg)',
+          fontSize: 'var(--font-xl)',
           fontWeight: 600,
           color: '#fff',
           textAlign: 'center',
@@ -86,7 +86,7 @@ export function ServiceCard({ service, layoutId }: ServiceCardProps) {
       {service.isMaintenance && (
         <Text
           style={{
-            fontSize: 'var(--font-sm)',
+            fontSize: 'var(--font-base)',
             fontWeight: 500,
             color: 'rgba(255, 255, 255, 0.95)',
             textAlign: 'center',
@@ -99,7 +99,7 @@ export function ServiceCard({ service, layoutId }: ServiceCardProps) {
       )}
       <Text
         style={{
-          fontSize: 'var(--font-base)',
+          fontSize: 'var(--font-md)',
           fontWeight: 400,
           color: 'rgba(255, 255, 255, 0.8)',
           textAlign: 'center',
