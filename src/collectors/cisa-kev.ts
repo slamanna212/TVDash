@@ -81,8 +81,15 @@ export async function collectCisaKevData(env: Env): Promise<void> {
       now
     ).run();
 
-    // 2. Insert/update vulnerabilities in parallel
-    const insertPromises = feed.vulnerabilities.map(async (vuln) => {
+    // 2. Only process the 12 most recent CVEs (shown on dashboard)
+    const recentVulns = feed.vulnerabilities
+      .sort((a, b) => b.dateAdded.localeCompare(a.dateAdded))
+      .slice(0, 12);
+
+    console.log(`Processing ${recentVulns.length} recent CVEs from catalog of ${feed.count}`);
+
+    // 3. Insert/update vulnerabilities in parallel
+    const insertPromises = recentVulns.map(async (vuln) => {
       return env.DB.prepare(`
         INSERT INTO cisa_kev (
           cve_id, vendor_project, product, vulnerability_name,
@@ -117,9 +124,9 @@ export async function collectCisaKevData(env: Env): Promise<void> {
     });
 
     await Promise.all(insertPromises);
-    console.log(`✓ CISA KEV: Processed ${feed.vulnerabilities.length} vulnerabilities (catalog v${feed.catalogVersion})`);
+    console.log(`✓ CISA KEV: Processed ${recentVulns.length} vulnerabilities (catalog v${feed.catalogVersion})`);
 
-    // 3. Fetch CVSS scores for CVEs without scores
+    // 4. Fetch CVSS scores for CVEs without scores
     // Only fetch for CVEs that:
     // - Don't have a score yet (cvss_score IS NULL)
     // - Haven't been checked recently (cvss_fetched_at IS NULL or older than 7 days)
