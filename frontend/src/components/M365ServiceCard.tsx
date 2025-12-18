@@ -34,7 +34,7 @@ export const M365ServiceCard = memo(function M365ServiceCard({ service, updatedA
         {/* Header with service name */}
         <Box>
           <Text
-            size="calc(var(--font-md) * 1.0)"
+            size="calc(var(--font-md) * 1.2)"
             fw={700}
             style={{ lineHeight: 1.2 }}
           >

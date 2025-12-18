@@ -201,7 +201,7 @@ export function RansomwarePage() {
                   >
                     <Group justify="space-between">
                       <div>
-                        <Text size="sm" c="dimmed" fw={500}>
+                        <Text size="md" fw={700}>
                           Total Victims
                         </Text>
                         <Title
@@ -223,7 +223,7 @@ export function RansomwarePage() {
                   >
                     <Group justify="space-between">
                       <div>
-                        <Text size="sm" c="dimmed" fw={500}>
+                        <Text size="md" fw={700}>
                           Active Groups
                         </Text>
                         <Title
@@ -252,7 +252,7 @@ export function RansomwarePage() {
                     flexDirection: 'column',
                   }}
                 >
-                  <Title order={3} size="lg" mb="md">
+                  <Title order={3} size="xl" mb="md">
                     Infections Over Time (30 Days)
                   </Title>
                   <Box style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
@@ -292,7 +292,7 @@ export function RansomwarePage() {
                     flexDirection: 'column',
                   }}
                 >
-                  <Title order={3} size="lg" mb="md">
+                  <Title order={3} size="xl" mb="md">
                     Top Sectors
                   </Title>
                   <Box style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
@@ -369,7 +369,7 @@ export function RansomwarePage() {
 
           {/* Recent Victims Grid */}
           <Box>
-            <Title order={3} size="lg" mb="md">
+            <Title order={3} size="xl" mb="md">
               Recent Victims
             </Title>
             <SimpleGrid cols={4} spacing="md">
@@ -386,14 +386,14 @@ export function RansomwarePage() {
                   >
                     <Stack gap="xs">
                       <Group justify="space-between" align="flex-start">
-                        <Text fw={700} size="sm" style={{ flex: 1 }} lineClamp={2}>
+                        <Text fw={700} size="md" style={{ flex: 1 }} lineClamp={2}>
                           {victim.name}
                         </Text>
                         {victim.countryCode && (
                           <ReactCountryFlag
                             countryCode={victim.countryCode}
                             svg
-                            style={{ width: '1.5em', height: '1.5em' }}
+                            style={{ width: '2em', height: '2em' }}
                           />
                         )}
                       </Group>
