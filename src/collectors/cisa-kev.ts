@@ -131,7 +131,7 @@ export async function collectCisaKevData(env: Env): Promise<void> {
       WHERE cvss_score IS NULL
         AND (cvss_fetched_at IS NULL OR cvss_fetched_at < ?)
       ORDER BY date_added DESC
-      LIMIT 100
+      LIMIT 12
     `).bind(sevenDaysAgo).all();
 
     if (cvesNeedingScores.results && cvesNeedingScores.results.length > 0) {
