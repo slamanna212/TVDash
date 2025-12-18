@@ -7,12 +7,14 @@ import { EventsPage } from '../pages/EventsPage';
 import { InternetStatusPage } from '../pages/InternetStatusPage';
 import { M365WorkspacePage } from '../pages/M365WorkspacePage';
 import { RansomwarePage } from '../pages/RansomwarePage';
+import { CisaKevPage } from '../pages/CisaKevPage';
 
 const pages = [
   { name: 'Internet Status', component: InternetStatusPage },
   { name: 'Cloud Status', component: CloudStatusPage },
   { name: 'M365 & Workspace', component: M365WorkspacePage },
   { name: 'Ransomware', component: RansomwarePage },
+  { name: 'CISA KEV', component: CisaKevPage },
   { name: 'Events Timeline', component: EventsPage },
 ];
 

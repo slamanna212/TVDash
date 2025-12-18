@@ -109,6 +109,30 @@ export interface RansomwareResponse {
   lastUpdated: string;
 }
 
+export interface CisaKevVulnerability {
+  cveId: string;
+  vendorProject: string;
+  product: string;
+  vulnerabilityName: string;
+  dateAdded: string;
+  dueDate: string;
+  shortDescription: string;
+  knownRansomwareUse: string;
+}
+
+export interface CisaKevMetadata {
+  catalogVersion: string;
+  dateReleased: string;
+  totalCount: number;
+  lastChecked: string;
+}
+
+export interface CisaKevResponse {
+  vulnerabilities: CisaKevVulnerability[];
+  metadata: CisaKevMetadata | null;
+  lastUpdated: string;
+}
+
 export interface ISPMetrics {
   isp: {
     id: number;
@@ -239,6 +263,10 @@ class APIClient {
 
   async getRadarAttacks(): Promise<AttackData> {
     return this.fetch<AttackData>('/api/radar/attacks');
+  }
+
+  async getCisaKev(): Promise<CisaKevResponse> {
+    return this.fetch<CisaKevResponse>('/api/cisa-kev');
   }
 
   async getEvents(params?: { source?: string; limit?: number }): Promise<EventsResponse> {

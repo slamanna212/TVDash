@@ -535,6 +535,23 @@
         "id": "check",
         "color": "terminal.ansiCyan"
       }
+    },
+    {
+      "label": "Trigger: Collect CISA KEV Data",
+      "type": "shell",
+      "command": "curl -X POST 'http://localhost:8787/api/trigger-scheduled?cron=0+*/4+*+*+*' && sleep 3 && curl 'http://localhost:8787/api/cisa-kev' | jq",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": true,
+        "clear": true
+      },
+      "group": "test",
+      "icon": {
+        "id": "cloud-download",
+        "color": "terminal.ansiRed"
+      }
     }
   ],
   "inputs": [

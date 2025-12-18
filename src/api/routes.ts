@@ -5,6 +5,7 @@ import { getM365Status } from './m365';
 import { getInternetStatus } from './internet';
 import { getRadarAttacks } from './radar';
 import { getRansomwareStatus } from './ransomware';
+import { getCisaKevStatus } from './cisa-kev';
 import { getEvents } from './events';
 import { getServiceHistory } from '../db/queries';
 import { handleHealthRelay } from './health-relay';
@@ -67,6 +68,11 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
     // GET /api/ransomware - Ransomware data
     if (path === '/api/ransomware' && request.method === 'GET') {
       return await getRansomwareStatus(env);
+    }
+
+    // GET /api/cisa-kev - CISA Known Exploited Vulnerabilities
+    if (path === '/api/cisa-kev' && request.method === 'GET') {
+      return await getCisaKevStatus(env);
     }
 
     // GET /api/radar/attacks - Attack activity data

@@ -10,6 +10,7 @@ import { collectM365Status } from './collectors/productivity/microsoft';
 import { checkAllISPs } from './collectors/isp/radar-isp';
 import { checkAndCreateAttackEvents } from './collectors/radar/attacks';
 import { collectRansomwareData } from './collectors/ransomware/processor';
+import { collectCisaKevData } from './collectors/cisa-kev';
 import {
   createEventIfChanged,
   getAlertState,
@@ -48,6 +49,12 @@ export async function handleScheduled(
         runISPChecks(env),
         checkAndCreateAttackEvents(env),
       ]);
+    }
+
+    // Every 4 hours - CISA KEV catalog
+    if (cron === '0 */4 * * *') {
+      console.log('Running 4-hour tasks');
+      await collectCisaKevData(env);
     }
 
     // Daily cleanup
@@ -681,6 +688,15 @@ async function cleanupOldData(env: Env): Promise<void> {
       'DELETE FROM ransomware_sectors WHERE checked_at < datetime(?, "-7 days")'
     ).bind(timestamp).run();
 
+    // Clean up old CISA KEV data (90 days)
+    const kevResult = await env.DB.prepare(
+      'DELETE FROM cisa_kev WHERE last_seen < datetime(?, "-90 days")'
+    ).bind(timestamp).run();
+
+    const kevMetadataResult = await env.DB.prepare(
+      'DELETE FROM cisa_kev_metadata WHERE checked_at < ?'
+    ).bind(timestamp).run();
+
     console.log('Data cleanup completed:', {
       statusHistory: statusResult.meta?.changes || 0,
       cloudStatus: cloudResult.meta?.changes || 0,
@@ -691,6 +707,8 @@ async function cleanupOldData(env: Env): Promise<void> {
       ransomwareVictims: ransomwareVictimsResult.meta?.changes || 0,
       ransomwareDaily: ransomwareDailyResult.meta?.changes || 0,
       ransomwareSectors: ransomwareSectorsResult.meta?.changes || 0,
+      cisaKev: kevResult.meta?.changes || 0,
+      cisaKevMetadata: kevMetadataResult.meta?.changes || 0,
     });
   } catch (error) {
     console.error('Error during data cleanup:', error);
