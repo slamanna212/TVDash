@@ -10,6 +10,7 @@ import { getEvents } from './events';
 import { getServiceHistory } from '../db/queries';
 import { handleHealthRelay } from './health-relay';
 import { handleSSEStream } from './sse';
+import { collectCisaKevData } from '../collectors/cisa-kev';
 
 export async function handleApiRequest(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
@@ -73,6 +74,31 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
     // GET /api/cisa-kev - CISA Known Exploited Vulnerabilities
     if (path === '/api/cisa-kev' && request.method === 'GET') {
       return await getCisaKevStatus(env);
+    }
+
+    // POST /api/trigger/cisa-kev - Manually trigger CISA KEV collection
+    if (path === '/api/trigger/cisa-kev' && request.method === 'POST') {
+      try {
+        await collectCisaKevData(env);
+        return new Response(JSON.stringify({
+          success: true,
+          message: 'CISA KEV collection triggered successfully',
+          timestamp: new Date().toISOString(),
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (error) {
+        console.error('Error triggering CISA KEV collection:', error);
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Failed to trigger CISA KEV collection',
+          message: error instanceof Error ? error.message : 'Unknown error',
+        }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     // GET /api/radar/attacks - Attack activity data
