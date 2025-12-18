@@ -123,12 +123,14 @@ export async function collectCisaKevData(env: Env): Promise<void> {
     // Only fetch for CVEs that:
     // - Don't have a score yet (cvss_score IS NULL)
     // - Haven't been checked recently (cvss_fetched_at IS NULL or older than 7 days)
+    // Prioritize latest CVEs first (shown on dashboard)
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
     const cvesNeedingScores = await env.DB.prepare(`
       SELECT cve_id FROM cisa_kev
       WHERE cvss_score IS NULL
         AND (cvss_fetched_at IS NULL OR cvss_fetched_at < ?)
+      ORDER BY date_added DESC
       LIMIT 100
     `).bind(sevenDaysAgo).all();
 
