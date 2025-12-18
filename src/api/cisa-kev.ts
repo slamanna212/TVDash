@@ -11,6 +11,9 @@ export interface CisaKevResponse {
     dueDate: string;
     shortDescription: string;
     knownRansomwareUse: string;
+    cvssScore: number | null;
+    cvssSeverity: string | null;
+    cvssVersion: string | null;
   }>;
   metadata: {
     catalogVersion: string;
@@ -32,7 +35,8 @@ export async function getCisaKevStatus(env: Env): Promise<Response> {
         const vulnsResult = await env.DB.prepare(`
           SELECT
             cve_id, vendor_project, product, vulnerability_name,
-            date_added, due_date, short_description, known_ransomware_use
+            date_added, due_date, short_description, known_ransomware_use,
+            cvss_score, cvss_severity, cvss_version
           FROM cisa_kev
           ORDER BY date_added DESC
           LIMIT 12
@@ -61,6 +65,9 @@ export async function getCisaKevStatus(env: Env): Promise<Response> {
             dueDate: v.due_date,
             shortDescription: v.short_description,
             knownRansomwareUse: v.known_ransomware_use,
+            cvssScore: v.cvss_score,
+            cvssSeverity: v.cvss_severity,
+            cvssVersion: v.cvss_version,
           })),
           metadata: metadataRow ? {
             catalogVersion: metadataRow.catalog_version,

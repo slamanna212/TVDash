@@ -118,6 +118,9 @@ export interface CisaKevVulnerability {
   dueDate: string;
   shortDescription: string;
   knownRansomwareUse: string;
+  cvssScore: number | null;
+  cvssSeverity: string | null;
+  cvssVersion: string | null;
 }
 
 export interface CisaKevMetadata {

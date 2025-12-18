@@ -12,6 +12,7 @@ export interface Env {
   PAGE_ROTATION_SECONDS: string;
   TICKER_REFRESH_SECONDS: string;
   RANSOMWARE_API_KEY: string;
+  NVD_API_KEY?: string;
 }
 
 export type ServiceStatus = 'operational' | 'degraded' | 'outage' | 'unknown';

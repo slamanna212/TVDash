@@ -1,5 +1,6 @@
 import type { Env } from '../types';
 import { fetchWithCache } from '../utils/cache';
+import { fetchCvssScoresBatch } from './nvd-api';
 
 const KEV_FEED_URL = 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json';
 
@@ -117,6 +118,51 @@ export async function collectCisaKevData(env: Env): Promise<void> {
 
     await Promise.all(insertPromises);
     console.log(`✓ CISA KEV: Processed ${feed.vulnerabilities.length} vulnerabilities (catalog v${feed.catalogVersion})`);
+
+    // 3. Fetch CVSS scores for CVEs without scores
+    // Only fetch for CVEs that:
+    // - Don't have a score yet (cvss_score IS NULL)
+    // - Haven't been checked recently (cvss_fetched_at IS NULL or older than 7 days)
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    const cvesNeedingScores = await env.DB.prepare(`
+      SELECT cve_id FROM cisa_kev
+      WHERE cvss_score IS NULL
+        AND (cvss_fetched_at IS NULL OR cvss_fetched_at < ?)
+      LIMIT 100
+    `).bind(sevenDaysAgo).all();
+
+    if (cvesNeedingScores.results && cvesNeedingScores.results.length > 0) {
+      const cveIds = cvesNeedingScores.results.map((row: any) => row.cve_id);
+      console.log(`Fetching CVSS scores for ${cveIds.length} CVEs...`);
+
+      const cvssScores = await fetchCvssScoresBatch(cveIds, env);
+
+      // Update database with scores
+      const updatePromises = Array.from(cvssScores.entries()).map(async ([cveId, cvssData]) => {
+        return env.DB.prepare(`
+          UPDATE cisa_kev
+          SET cvss_score = ?,
+              cvss_version = ?,
+              cvss_severity = ?,
+              cvss_vector = ?,
+              cvss_fetched_at = ?
+          WHERE cve_id = ?
+        `).bind(
+          cvssData.score,
+          cvssData.version,
+          cvssData.severity,
+          cvssData.vectorString,
+          now,
+          cveId
+        ).run();
+      });
+
+      await Promise.all(updatePromises);
+      console.log(`✓ CVSS scores updated for ${cvssScores.size} CVEs`);
+    } else {
+      console.log('No CVEs need CVSS score updates');
+    }
 
   } catch (error) {
     console.error('Error collecting CISA KEV data:', error);
