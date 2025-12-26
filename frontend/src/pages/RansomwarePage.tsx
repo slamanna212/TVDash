@@ -43,6 +43,41 @@ const cardVariants = {
   },
 };
 
+// Sector color palette (matches RingProgress)
+const SECTOR_COLORS = [
+  '#e53935', // Red
+  '#ab47bc', // Purple
+  '#5c6bc0', // Indigo
+  '#42a5f5', // Blue
+  '#26c6da', // Cyan
+  '#26a69a', // Teal
+  '#66bb6a', // Green
+  '#ffa726', // Orange
+];
+
+/**
+ * Get color for sector matching Top Sectors ring
+ */
+function getSectorColor(
+  sectorName: string,
+  topSectors: Array<{ name: string; count: number }>
+): string {
+  // First try to find in top sectors for consistent coloring
+  const index = topSectors.findIndex((s) => s.name === sectorName);
+  if (index !== -1) {
+    return SECTOR_COLORS[index % SECTOR_COLORS.length];
+  }
+
+  // For sectors outside top 8, generate color based on sector name
+  // This ensures same sector always gets same color
+  let hash = 0;
+  for (let i = 0; i < sectorName.length; i++) {
+    hash = sectorName.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const colorIndex = Math.abs(hash) % SECTOR_COLORS.length;
+  return SECTOR_COLORS[colorIndex];
+}
+
 export function RansomwarePage() {
   const { data, isLoading, error } = useRansomware();
 
@@ -146,7 +181,7 @@ export function RansomwarePage() {
     return (
       <Box style={{ height: '100%', width: '100%' }}>
         <Title order={1} style={{ fontSize: 'var(--font-xl)', marginBottom: '2vw' }}>
-          Ransomware
+          Global Ransomware Stats
         </Title>
         <Grid gutter="md">
           <Grid.Col span={12}>
@@ -185,7 +220,7 @@ export function RansomwarePage() {
       }}
     >
       <Title order={1} style={{ fontSize: 'var(--font-xl)', marginBottom: '2vw' }}>
-        Ransomware
+        Global Ransomware Stats
       </Title>
 
       <motion.div variants={containerVariants} initial="hidden" animate="visible">
@@ -193,7 +228,7 @@ export function RansomwarePage() {
           {/* Main Content Row */}
           <Grid gutter="md" align="stretch">
             {/* Stats Column */}
-            <Grid.Col span={3}>
+            <Grid.Col span={2}>
               <Stack gap="md" style={{ height: '100%' }}>
                 <motion.div variants={cardVariants} style={{ flex: 1 }}>
                   <Card
@@ -242,7 +277,7 @@ export function RansomwarePage() {
             </Grid.Col>
 
             {/* Line Chart */}
-            <Grid.Col span={5}>
+            <Grid.Col span={6}>
               <motion.div variants={cardVariants} style={{ height: '100%' }}>
                 <Card
                   padding="lg"
@@ -307,60 +342,36 @@ export function RansomwarePage() {
                           width: 'var(--ring-lg)',
                           height: 'var(--ring-lg)',
                         }}
-                        sections={sectorData.slice(0, 8).map((sector, index) => {
-                          const colors = [
-                            '#e53935', // Red
-                            '#ab47bc', // Purple
-                            '#5c6bc0', // Indigo
-                            '#42a5f5', // Blue
-                            '#26c6da', // Cyan
-                            '#26a69a', // Teal
-                            '#66bb6a', // Green
-                            '#ffa726', // Orange
-                          ];
-                          return {
-                            value: animatedSections[index] || 0,
-                            color: colors[index % colors.length],
-                            tooltip: `${sector.name}: ${sector.count} (${sector.percentage.toFixed(
-                              1
-                            )}%)`,
-                          };
-                        })}
+                        sections={sectorData.slice(0, 8).map((sector, index) => ({
+                          value: animatedSections[index] || 0,
+                          color: SECTOR_COLORS[index % SECTOR_COLORS.length],
+                          tooltip: `${sector.name}: ${sector.count} (${sector.percentage.toFixed(
+                            1
+                          )}%)`,
+                        }))}
                       />
 
                       {/* Legend */}
                       <Stack gap="xs" style={{ flex: 1 }}>
-                        {sectorData.slice(0, 8).map((sector, index) => {
-                          const colors = [
-                            '#e53935', // Red
-                            '#ab47bc', // Purple
-                            '#5c6bc0', // Indigo
-                            '#42a5f5', // Blue
-                            '#26c6da', // Cyan
-                            '#26a69a', // Teal
-                            '#66bb6a', // Green
-                            '#ffa726', // Orange
-                          ];
-                          return (
-                            <Group key={sector.name} gap="xs" wrap="nowrap">
-                              <Box
-                                style={{
-                                  width: 'var(--icon-xs)',
-                                  height: 'var(--icon-xs)',
-                                  borderRadius: 2,
-                                  backgroundColor: colors[index % colors.length],
-                                  flexShrink: 0,
-                                }}
-                              />
-                              <Text size="sm" truncate style={{ flex: 1 }}>
-                                {sector.name}
-                              </Text>
-                              <Text size="sm" c="dimmed" style={{ flexShrink: 0 }}>
-                                {sector.count}
-                              </Text>
-                            </Group>
-                          );
-                        })}
+                        {sectorData.slice(0, 8).map((sector, index) => (
+                          <Group key={sector.name} gap="xs" wrap="nowrap">
+                            <Box
+                              style={{
+                                width: 'var(--icon-xs)',
+                                height: 'var(--icon-xs)',
+                                borderRadius: 2,
+                                backgroundColor: SECTOR_COLORS[index % SECTOR_COLORS.length],
+                                flexShrink: 0,
+                              }}
+                            />
+                            <Text size="sm" truncate style={{ flex: 1 }}>
+                              {sector.name}
+                            </Text>
+                            <Text size="sm" c="dimmed" style={{ flexShrink: 0 }}>
+                              {sector.count}
+                            </Text>
+                          </Group>
+                        ))}
                       </Stack>
                     </Group>
                   </Box>
@@ -383,12 +394,21 @@ export function RansomwarePage() {
                     style={{
                       background: 'var(--bg-secondary)',
                       borderLeft: 'var(--border-thick) solid #e53935',
-                      minHeight: 'var(--card-height-sm)',
+                      height: 'var(--card-height-max)',
+                      display: 'flex',
+                      flexDirection: 'column',
                     }}
                   >
                     <Stack gap="xs">
                       <Group justify="space-between" align="flex-start">
-                        <Text fw={700} size="md" style={{ flex: 1 }} lineClamp={2}>
+                        <Text
+                          fw={700}
+                          style={{
+                            flex: 1,
+                            fontSize: 'calc(var(--font-md) * 1.3)',
+                          }}
+                          lineClamp={2}
+                        >
                           {victim.name}
                         </Text>
                         {victim.countryCode && (
@@ -400,13 +420,21 @@ export function RansomwarePage() {
                         )}
                       </Group>
 
-                      <Badge size="sm" variant="light" color="red">
-                        {victim.group}
-                      </Badge>
+                      <Group gap="xs">
+                        <Badge size="sm" variant="light" color="red">
+                          {victim.group}
+                        </Badge>
 
-                      <Text size="xs" c="dimmed">
-                        {victim.sector}
-                      </Text>
+                        <Badge
+                          size="sm"
+                          variant="filled"
+                          style={{
+                            backgroundColor: getSectorColor(victim.sector, sectorData),
+                          }}
+                        >
+                          {victim.sector}
+                        </Badge>
+                      </Group>
 
                       <Text size="xs" c="dimmed">
                         {getTimeAgo(victim.discoveredDate)}
