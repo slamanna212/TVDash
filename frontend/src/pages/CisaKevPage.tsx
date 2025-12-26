@@ -175,7 +175,7 @@ export function CisaKevPage() {
               >
                 <Stack gap="xs">
                   {/* CVE ID Header with CVSS Ring */}
-                  <Group justify="space-between" align="flex-start">
+                  <Group justify="space-between" align="center">
                     <Text fw={700} size="xl" c="#e53935">
                       {vuln.cveId}
                     </Text>
@@ -220,7 +220,7 @@ export function CisaKevPage() {
                   )}
 
                   {/* Vulnerability Name */}
-                  <Text fw={600} size="lg" lineClamp={2}>
+                  <Text fw={700} size="xl" lineClamp={2}>
                     {vuln.vulnerabilityName}
                   </Text>
 
@@ -233,11 +233,6 @@ export function CisaKevPage() {
                       {vuln.product}
                     </Text>
                   </Group>
-
-                  {/* Description */}
-                  <Text size="xs" c="dimmed" lineClamp={1}>
-                    {vuln.shortDescription}
-                  </Text>
 
                   {/* Date Added */}
                   <Text size="xs" c="dimmed" mt="auto">
