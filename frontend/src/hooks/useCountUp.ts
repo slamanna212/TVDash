@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 interface UseCountUpOptions {
   duration?: number; // Duration in milliseconds
@@ -17,16 +17,19 @@ export function useCountUp(
 ): number {
   const { duration = 800, decimals = 0 } = options;
   const [count, setCount] = useState(target ?? 0);
+  const previousTargetRef = useRef(target);
 
   useEffect(() => {
     if (target === undefined || target === null) {
       return;
     }
 
-    // If target is the same as current, don't animate
-    if (target === count) {
+    // If target hasn't changed, don't animate
+    if (target === previousTargetRef.current) {
       return;
     }
+
+    previousTargetRef.current = target;
 
     const startValue = count;
     const endValue = target;
@@ -59,7 +62,7 @@ export function useCountUp(
         cancelAnimationFrame(rafId);
       }
     };
-  }, [target, duration, decimals, count]);
+  }, [target, duration, decimals]);
 
   return count;
 }

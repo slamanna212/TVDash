@@ -87,14 +87,15 @@ async function updateDailyCounts(env: Env): Promise<void> {
     }
 
     // Update or insert daily counts
-    const updatePromises = (result.results as any[]).map(async (row) => {
+    const updatePromises = result.results.map(async (row) => {
+      const dailyRow = row as { date: string; count: number };
       return env.DB.prepare(`
         INSERT INTO ransomware_daily_counts (date, victim_count, updated_at)
         VALUES (?, ?, ?)
         ON CONFLICT(date) DO UPDATE SET
           victim_count = excluded.victim_count,
           updated_at = excluded.updated_at
-      `).bind(row.date, row.count, new Date().toISOString()).run();
+      `).bind(dailyRow.date, dailyRow.count, new Date().toISOString()).run();
     });
 
     await Promise.all(updatePromises);

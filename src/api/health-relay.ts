@@ -110,8 +110,15 @@ async function verifySignature(body: string, signature: string, secret: string):
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
 
-  // Constant-time comparison
-  return hash === expectedHash;
+  // Constant-time comparison to prevent timing attacks
+  if (hash.length !== expectedHash.length) {
+    return false;
+  }
+
+  const hashBuffer = encoder.encode(hash);
+  const expectedBuffer = encoder.encode(expectedHash);
+
+  return crypto.subtle.timingSafeEqual(hashBuffer, expectedBuffer);
 }
 
 /**

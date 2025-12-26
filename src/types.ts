@@ -129,3 +129,73 @@ export interface CheckResult {
   message?: string;
   isMaintenance?: boolean;
 }
+
+// Database row types for query results
+export interface StatusHistoryRow {
+  status: string;
+  response_time_ms: number | null;
+  message: string | null;
+  checked_at: string;
+}
+
+export interface CloudStatusRow {
+  provider: string;
+  overall_status: string;
+  incidents: string;
+  last_updated: string;
+}
+
+export interface M365HealthRow {
+  service_name: string;
+  status: string;
+  issues: string;
+  last_changed: string;
+  checked_at: string;
+}
+
+export interface WorkspaceStatusRow {
+  overall_status: string;
+  incidents: string;
+}
+
+export interface AlertStateRow {
+  last_status: string;
+  last_checked?: string;
+}
+
+export interface ServiceNameRow {
+  id: number;
+  name: string;
+}
+
+export interface EntityIdRow {
+  entity_id: string;
+}
+
+export interface CountRow {
+  count: number;
+  total?: number;
+}
+
+export interface SeverityCountRow {
+  severity: string;
+  count: number;
+}
+
+export interface SourceCountRow {
+  source: string;
+  count: number;
+}
+
+// API validation constants
+export const MAX_LIMIT = 1000;
+export const VALID_SEVERITIES = ['info', 'warning', 'critical'] as const;
+export const VALID_EVENT_SOURCES = [
+  'statuspage',
+  'cloud',
+  'm365',
+  'gworkspace',
+  'radar',
+  'cisa',
+  'ransomware',
+] as const;

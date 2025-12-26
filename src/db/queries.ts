@@ -1,4 +1,15 @@
-import type { Env, Service, LocalISP } from '../types';
+import type {
+  Env,
+  Service,
+  LocalISP,
+  Event,
+  StatusHistoryRow,
+  CloudStatusRow,
+  M365HealthRow,
+  WorkspaceStatusRow,
+  AlertStateRow,
+  EntityIdRow,
+} from '../types';
 
 /**
  * Database query helpers for common operations
@@ -32,16 +43,16 @@ export async function getServiceById(env: Env, id: number): Promise<Service | nu
 export async function getLatestServiceStatus(
   env: Env,
   serviceId: number
-): Promise<{ status: string; response_time_ms?: number; message?: string; checked_at: string } | null> {
+): Promise<StatusHistoryRow | null> {
   const result = await env.DB.prepare(`
     SELECT status, response_time_ms, message, checked_at
     FROM status_history
     WHERE service_id = ?
     ORDER BY checked_at DESC
     LIMIT 1
-  `).bind(serviceId).first();
+  `).bind(serviceId).first<StatusHistoryRow>();
 
-  return result as any;
+  return result;
 }
 
 /**
@@ -51,7 +62,7 @@ export async function getServiceHistory(
   env: Env,
   serviceId: number,
   days: number = 7
-): Promise<Array<{ status: string; checked_at: string; response_time_ms?: number }>> {
+): Promise<StatusHistoryRow[]> {
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - days);
 
@@ -60,13 +71,13 @@ export async function getServiceHistory(
     FROM status_history
     WHERE service_id = ? AND checked_at > ?
     ORDER BY checked_at ASC
-  `).bind(serviceId, cutoffDate.toISOString()).all();
+  `).bind(serviceId, cutoffDate.toISOString()).all<StatusHistoryRow>();
 
   if (!result.success) {
     return [];
   }
 
-  return result.results as any[];
+  return result.results;
 }
 
 /**
@@ -85,9 +96,7 @@ export async function getAllISPs(env: Env): Promise<LocalISP[]> {
 /**
  * Get latest cloud status for all providers
  */
-export async function getLatestCloudStatus(env: Env): Promise<
-  Array<{ provider: string; overall_status: string; incidents: string; last_updated: string }>
-> {
+export async function getLatestCloudStatus(env: Env): Promise<CloudStatusRow[]> {
   // Get the most recent status for each provider
   const result = await env.DB.prepare(`
     SELECT provider, overall_status, incidents, last_updated
@@ -97,48 +106,43 @@ export async function getLatestCloudStatus(env: Env): Promise<
       FROM cloud_status
       GROUP BY provider
     )
-  `).all();
+  `).all<CloudStatusRow>();
 
   if (!result.success) {
     return [];
   }
 
-  return result.results as any[];
+  return result.results;
 }
 
 /**
  * Get latest M365 health for all services
  */
-export async function getLatestM365Health(env: Env): Promise<
-  Array<{ service_name: string; status: string; issues: string; last_changed: string; checked_at: string }>
-> {
+export async function getLatestM365Health(env: Env): Promise<M365HealthRow[]> {
   const result = await env.DB.prepare(`
     SELECT service_name, status, issues, last_changed, checked_at
     FROM m365_current
-  `).all();
+  `).all<M365HealthRow>();
 
   if (!result.success) {
     return [];
   }
 
-  return result.results as any[];
+  return result.results;
 }
 
 /**
  * Get latest Google Workspace status
  */
-export async function getLatestWorkspaceStatus(env: Env): Promise<{
-  overall_status: string;
-  incidents: string;
-} | null> {
+export async function getLatestWorkspaceStatus(env: Env): Promise<WorkspaceStatusRow | null> {
   const result = await env.DB.prepare(`
     SELECT overall_status, incidents
     FROM gworkspace_status
     ORDER BY checked_at DESC
     LIMIT 1
-  `).first();
+  `).first<WorkspaceStatusRow>();
 
-  return result as any;
+  return result;
 }
 
 /**
@@ -184,7 +188,7 @@ export async function getRecentEvents(
   env: Env,
   limit: number = 50,
   source?: string
-): Promise<Array<any>> {
+): Promise<Event[]> {
   const query = `
     SELECT *
     FROM events
@@ -196,8 +200,8 @@ export async function getRecentEvents(
   const stmt = env.DB.prepare(query);
 
   const result = source
-    ? await stmt.bind(source, limit).all()
-    : await stmt.bind(limit).all();
+    ? await stmt.bind(source, limit).all<Event>()
+    : await stmt.bind(limit).all<Event>();
 
   if (!result.success) {
     return [];
@@ -213,14 +217,14 @@ export async function getAlertState(
   env: Env,
   entityType: string,
   entityId: string
-): Promise<{ last_status: string } | null> {
+): Promise<AlertStateRow | null> {
   const result = await env.DB.prepare(`
     SELECT last_status
     FROM alert_state
     WHERE entity_type = ? AND entity_id = ?
-  `).bind(entityType, entityId).first();
+  `).bind(entityType, entityId).first<AlertStateRow>();
 
-  return result as any;
+  return result;
 }
 
 /**
@@ -275,11 +279,11 @@ export async function getPreviousCloudIncidents(
     FROM alert_state
     WHERE entity_type = 'cloud-incident'
   `)
-    .all();
+    .all<EntityIdRow>();
 
   if (!result.success) {return new Set();}
 
-  return new Set((result.results as any[]).map((r) => r.entity_id));
+  return new Set(result.results.map((r) => r.entity_id));
 }
 
 /**
@@ -296,12 +300,12 @@ export async function getPreviousM365Issues(
       AND entity_id LIKE ?
   `)
     .bind(`${serviceName}-%`)
-    .all();
+    .all<EntityIdRow>();
 
   if (!result.success) {return new Set();}
 
   return new Set(
-    (result.results as any[]).map((r) => {
+    result.results.map((r) => {
       // Extract issue ID from entity_id format: "ServiceName-IssueID"
       const parts = r.entity_id.split('-');
       return parts.slice(1).join('-'); // Handle service names with dashes

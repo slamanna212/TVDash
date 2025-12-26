@@ -98,7 +98,8 @@ export function RansomwarePage() {
       return;
     }
 
-    const timers: number[] = [];
+    const timeoutIds: ReturnType<typeof setTimeout>[] = [];
+    const intervalIds: ReturnType<typeof setInterval>[] = [];
 
     // Animate each section sequentially with stagger
     sectorData.slice(0, 8).forEach((sector, index) => {
@@ -127,15 +128,16 @@ export function RansomwarePage() {
           }
         }, stepDuration);
 
-        timers.push(animationInterval);
+        intervalIds.push(animationInterval);
       }, startDelay);
 
-      timers.push(startTimer);
+      timeoutIds.push(startTimer);
     });
 
     // Cleanup timers on unmount or data change
     return () => {
-      timers.forEach((timer) => clearTimeout(timer));
+      timeoutIds.forEach((id) => clearTimeout(id));
+      intervalIds.forEach((id) => clearInterval(id));
     };
   }, [sectorData, prefersReducedMotion]);
 

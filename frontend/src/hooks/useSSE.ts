@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
 export interface UseSSEOptions {
   url: string;
@@ -34,6 +34,15 @@ export function useSSE({
   const reconnectAttemptsRef = useRef(0);
   const [isConnected, setIsConnected] = useState(false);
 
+  // Memoize callbacks to prevent unnecessary reconnections
+  const onMessageRef = useRef(onMessage);
+  const onErrorRef = useRef(onError);
+
+  useEffect(() => {
+    onMessageRef.current = onMessage;
+    onErrorRef.current = onError;
+  }, [onMessage, onError]);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -60,49 +69,49 @@ export function useSSE({
       eventSource.addEventListener('services', (event) => {
         console.log('[SSE] Services updated:', event.data);
         void queryClient.invalidateQueries({ queryKey: ['services'] });
-        onMessage?.(event);
+        onMessageRef.current?.(event);
       });
 
       // Cloud status update event
       eventSource.addEventListener('cloud', (event) => {
         console.log('[SSE] Cloud status updated:', event.data);
         void queryClient.invalidateQueries({ queryKey: ['cloud'] });
-        onMessage?.(event);
+        onMessageRef.current?.(event);
       });
 
       // M365 health update event
       eventSource.addEventListener('m365', (event) => {
         console.log('[SSE] M365 health updated:', event.data);
         void queryClient.invalidateQueries({ queryKey: ['m365'] });
-        onMessage?.(event);
+        onMessageRef.current?.(event);
       });
 
       // Internet/ISP update event
       eventSource.addEventListener('internet', (event) => {
         console.log('[SSE] Internet status updated:', event.data);
         void queryClient.invalidateQueries({ queryKey: ['internet'] });
-        onMessage?.(event);
+        onMessageRef.current?.(event);
       });
 
       // Radar attacks update event
       eventSource.addEventListener('radar', (event) => {
         console.log('[SSE] Radar data updated:', event.data);
         void queryClient.invalidateQueries({ queryKey: ['radar'] });
-        onMessage?.(event);
+        onMessageRef.current?.(event);
       });
 
       // Ransomware update event
       eventSource.addEventListener('ransomware', (event) => {
         console.log('[SSE] Ransomware data updated:', event.data);
         void queryClient.invalidateQueries({ queryKey: ['ransomware'] });
-        onMessage?.(event);
+        onMessageRef.current?.(event);
       });
 
       eventSource.onerror = (error) => {
         console.error('[SSE] Connection error:', error);
         setIsConnected(false);
         eventSource.close();
-        onError?.(error);
+        onErrorRef.current?.(error);
 
         // Exponential backoff for reconnection
         const backoffTime = Math.min(
@@ -135,7 +144,7 @@ export function useSSE({
         clearTimeout(reconnectTimeoutRef.current);
       }
     };
-  }, [url, queryClient, onMessage, onError, reconnectInterval]);
+  }, [url, queryClient, reconnectInterval]);
 
   return {
     isConnected,

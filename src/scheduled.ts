@@ -1,4 +1,4 @@
-import type { Env, Service, CheckResult, ServiceStatus } from './types';
+import type { Env, Service, CheckResult, ServiceStatus, EventSeverity, ServiceNameRow } from './types';
 import { performHttpCheck } from './collectors/http-check';
 import { checkStatuspageStatusWithGroups } from './collectors/statuspage';
 import { checkStatusHubStatus } from './collectors/statushub';
@@ -411,13 +411,13 @@ async function processM365Issues(env: Env, service: any): Promise<void> {
     // New issues
     for (const issue of service.issues) {
       if (!previousIssueIds.has(issue.id)) {
-        const severity = issue.severity === 'Incident' || issue.severity === 'critical' ? 'critical' :
+        const severity: EventSeverity = issue.severity === 'Incident' || issue.severity === 'critical' ? 'critical' :
                         issue.severity === 'Advisory' ? 'warning' : 'info';
 
         await createEvent(env, {
           source: 'm365',
           event_type: EVENT_TYPES.M365_ISSUE,
-          severity: severity as any,
+          severity,
           title: `M365 ${service.name}: ${issue.title}`,
           description: issue.impactDescription?.substring(0, 500),
           entity_id: `${service.name}-${issue.id}`,
@@ -506,12 +506,12 @@ async function processISPStatusChange(env: Env, metric: any): Promise<void> {
     if (metric.status === 'degraded' || metric.status === 'outage') {
       if (!previousState || previousState.last_status === 'operational') {
         const eventType = metric.status === 'outage' ? EVENT_TYPES.ISP_OUTAGE : EVENT_TYPES.ISP_DEGRADED;
-        const severity = metric.status === 'outage' ? 'critical' : 'warning';
+        const severity: EventSeverity = metric.status === 'outage' ? 'critical' : 'warning';
 
         await createEvent(env, {
           source: 'isp',
           event_type: eventType,
-          severity: severity as any,
+          severity,
           title: `${metric.isp.name}: Connectivity ${metric.status}`,
           description: formatISPMetrics(metric),
           entity_id: entityId,
@@ -614,11 +614,11 @@ async function recordStatusHistory(
     // Get service details for event generation
     const service = await env.DB.prepare(`
       SELECT id, name FROM services WHERE id = ?
-    `).bind(serviceId).first();
+    `).bind(serviceId).first<ServiceNameRow>();
 
     if (!service) {return;}
 
-    const serviceName = (service as any).name;
+    const serviceName = service.name;
     const entityId = `service-${serviceId}`;
 
     // Create events based on status changes

@@ -1,0 +1,47 @@
+# Local development secrets (DO NOT COMMIT - already in .gitignore)
+# These are used when running `npm run dev` locally
+# For production, use: npx wrangler secret put SECRET_NAME
+
+# Copy this file to .dev.vars and fill in your actual values
+
+# Cloudflare Radar API Token (REQUIRED for Internet Status & Attack Data)
+# Get from: https://dash.cloudflare.com/profile/api-tokens
+# Permission needed: Account.Cloudflare Radar:Read
+CF_RADAR_API_TOKEN=your_cloudflare_radar_token_here
+
+# Microsoft 365 Health API (OPTIONAL)
+# Required for M365 health monitoring
+# Create Azure AD app: https://portal.azure.com/
+# App registration requires ServiceHealth.Read.All permission
+M365_TENANT_ID=your_azure_tenant_id_here
+M365_CLIENT_ID=your_azure_client_id_here
+M365_CLIENT_SECRET=your_azure_client_secret_here
+
+# Ransomware.live API Key (REQUIRED for Ransomware tracking)
+# Get from: https://api.ransomware.live/
+RANSOMWARE_API_KEY=your_ransomware_api_key_here
+
+# NVD (National Vulnerability Database) API Key (OPTIONAL)
+# Get from: https://nvd.nist.gov/developers/request-an-api-key
+# Used for enhanced vulnerability data
+NVD_API_KEY=your_nvd_api_key_here
+
+# Health Relay Secret (REQUIRED)
+# Generate a random secure string for GitHub Actions health check relay
+# Example: openssl rand -hex 32
+HEALTH_RELAY_SECRET=your_random_secret_here
+
+# Microsoft Teams Webhook URL (OPTIONAL)
+# For alerts and notifications
+# Get from Teams: Connectors > Incoming Webhook
+# TEAMS_WEBHOOK_URL=your_teams_webhook_url_here
+
+# Environment (default: development)
+ENVIRONMENT=development
+
+# Alerts enabled (default: false for development)
+ALERTS_ENABLED=false
+
+# Page rotation settings (in seconds)
+PAGE_ROTATION_SECONDS=45
+TICKER_REFRESH_SECONDS=30

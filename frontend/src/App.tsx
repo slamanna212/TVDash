@@ -1,5 +1,6 @@
 import { AppShell } from '@mantine/core';
 import './App.css';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { Layout } from './components/Layout';
 import { useSSE } from './hooks/useSSE';
 
@@ -30,7 +31,9 @@ function App() {
         },
       }}
     >
-      <Layout />
+      <ErrorBoundary>
+        <Layout />
+      </ErrorBoundary>
     </AppShell>
   );
 }

@@ -1,5 +1,5 @@
-import { Box, Title, Text, Skeleton, Center, SimpleGrid } from '@mantine/core';
-import { motion } from 'framer-motion';
+import { Box, Title, Text, Skeleton, Center, SimpleGrid, Loader } from '@mantine/core';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useMemo } from 'react';
 import type { M365Service } from '../api/client';
 import { M365ServiceCard } from '../components/M365ServiceCard';
@@ -38,7 +38,7 @@ const cardVariants = {
 };
 
 export function M365WorkspacePage() {
-  const { data: m365Data, isLoading: m365Loading, error: m365Error } = useM365();
+  const { data: m365Data, isLoading: m365Loading, isFetching: m365Fetching, error: m365Error } = useM365();
 
   if (m365Loading && !m365Data) {
     return (
@@ -62,10 +62,24 @@ export function M365WorkspacePage() {
   }
 
   return (
-    <Box style={{ height: '100%', width: '100%' }}>
-      <Title order={1} style={{ fontSize: 'var(--font-xl)', marginBottom: '2vw' }}>
-        Microsoft 365
-      </Title>
+    <Box style={{ height: '100%', width: '100%', position: 'relative' }}>
+      <Box style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2vw' }}>
+        <Title order={1} style={{ fontSize: 'var(--font-xl)' }}>
+          Microsoft 365
+        </Title>
+        <AnimatePresence>
+          {m365Fetching && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Loader size="sm" color="blue" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Box>
 
       <M365Section data={m365Data} error={m365Error} />
     </Box>

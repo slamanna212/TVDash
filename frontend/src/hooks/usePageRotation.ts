@@ -28,16 +28,19 @@ export function usePageRotation(pageCount: number, intervalSeconds: number) {
 
   useEffect(() => {
     startTimeRef.current = Date.now();
-    let rafId: number;
+    let rafId: number | null = null;
+    let isActive = true;
 
     // RAF-based progress update (only updates when browser paints, much more efficient)
     const updateProgress = () => {
+      if (!isActive) return;
+
       const elapsed = Date.now() - startTimeRef.current;
       const newProgress = Math.min((elapsed / (intervalSeconds * 1000)) * 100, 100);
       setProgress(newProgress);
 
       // Continue updating until rotation completes
-      if (elapsed < intervalSeconds * 1000) {
+      if (elapsed < intervalSeconds * 1000 && isActive) {
         rafId = requestAnimationFrame(updateProgress);
       }
     };
@@ -46,6 +49,7 @@ export function usePageRotation(pageCount: number, intervalSeconds: number) {
 
     // Rotate page at interval
     const rotationInterval = setInterval(() => {
+      if (!isActive) return;
       setCurrentPage((prev) => (prev + 1) % pageCount);
       startTimeRef.current = Date.now(); // Reset start time for next cycle
       setProgress(0);
@@ -54,7 +58,10 @@ export function usePageRotation(pageCount: number, intervalSeconds: number) {
     }, intervalSeconds * 1000);
 
     return () => {
-      cancelAnimationFrame(rafId);
+      isActive = false;
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
       clearInterval(rotationInterval);
     };
   }, [pageCount, intervalSeconds]);

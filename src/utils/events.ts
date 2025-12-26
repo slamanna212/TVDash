@@ -2,7 +2,7 @@
  * Event generation utilities with deduplication logic
  */
 
-import type { Env, EventSeverity } from '../types';
+import type { Env, EventSeverity, AlertStateRow } from '../types';
 import { createEvent } from '../db/queries';
 import { DEGRADED_THRESHOLD_MINUTES } from '../config/events';
 
@@ -18,13 +18,13 @@ export async function getAlertState(
     'SELECT last_status, last_checked FROM alert_state WHERE entity_type = ? AND entity_id = ?'
   )
     .bind(entityType, entityId)
-    .first();
+    .first<AlertStateRow>();
 
   if (!result) {return null;}
 
   return {
-    last_status: (result as any).last_status,
-    last_checked: (result as any).last_checked,
+    last_status: result.last_status,
+    last_checked: result.last_checked || new Date().toISOString(),
   };
 }
 

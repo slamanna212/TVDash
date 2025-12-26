@@ -90,9 +90,12 @@ export const ServiceCard = memo(function ServiceCard({ service, layoutId }: Serv
   );
 }, (prevProps, nextProps) => {
   // Only re-render if service data or layoutId actually changes
+  // Return true if props are equal (skip re-render), false if different (re-render)
   return (
     prevProps.service.name === nextProps.service.name &&
     prevProps.service.status === nextProps.service.status &&
+    prevProps.service.statusText === nextProps.service.statusText &&
+    prevProps.service.responseTime === nextProps.service.responseTime &&
     prevProps.service.lastChecked === nextProps.service.lastChecked &&
     prevProps.service.isMaintenance === nextProps.service.isMaintenance &&
     prevProps.layoutId === nextProps.layoutId
