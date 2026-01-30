@@ -191,6 +191,7 @@ export async function createEventIfChanged(
   const previousState = await getAlertState(env, source, entityId);
 
   // Handle degraded state with threshold
+  let shouldCreateDegradedEvent = false;
   if (currentStatus === 'degraded') {
     if (!previousState || previousState.last_status !== 'degraded') {
       // Just entered degraded state - record timestamp, don't create event yet
@@ -202,12 +203,13 @@ export async function createEventIfChanged(
         // Still within threshold, don't create event
         return false;
       }
-      // Threshold passed, create event (will be created below)
+      // Threshold passed - flag to create event
+      shouldCreateDegradedEvent = true;
     }
   }
 
-  // Check if status has changed (skip if same status)
-  if (previousState && previousState.last_status === currentStatus) {
+  // Check if status has changed (skip if same status, UNLESS degraded threshold passed)
+  if (!shouldCreateDegradedEvent && previousState && previousState.last_status === currentStatus) {
     // Status hasn't changed, skip event creation
     return false;
   }
