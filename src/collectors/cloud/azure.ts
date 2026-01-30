@@ -52,7 +52,7 @@ export async function collectAzureStatus(env: Env): Promise<CloudProvider> {
           } else if (hasMajor) {
             status = 'degraded';
           } else {
-            status = 'degraded';
+            status = 'operational';
           }
         }
 

@@ -48,9 +48,12 @@ export async function getM365Status(env: Env): Promise<Response> {
       overall = 'unknown';
     }
 
-        // Get the most recent checked_at timestamp
+        // Get the most recent checked_at timestamp across all services
         const lastChecked = latestServices.results.length > 0
-          ? latestServices.results[0].checked_at as string
+          ? latestServices.results.reduce((max, row: any) => {
+              const checkedAt = row.checked_at as string;
+              return checkedAt > max ? checkedAt : max;
+            }, latestServices.results[0].checked_at as string)
           : new Date().toISOString();
 
         return {

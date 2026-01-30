@@ -32,23 +32,37 @@ export async function handleScheduled(
     // Every 10 minute tasks (changed from 5 to reduce database load)
     if (cron === '*/10 * * * *') {
       console.log('Running 10-minute tasks');
-      await Promise.all([
+      const results = await Promise.allSettled([
         runHttpHealthChecks(env),
         runStatuspageChecks(env),
         runCustomChecks(env),
         runProductivityChecks(env),
         collectRansomwareData(env),
       ]);
+      // Log any failures without blocking other collectors
+      results.forEach((result, idx) => {
+        if (result.status === 'rejected') {
+          const taskNames = ['HTTP checks', 'Statuspage checks', 'Custom checks', 'Productivity checks', 'Ransomware data'];
+          console.error(`${taskNames[idx]} failed:`, result.reason);
+        }
+      });
     }
 
     // Every 15 minute tasks
     if (cron === '*/15 * * * *') {
       console.log('Running 15-minute tasks');
-      await Promise.all([
+      const results = await Promise.allSettled([
         runCloudStatusChecks(env),
         runISPChecks(env),
         checkAndCreateAttackEvents(env),
       ]);
+      // Log any failures without blocking other collectors
+      results.forEach((result, idx) => {
+        if (result.status === 'rejected') {
+          const taskNames = ['Cloud status', 'ISP checks', 'Attack events'];
+          console.error(`${taskNames[idx]} failed:`, result.reason);
+        }
+      });
     }
 
     // Every 4 hours - CISA KEV catalog
@@ -420,13 +434,13 @@ async function processM365Issues(env: Env, service: any): Promise<void> {
           severity,
           title: `M365 ${service.name}: ${issue.title}`,
           description: issue.impactDescription?.substring(0, 500),
-          entity_id: `${service.name}-${issue.id}`,
+          entity_id: `${service.name}:${issue.id}`,
           entity_name: `M365 ${service.name}`,
           occurred_at: issue.startTime || new Date().toISOString(),
         });
 
         // Track this issue
-        await updateAlertState(env, 'm365-issue', `${service.name}-${issue.id}`, 'active');
+        await updateAlertState(env, 'm365-issue', `${service.name}:${issue.id}`, 'active');
         console.log(`📢 New M365 issue: ${service.name} - ${issue.title}`);
       }
     }
@@ -502,9 +516,14 @@ async function processISPStatusChange(env: Env, metric: any): Promise<void> {
     const entityId = `isp-${metric.isp.id}`;
     const previousState = await getAlertState(env, 'isp', entityId);
 
-    // Check for status changes
+    // Check for status changes - track any degradation or worsening
     if (metric.status === 'degraded' || metric.status === 'outage') {
-      if (!previousState || previousState.last_status === 'operational') {
+      // Create event if: no previous state, coming from operational, OR escalating from degraded to outage
+      const shouldCreateEvent = !previousState ||
+        previousState.last_status === 'operational' ||
+        (metric.status === 'outage' && previousState.last_status === 'degraded');
+
+      if (shouldCreateEvent) {
         const eventType = metric.status === 'outage' ? EVENT_TYPES.ISP_OUTAGE : EVENT_TYPES.ISP_DEGRADED;
         const severity: EventSeverity = metric.status === 'outage' ? 'critical' : 'warning';
 

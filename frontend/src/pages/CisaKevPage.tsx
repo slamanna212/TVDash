@@ -49,7 +49,8 @@ interface AnimatedRingProgressProps {
 
 function AnimatedRingProgress({ score, color, label }: AnimatedRingProgressProps) {
   const [animatedValue, setAnimatedValue] = useState(0);
-  const targetPercentage = score ? (score / 10) * 100 : 100;
+  // Show 0% when score is null (no data), not 100%
+  const targetPercentage = score !== null ? (score / 10) * 100 : 0;
 
   useEffect(() => {
     const startTime = Date.now();

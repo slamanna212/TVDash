@@ -27,7 +27,8 @@ export async function collectAWSStatus(env: Env): Promise<CloudProvider> {
         for (const [serviceName, feedUrl] of Object.entries(AWS_RSS_FEEDS)) {
           try {
             const feed = await parseRSSFeed(feedUrl);
-            const recentItems = feed.items.slice(0, 5); // Check last 5 items
+            // Pass all items to hasActiveIncidents - it handles time filtering internally
+            const recentItems = feed.items;
 
             if (hasActiveIncidents(recentItems, 48)) { // Check last 48 hours
               hasAnyIncidents = true;

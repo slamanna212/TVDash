@@ -38,11 +38,12 @@ export async function getCloudStatus(env: Env): Promise<Response> {
         console.error(`Error parsing incidents for ${row.provider}:`, e);
       }
 
-      // Determine provider name (capitalize properly)
+      // Determine provider name (capitalize properly, case-insensitive comparison)
+      const providerLower = row.provider.toLowerCase();
       let providerName = row.provider.toUpperCase();
-      if (row.provider === 'gcp') {providerName = 'Google Cloud';}
-      if (row.provider === 'azure') {providerName = 'Azure';}
-      if (row.provider === 'aws') {providerName = 'AWS';}
+      if (providerLower === 'gcp') {providerName = 'Google Cloud';}
+      else if (providerLower === 'azure') {providerName = 'Azure';}
+      else if (providerLower === 'aws') {providerName = 'AWS';}
 
       return {
         name: providerName,

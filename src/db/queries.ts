@@ -299,16 +299,17 @@ export async function getPreviousM365Issues(
     WHERE entity_type = 'm365-issue'
       AND entity_id LIKE ?
   `)
-    .bind(`${serviceName}-%`)
+    .bind(`${serviceName}:%`)
     .all<EntityIdRow>();
 
   if (!result.success) {return new Set();}
 
   return new Set(
     result.results.map((r) => {
-      // Extract issue ID from entity_id format: "ServiceName-IssueID"
-      const parts = r.entity_id.split('-');
-      return parts.slice(1).join('-'); // Handle service names with dashes
+      // Extract issue ID from entity_id format: "ServiceName:IssueID"
+      // Using ':' delimiter since it can't appear in service names
+      const colonIndex = r.entity_id.indexOf(':');
+      return colonIndex >= 0 ? r.entity_id.substring(colonIndex + 1) : r.entity_id;
     })
   );
 }

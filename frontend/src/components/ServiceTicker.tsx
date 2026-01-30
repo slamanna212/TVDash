@@ -149,6 +149,7 @@ export function ServiceTicker() {
             <ServiceCard
               key={`b-${service.id}`}
               service={service}
+              layoutId={`service-dup-${service.id}`}
             />
           ))}
         </Box>

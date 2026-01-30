@@ -82,7 +82,7 @@ export async function collectGCPStatus(env: Env): Promise<CloudProvider> {
           } else if (hasMajor || incidents.length > 2) {
             status = 'degraded';
           } else {
-            status = 'degraded';
+            status = 'operational';
           }
         }
 

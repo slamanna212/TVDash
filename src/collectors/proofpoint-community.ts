@@ -51,6 +51,7 @@ export async function checkProofpointCommunityStatus(url: string): Promise<Check
     return {
       status: 'unknown',
       message: error instanceof Error ? error.message : 'Check failed',
+      responseTime: 0,
     };
   }
 }
