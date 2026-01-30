@@ -38,6 +38,10 @@ export const EVENT_TYPES = {
   // Radar
   RADAR_L3_SPIKE: 'ddos_spike_layer3',
   RADAR_L7_SPIKE: 'ddos_spike_layer7',
+
+  // CISA KEV
+  CISA_NEW_CVE: 'cisa_new_cve',
+  CISA_DUE_SOON: 'cisa_due_soon',
 } as const;
 
 // Source labels for UI
@@ -48,4 +52,6 @@ export const SOURCE_LABELS: Record<string, string> = {
   gworkspace: 'Google Workspace',
   isp: 'ISP',
   radar: 'Security',
+  cisa: 'CISA KEV',
+  ransomware: 'Ransomware',
 };

@@ -1,6 +1,8 @@
 import type { Env } from '../types';
 import { fetchWithCache } from '../utils/cache';
 import { fetchCvssScoresBatch } from './nvd-api';
+import { createEvent, getAlertState, updateAlertState } from '../db/queries';
+import { EVENT_TYPES } from '../config/events';
 
 const KEV_FEED_URL = 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json';
 
@@ -173,7 +175,93 @@ export async function collectCisaKevData(env: Env): Promise<void> {
       console.log('No CVEs need CVSS score updates');
     }
 
+    // 5. Create events for new CVEs and approaching due dates
+    await createCisaEvents(env, recentVulns, now);
+
   } catch (error) {
     console.error('Error collecting CISA KEV data:', error);
+  }
+}
+
+/**
+ * Create events for CISA KEV vulnerabilities:
+ * - New CVEs added to the catalog
+ * - CVEs with due dates approaching (7 days, 1 day)
+ */
+async function createCisaEvents(
+  env: Env,
+  vulnerabilities: CisaKevEntry[],
+  now: string
+): Promise<void> {
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
+
+  for (const vuln of vulnerabilities) {
+    try {
+      // Check if we've already seen this CVE
+      const alertState = await getAlertState(env, 'cisa-cve', vuln.cveID);
+
+      // Create event for NEW CVEs (not seen before)
+      if (!alertState) {
+        await createEvent(env, {
+          source: 'cisa',
+          event_type: EVENT_TYPES.CISA_NEW_CVE,
+          severity: vuln.knownRansomwareCampaignUse === 'Known' ? 'critical' : 'warning',
+          title: `New KEV: ${vuln.cveID} - ${vuln.vendorProject} ${vuln.product}`,
+          description: vuln.shortDescription,
+          entity_id: vuln.cveID,
+          entity_name: vuln.vulnerabilityName,
+          occurred_at: `${vuln.dateAdded}T00:00:00Z`,
+        });
+
+        // Mark as seen with status 'new'
+        await updateAlertState(env, 'cisa-cve', vuln.cveID, 'new');
+        console.log(`Created event for new CVE: ${vuln.cveID}`);
+      }
+
+      // Check for approaching due dates
+      const dueDate = new Date(vuln.dueDate);
+      dueDate.setHours(0, 0, 0, 0);
+      const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+      // Get current alert status
+      const currentStatus = alertState?.last_status || 'new';
+
+      // Create warning event 7 days before due date
+      if (daysUntilDue <= 7 && daysUntilDue > 1 && currentStatus !== 'due_7day' && currentStatus !== 'due_1day') {
+        await createEvent(env, {
+          source: 'cisa',
+          event_type: EVENT_TYPES.CISA_DUE_SOON,
+          severity: 'warning',
+          title: `KEV Due Soon: ${vuln.cveID} - ${daysUntilDue} days remaining`,
+          description: `${vuln.vendorProject} ${vuln.product}: ${vuln.requiredAction}. Due: ${vuln.dueDate}`,
+          entity_id: vuln.cveID,
+          entity_name: vuln.vulnerabilityName,
+          occurred_at: now,
+        });
+
+        await updateAlertState(env, 'cisa-cve', vuln.cveID, 'due_7day');
+        console.log(`Created 7-day warning for CVE: ${vuln.cveID}`);
+      }
+
+      // Create critical event 1 day before due date
+      if (daysUntilDue <= 1 && daysUntilDue >= 0 && currentStatus !== 'due_1day') {
+        await createEvent(env, {
+          source: 'cisa',
+          event_type: EVENT_TYPES.CISA_DUE_SOON,
+          severity: 'critical',
+          title: `KEV Due Tomorrow: ${vuln.cveID} - ${vuln.vendorProject} ${vuln.product}`,
+          description: `URGENT: ${vuln.requiredAction}. Due: ${vuln.dueDate}`,
+          entity_id: vuln.cveID,
+          entity_name: vuln.vulnerabilityName,
+          occurred_at: now,
+        });
+
+        await updateAlertState(env, 'cisa-cve', vuln.cveID, 'due_1day');
+        console.log(`Created 1-day critical warning for CVE: ${vuln.cveID}`);
+      }
+    } catch (error) {
+      console.error(`Error creating event for CVE ${vuln.cveID}:`, error);
+    }
   }
 }

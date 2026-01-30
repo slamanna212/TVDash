@@ -33,7 +33,7 @@ export async function collectAzureStatus(env: Env): Promise<CloudProvider> {
                 severity: determineAzureSeverity(item.title, item.description),
                 regions: extractAzureRegions(item.description),
                 services: extractAzureServices(item.title),
-                startTime: item.pubDate,
+                startTime: new Date(item.pubDate).toISOString(),
                 message: item.description,
               });
             }

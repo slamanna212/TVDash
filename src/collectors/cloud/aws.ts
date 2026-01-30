@@ -43,7 +43,7 @@ export async function collectAWSStatus(env: Env): Promise<CloudProvider> {
                 severity: determineAWSSeverity(latestIncident.description),
                 services: [serviceName],
                 regions,
-                startTime: latestIncident.pubDate,
+                startTime: new Date(latestIncident.pubDate).toISOString(),
                 message: latestIncident.description,
               });
             }

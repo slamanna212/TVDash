@@ -191,6 +191,7 @@ export interface SourceCountRow {
 export const MAX_LIMIT = 1000;
 export const VALID_SEVERITIES = ['info', 'warning', 'critical'] as const;
 export const VALID_EVENT_SOURCES = [
+  'service',
   'statuspage',
   'cloud',
   'm365',
