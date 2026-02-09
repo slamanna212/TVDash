@@ -299,6 +299,7 @@ export async function getPreviousM365Issues(
     FROM alert_state
     WHERE entity_type = 'm365-issue'
       AND entity_id LIKE ?
+      AND last_status = 'active'
   `)
     .bind(`${serviceName}:%`)
     .all<EntityIdRow>();
