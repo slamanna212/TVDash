@@ -272,13 +272,14 @@ export async function checkEventExists(
  */
 export async function getPreviousCloudIncidents(
   env: Env,
-  _provider: string
+  provider: string
 ): Promise<Set<string>> {
   const result = await env.DB.prepare(`
     SELECT entity_id
     FROM alert_state
-    WHERE entity_type = 'cloud-incident'
+    WHERE entity_type = ?
   `)
+    .bind(`cloud-incident-${provider.toLowerCase()}`)
     .all<EntityIdRow>();
 
   if (!result.success) {return new Set();}

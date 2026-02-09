@@ -17,7 +17,7 @@ import {
   updateAlertState,
   hashIncident,
 } from './utils/events';
-import { createEvent, getPreviousCloudIncidents, getPreviousM365Issues } from './db/queries';
+import { createEvent, getPreviousCloudIncidents, getPreviousM365Issues, markEventResolved } from './db/queries';
 import { EVENT_TYPES } from './config/events';
 
 export async function handleScheduled(
@@ -312,8 +312,8 @@ async function processCloudIncidents(env: Env, provider: any): Promise<void> {
           occurred_at: incident.startTime || new Date().toISOString(),
         });
 
-        // Track this incident
-        await updateAlertState(env, 'cloud-incident', hash, 'active');
+        // Track this incident (provider-scoped to avoid cross-contamination)
+        await updateAlertState(env, `cloud-incident-${provider.name.toLowerCase()}`, hash, 'active');
         console.log(`📢 New cloud incident: ${provider.name} - ${incident.title}`);
       }
     }
@@ -321,6 +321,9 @@ async function processCloudIncidents(env: Env, provider: any): Promise<void> {
     // Detect resolved incidents
     for (const prevHash of previousIncidents) {
       if (!currentIncidents.has(prevHash)) {
+        // Mark previous events as resolved
+        await markEventResolved(env, 'cloud', prevHash);
+
         // Incident resolved
         await createEvent(env, {
           source: 'cloud',
@@ -333,10 +336,10 @@ async function processCloudIncidents(env: Env, provider: any): Promise<void> {
           occurred_at: new Date().toISOString(),
         });
 
-        // Remove from alert_state
+        // Remove from alert_state (provider-scoped)
         await env.DB.prepare(`
-          DELETE FROM alert_state WHERE entity_type = 'cloud-incident' AND entity_id = ?
-        `).bind(prevHash).run();
+          DELETE FROM alert_state WHERE entity_type = ? AND entity_id = ?
+        `).bind(`cloud-incident-${provider.name.toLowerCase()}`, prevHash).run();
 
         console.log(`✅ Cloud incident resolved: ${provider.name}`);
       }
@@ -448,13 +451,16 @@ async function processM365Issues(env: Env, service: any): Promise<void> {
     // Resolved issues
     for (const prevId of previousIssueIds) {
       if (!currentIssueIds.has(prevId)) {
+        // Mark previous events as resolved
+        await markEventResolved(env, 'm365', `${service.name}:${prevId}`);
+
         await createEvent(env, {
           source: 'm365',
           event_type: EVENT_TYPES.M365_RESOLVED,
           severity: 'info',
           title: `M365 ${service.name} issue resolved`,
           description: 'Issue no longer reported',
-          entity_id: `${service.name}-${prevId}`,
+          entity_id: `${service.name}:${prevId}`,
           entity_name: `M365 ${service.name}`,
           occurred_at: new Date().toISOString(),
         });
@@ -462,7 +468,7 @@ async function processM365Issues(env: Env, service: any): Promise<void> {
         // Remove from alert_state
         await env.DB.prepare(`
           DELETE FROM alert_state WHERE entity_type = 'm365-issue' AND entity_id = ?
-        `).bind(`${service.name}-${prevId}`).run();
+        `).bind(`${service.name}:${prevId}`).run();
 
         console.log(`✅ M365 issue resolved: ${service.name}`);
       }
@@ -542,6 +548,9 @@ async function processISPStatusChange(env: Env, metric: any): Promise<void> {
       }
     } else if (metric.status === 'operational') {
       if (previousState && (previousState.last_status === 'degraded' || previousState.last_status === 'outage')) {
+        // Mark previous events as resolved
+        await markEventResolved(env, 'isp', entityId);
+
         await createEvent(env, {
           source: 'isp',
           event_type: EVENT_TYPES.ISP_RESOLVED,

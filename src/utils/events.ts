@@ -3,7 +3,7 @@
  */
 
 import type { Env, EventSeverity, AlertStateRow } from '../types';
-import { createEvent } from '../db/queries';
+import { createEvent, markEventResolved } from '../db/queries';
 import { DEGRADED_THRESHOLD_MINUTES } from '../config/events';
 
 /**
@@ -53,8 +53,13 @@ export async function updateAlertState(
  * Check if enough time has passed for degraded state to be logged
  */
 export function shouldLogDegraded(previousState: { last_status: string; last_checked: string } | null): boolean {
-  if (!previousState || previousState.last_status !== 'degraded') {
+  if (!previousState || (previousState.last_status !== 'degraded' && previousState.last_status !== 'degraded_logged')) {
     return false; // Just entered degraded, don't log yet
+  }
+
+  // Already logged, don't log again
+  if (previousState.last_status === 'degraded_logged') {
+    return false;
   }
 
   const degradedSince = new Date(previousState.last_checked);
@@ -193,9 +198,12 @@ export async function createEventIfChanged(
   // Handle degraded state with threshold
   let shouldCreateDegradedEvent = false;
   if (currentStatus === 'degraded') {
-    if (!previousState || previousState.last_status !== 'degraded') {
+    if (!previousState || (previousState.last_status !== 'degraded' && previousState.last_status !== 'degraded_logged')) {
       // Just entered degraded state - record timestamp, don't create event yet
       await updateAlertState(env, source, entityId, 'degraded');
+      return false;
+    } else if (previousState.last_status === 'degraded_logged') {
+      // Already logged this degraded event, skip
       return false;
     } else {
       // Check if 5 minutes have passed
@@ -218,7 +226,7 @@ export async function createEventIfChanged(
   const isResolution =
     currentStatus === 'operational' &&
     previousState &&
-    (previousState.last_status === 'degraded' || previousState.last_status === 'outage');
+    (previousState.last_status === 'degraded' || previousState.last_status === 'degraded_logged' || previousState.last_status === 'outage');
 
   // Don't create resolution event if previous status was unknown/operational
   if (currentStatus === 'operational' && !isResolution) {
@@ -231,6 +239,11 @@ export async function createEventIfChanged(
 
   // Determine severity
   const severity = mapSeverity(currentStatus, event_type);
+
+  // Mark previous events as resolved if this is a resolution
+  if (isResolution) {
+    await markEventResolved(env, source, entityId);
+  }
 
   // Create the event
   try {
@@ -245,8 +258,8 @@ export async function createEventIfChanged(
       occurred_at: new Date().toISOString(),
     });
 
-    // Update alert state
-    await updateAlertState(env, source, entityId, currentStatus);
+    // Update alert state (use 'degraded_logged' to prevent re-logging)
+    await updateAlertState(env, source, entityId, shouldCreateDegradedEvent ? 'degraded_logged' : currentStatus);
 
     console.log(`Created event: ${source}/${entityId} - ${eventTitle}`);
     return true;
