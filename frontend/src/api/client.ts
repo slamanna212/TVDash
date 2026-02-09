@@ -272,10 +272,11 @@ class APIClient {
     return this.fetch<CisaKevResponse>('/api/cisa-kev');
   }
 
-  async getEvents(params?: { source?: string; limit?: number }): Promise<EventsResponse> {
+  async getEvents(params?: { source?: string; limit?: number; entity_name?: string }): Promise<EventsResponse> {
     const queryParams = new URLSearchParams();
     if (params?.source) queryParams.set('source', params.source);
     if (params?.limit) queryParams.set('limit', params.limit.toString());
+    if (params?.entity_name) queryParams.set('entity_name', params.entity_name);
 
     const query = queryParams.toString();
     return this.fetch<EventsResponse>(`/api/events${query ? '?' + query : ''}`);

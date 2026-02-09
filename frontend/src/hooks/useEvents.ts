@@ -5,6 +5,7 @@ export interface UseEventsOptions {
   limit?: number;
   severity?: 'info' | 'warning' | 'critical';
   source?: string;
+  entity_name?: string;
 }
 
 /**

@@ -3,10 +3,13 @@ import { AnimatePresence } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useServices } from '../hooks/useServices';
 import { ServiceCard } from './ServiceCard';
+import { ServiceIncidentModal } from './ServiceIncidentModal';
+import type { ServiceStatus } from '../api/client';
 
 export function ServiceTicker() {
   const { data, isLoading } = useServices();
   const services = data?.services || [];
+  const [selectedService, setSelectedService] = useState<ServiceStatus | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number | null>(null);
@@ -128,6 +131,7 @@ export function ServiceTicker() {
                 key={service.id}
                 service={service}
                 layoutId={`service-${service.id}`}
+                onClick={() => setSelectedService(service)}
               />
             ))}
           </Box>
@@ -143,6 +147,7 @@ export function ServiceTicker() {
               key={`a-${service.id}`}
               service={service}
               layoutId={`service-${service.id}`}
+              onClick={() => setSelectedService(service)}
             />
           ))}
           {scrollingCards.map(service => (
@@ -150,10 +155,16 @@ export function ServiceTicker() {
               key={`b-${service.id}`}
               service={service}
               layoutId={`service-dup-${service.id}`}
+              onClick={() => setSelectedService(service)}
             />
           ))}
         </Box>
       </Box>
+
+      <ServiceIncidentModal
+        service={selectedService}
+        onClose={() => setSelectedService(null)}
+      />
     </Box>
   );
 }

@@ -1,6 +1,6 @@
 import { Box, Text } from '@mantine/core';
 import { motion } from 'framer-motion';
-import { memo } from 'react';
+import { memo, type MouseEvent } from 'react';
 import { statusColors } from '../theme';
 import { formatTimeAgo } from '../utils/format';
 
@@ -14,13 +14,15 @@ interface ServiceCardProps {
     isMaintenance?: boolean;
   };
   layoutId?: string;
+  onClick?: () => void;
 }
 
-export const ServiceCard = memo(function ServiceCard({ service, layoutId }: ServiceCardProps) {
+export const ServiceCard = memo(function ServiceCard({ service, layoutId, onClick }: ServiceCardProps) {
   const backgroundColor = service.isMaintenance
     ? statusColors.maintenance
     : statusColors[service.status];
   const timeAgo = formatTimeAgo(service.lastChecked);
+  const isClickable = service.status === 'degraded' || service.status === 'outage' || service.isMaintenance;
 
   return (
     <Box
@@ -30,11 +32,15 @@ export const ServiceCard = memo(function ServiceCard({ service, layoutId }: Serv
       initial={false}
       animate={{
         backgroundColor,
+        scale: 1,
       }}
+      whileHover={isClickable ? { scale: 1.05 } : undefined}
       transition={{
         layout: { type: 'spring', stiffness: 300, damping: 30 },
         backgroundColor: { duration: 0.3 },
+        scale: { duration: 0.15 },
       }}
+      onClick={isClickable && onClick ? (e: MouseEvent) => { e.stopPropagation(); onClick(); } : undefined}
       style={{
         backgroundColor,
         padding: '0 var(--spacing-base)',
@@ -48,6 +54,7 @@ export const ServiceCard = memo(function ServiceCard({ service, layoutId }: Serv
         gap: '0.5vw',
         flexShrink: 0,
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+        cursor: isClickable ? 'pointer' : 'default',
       }}
     >
       <Text
@@ -98,6 +105,7 @@ export const ServiceCard = memo(function ServiceCard({ service, layoutId }: Serv
     prevProps.service.responseTime === nextProps.service.responseTime &&
     prevProps.service.lastChecked === nextProps.service.lastChecked &&
     prevProps.service.isMaintenance === nextProps.service.isMaintenance &&
-    prevProps.layoutId === nextProps.layoutId
+    prevProps.layoutId === nextProps.layoutId &&
+    prevProps.onClick === nextProps.onClick
   );
 });

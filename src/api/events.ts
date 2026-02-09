@@ -24,6 +24,7 @@ export async function getEvents(env: Env, request: Request): Promise<Response> {
     // Query parameters with validation
     const source = url.searchParams.get('source');
     const severity = url.searchParams.get('severity');
+    const entity_name = url.searchParams.get('entity_name');
     const rawLimit = parseInt(url.searchParams.get('limit') || '100', 10);
     const rawOffset = parseInt(url.searchParams.get('offset') || '0', 10);
     const resolved = url.searchParams.get('resolved');
@@ -74,6 +75,11 @@ export async function getEvents(env: Env, request: Request): Promise<Response> {
     if (severity) {
       conditions.push('severity = ?');
       bindings.push(severity);
+    }
+
+    if (entity_name) {
+      conditions.push('entity_name = ?');
+      bindings.push(entity_name);
     }
 
     if (resolved === 'true') {
