@@ -54,7 +54,16 @@ export async function collectM365Status(env: Env): Promise<{
           const mappedStatus = mapM365Status(overview.status);
           console.log(`M365 Service: ${overview.service} - Raw Status: "${overview.status}" - Mapped: ${mappedStatus}`);
 
-          const serviceIssues = issues.filter(issue => issue.service === overview.service);
+          const serviceIssues = issues.filter(issue => {
+          if (issue.service !== overview.service) return false;
+          // Filter out resolved/closed issues to prevent re-detection as new
+          const status = (issue.status || '').toLowerCase();
+          return !status.includes('resolved') &&
+                 !status.includes('servicerestored') &&
+                 !status.includes('serviceoperational') &&
+                 !status.includes('falsepositive') &&
+                 !status.includes('postincidentreviewpublished');
+        });
 
           return {
             name: overview.service,
