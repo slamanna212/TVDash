@@ -225,6 +225,32 @@ export interface EventsResponse {
   lastUpdated: string;
 }
 
+export interface ServiceIncidentUpdate {
+  body: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface ServiceIncident {
+  title: string;
+  impact: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  affectedComponents: string[];
+  updates: ServiceIncidentUpdate[];
+}
+
+export interface ServiceIncidentsResponse {
+  service: {
+    id: number;
+    name: string;
+    status: string;
+    statusPageUrl: string | null;
+  };
+  incidents: ServiceIncident[];
+}
+
 class APIClient {
   private baseUrl: string;
 
@@ -270,6 +296,10 @@ class APIClient {
 
   async getCisaKev(): Promise<CisaKevResponse> {
     return this.fetch<CisaKevResponse>('/api/cisa-kev');
+  }
+
+  async getServiceIncidents(id: number): Promise<ServiceIncidentsResponse> {
+    return this.fetch<ServiceIncidentsResponse>(`/api/services/${id}/incidents`);
   }
 
   async getEvents(params?: { source?: string; limit?: number; entity_name?: string }): Promise<EventsResponse> {

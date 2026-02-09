@@ -8,6 +8,7 @@ import { getRansomwareStatus } from './ransomware';
 import { getCisaKevStatus } from './cisa-kev';
 import { getEvents } from './events';
 import { getServiceHistory } from '../db/queries';
+import { getServiceIncidents } from './service-incidents';
 import { handleHealthRelay } from './health-relay';
 import { handleSSEStream } from './sse';
 import { collectCisaKevData } from '../collectors/cisa-kev';
@@ -49,6 +50,12 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
           headers: { 'Content-Type': 'application/json' },
         });
       }
+    }
+
+    // GET /api/services/:id/incidents - Live incident data from upstream status page
+    if (path.match(/^\/api\/services\/\d+\/incidents$/) && request.method === 'GET') {
+      const id = parseInt(path.split('/')[3]);
+      return await getServiceIncidents(env, id);
     }
 
     // GET /api/internet - ISP status + global internet health
