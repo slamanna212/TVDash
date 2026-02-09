@@ -1,8 +1,9 @@
 import { Box, Title, Text, Skeleton, Center, SimpleGrid, Loader } from '@mantine/core';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { M365Service } from '../api/client';
 import { M365ServiceCard } from '../components/M365ServiceCard';
+import { M365IncidentModal } from '../components/M365IncidentModal';
 import { useM365 } from '../hooks/useM365';
 
 // Status priority for sorting (extracted to avoid recreating on every render)
@@ -39,6 +40,7 @@ const cardVariants = {
 
 export function M365WorkspacePage() {
   const { data: m365Data, isLoading: m365Loading, isFetching: m365Fetching, error: m365Error } = useM365();
+  const [selectedService, setSelectedService] = useState<M365Service | null>(null);
 
   if (m365Loading && !m365Data) {
     return (
@@ -81,12 +83,17 @@ export function M365WorkspacePage() {
         </AnimatePresence>
       </Box>
 
-      <M365Section data={m365Data} error={m365Error} />
+      <M365Section data={m365Data} error={m365Error} onServiceClick={setSelectedService} />
+
+      <M365IncidentModal
+        service={selectedService}
+        onClose={() => setSelectedService(null)}
+      />
     </Box>
   );
 }
 
-function M365Section({ data, error }: { data: any; error: Error | null }) {
+function M365Section({ data, error, onServiceClick }: { data: any; error: Error | null; onServiceClick: (service: M365Service) => void }) {
   // Memoize sorted services to prevent re-sorting on every render
   const sortedServices = useMemo(
     () => data?.services
@@ -122,6 +129,7 @@ function M365Section({ data, error }: { data: any; error: Error | null }) {
                 <M365ServiceCard
                   service={service}
                   updatedAt={data.lastChecked}
+                  onClick={() => onServiceClick(service)}
                 />
               </motion.div>
             ))}

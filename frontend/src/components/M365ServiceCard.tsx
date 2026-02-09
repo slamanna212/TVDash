@@ -7,9 +7,10 @@ import { getBorderColor } from '../utils/format';
 interface M365ServiceCardProps {
   service: M365Service;
   updatedAt: string;
+  onClick?: () => void;
 }
 
-export const M365ServiceCard = memo(function M365ServiceCard({ service, updatedAt }: M365ServiceCardProps) {
+export const M365ServiceCard = memo(function M365ServiceCard({ service, updatedAt, onClick }: M365ServiceCardProps) {
 
   const mostRecentIssue = service.issues && service.issues.length > 0
     ? service.issues[0]
@@ -21,6 +22,7 @@ export const M365ServiceCard = memo(function M365ServiceCard({ service, updatedA
       padding="md"
       radius="md"
       className={service.status === 'outage' ? 'service-card service-card-outage' : 'service-card'}
+      onClick={service.status !== 'operational' && onClick ? onClick : undefined}
       style={{
         minHeight: 'var(--card-height-base)',
         maxHeight: 'var(--card-height-max)',
@@ -28,6 +30,7 @@ export const M365ServiceCard = memo(function M365ServiceCard({ service, updatedA
         borderLeft: `var(--border-emphasis) solid ${getBorderColor(service.status)}`,
         display: 'flex',
         flexDirection: 'column',
+        cursor: service.status !== 'operational' && onClick ? 'pointer' : 'default',
       }}
     >
       <Stack gap="sm" style={{ height: '100%' }}>
