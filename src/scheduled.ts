@@ -467,7 +467,7 @@ async function processM365Issues(env: Env, service: any): Promise<void> {
 
         // Mark as resolved in alert_state (keep entry to prevent re-detection)
         await env.DB.prepare(`
-          UPDATE alert_state SET status = 'resolved' WHERE entity_type = 'm365-issue' AND entity_id = ?
+          UPDATE alert_state SET last_status = 'resolved' WHERE entity_type = 'm365-issue' AND entity_id = ?
         `).bind(`${service.name}:${prevId}`).run();
 
         console.log(`✅ M365 issue resolved: ${service.name}`);
